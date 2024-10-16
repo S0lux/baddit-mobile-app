@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,15 +72,29 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCard(postDetails: PostDTOItem) {
-    var colorUpvote = Color(0xFFFF7315)
-    var colorDownvote = Color(0xFF3C15FF)
+    val colorUpvote = Color(0xFFFF7315)
+    val colorDownvote = Color(0xFF3C15FF)
 
-    var voteInteractionSource = remember { MutableInteractionSource() }
-    var voteBoxInteractionColor by remember { mutableStateOf(colorUpvote) }
-    var coroutineScope = rememberCoroutineScope();
+    val voteInteractionSource = remember { MutableInteractionSource() }
+    var voteState by remember { mutableStateOf(postDetails.voteState) }
 
     var votePosition by remember { mutableStateOf(IntOffset.Zero) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
+
+    LaunchedEffect(voteState) {
+        val pressPosition = Offset(
+            x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
+            y = voteElementSize.height / 2f
+        )
+
+        // If voteState is empty string then don't trigger ripple effect
+        if (voteState !== Unit) {
+            val press = PressInteraction.Press(pressPosition);
+            voteInteractionSource.emit(press)
+            delay(300)
+            voteInteractionSource.emit(PressInteraction.Release(press))
+        }
+    }
 
     Box(
         Modifier
@@ -181,7 +196,9 @@ fun PostCard(postDetails: PostDTOItem) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier
                         .onGloballyPositioned { coordinates ->
-                            votePosition = coordinates.positionInWindow().round()
+                            votePosition = coordinates
+                                .positionInWindow()
+                                .round()
                             voteElementSize = coordinates.size
                         }
                         .clip(RoundedCornerShape(10))
@@ -190,7 +207,7 @@ fun PostCard(postDetails: PostDTOItem) {
                             interactionSource = voteInteractionSource,
                             indication = rememberRipple(
                                 bounded = true,
-                                color = voteBoxInteractionColor
+                                color = if (voteState == "UPVOTE") colorUpvote else colorDownvote
                             )
                         )
                         .background(MaterialTheme.colorScheme.cardForeground)
@@ -201,19 +218,9 @@ fun PostCard(postDetails: PostDTOItem) {
                         contentDescription = null,
                         tint = if (postDetails.voteState == "UPVOTE") colorUpvote else MaterialTheme.colorScheme.textSecondary,
                         modifier = Modifier.clickable(
-                            onClick = {
-                                coroutineScope.launch {
-                                    val pressPosition = Offset(
-                                        x = voteElementSize.width / 6f,
-                                        y = voteElementSize.height / 2f
-                                    )
-                                    val press = PressInteraction.Press(pressPosition);
-                                    voteBoxInteractionColor = colorUpvote
-                                    voteInteractionSource.emit(press)
-                                    delay(300)
-                                    voteInteractionSource.emit(PressInteraction.Release(press))
-                                }
-                            }
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = { voteState = if (voteState == "UPVOTE") Unit else "UPVOTE" }
                         )
                     )
 
@@ -227,21 +234,15 @@ fun PostCard(postDetails: PostDTOItem) {
                         painter = painterResource(id = R.drawable.arrow_upvote),
                         contentDescription = null,
                         tint = if (postDetails.voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
-                        modifier = Modifier.rotate(180f).clickable(
-                            onClick = {
-                                coroutineScope.launch {
-                                    val pressPosition = Offset(
-                                        x = voteElementSize.width / 1f,
-                                        y = voteElementSize.height / 2f
-                                    )
-                                    val press = PressInteraction.Press(pressPosition);
-                                    voteBoxInteractionColor = colorDownvote
-                                    voteInteractionSource.emit(press)
-                                    delay(300)
-                                    voteInteractionSource.emit(PressInteraction.Release(press))
+                        modifier = Modifier
+                            .rotate(180f)
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {
+                                    voteState = if (voteState == "DOWNVOTE") Unit else "DOWNVOTE"
                                 }
-                            }
-                        )
+                            )
                     )
                 }
 
