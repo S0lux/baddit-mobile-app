@@ -2,9 +2,11 @@ package com.example.baddit.presentation.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -21,6 +23,7 @@ import kotlinx.coroutines.async
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
+
     val pullToRefreshState = rememberPullToRefreshState()
     val posts = viewModel.posts;
 
@@ -32,10 +35,13 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         }
     }
 
-    Box(modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)) {
+    Box(
+        modifier = Modifier
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+            .fillMaxSize()
+    ) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp),
-
         ) {
 
             if (!pullToRefreshState.isRefreshing) {
@@ -43,11 +49,14 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     PostCard(postDetails = item)
                 }
             }
+
         }
 
         PullToRefreshContainer(
             state = pullToRefreshState,
             modifier = Modifier.align(Alignment.TopCenter)
         )
+        Text(text = "HomeScreen")
+
     }
 }
