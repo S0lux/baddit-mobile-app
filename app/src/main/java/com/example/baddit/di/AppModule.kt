@@ -15,12 +15,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class AppModule {
 
-    private val interceptor: HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+    private val logInterceptor: HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val client: OkHttpClient = OkHttpClient.Builder().apply {
-        addInterceptor(interceptor)
+        addInterceptor(logInterceptor)
     }.build()
 
     @Provides

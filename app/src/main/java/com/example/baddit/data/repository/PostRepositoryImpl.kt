@@ -7,6 +7,7 @@ import com.example.baddit.domain.error.errors.NetworkError
 import com.example.baddit.domain.repository.PostRepository
 import retrofit2.HttpException
 import retrofit2.Response
+import java.io.IOException
 import javax.inject.Inject
 
 class PostRepositoryImpl @Inject constructor(
@@ -22,7 +23,13 @@ class PostRepositoryImpl @Inject constructor(
         return try {
             val response = badditAPI.getPosts(communityName, authorName, cursor, postTitle);
             return Result.Success(response);
-        } catch (err: HttpException) {
+        }
+
+        catch (err: IOException) {
+            return Result.Error(NetworkError.NO_INTERNET)
+        }
+
+        catch (err: HttpException) {
             when (err.code()) {
                 500 -> Result.Error(NetworkError.INTERNAL_SERVER_ERROR)
                 else -> Result.Error(NetworkError.UNKNOWN_ERROR)

@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.Interaction
@@ -61,7 +62,8 @@ import com.example.baddit.domain.model.posts.PostDTOItem
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
-import com.example.baddit.ui.theme.CustomTheme.cardTitleText
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import getTimeAgoFromUtcString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -69,13 +71,15 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCard(postDetails: PostDTOItem) {
+    var colorUpvote = Color(0xFFFF7315)
+    var colorDownvote = Color(0xFF3C15FF)
+
     var voteInteractionSource = remember { MutableInteractionSource() }
-    var voteBoxInteractionColor by remember { mutableStateOf(Color(0xFFFFA500)) }
+    var voteBoxInteractionColor by remember { mutableStateOf(colorUpvote) }
     var coroutineScope = rememberCoroutineScope();
 
     var votePosition by remember { mutableStateOf(IntOffset.Zero) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
-
 
     Box(
         Modifier
@@ -106,7 +110,7 @@ fun PostCard(postDetails: PostDTOItem) {
                             "r/",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF9E9E9E),
+                            color = MaterialTheme.colorScheme.textSecondary,
                             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                         )
 
@@ -124,7 +128,7 @@ fun PostCard(postDetails: PostDTOItem) {
                             postDetails.author.username,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF9E9E9E),
+                            color = MaterialTheme.colorScheme.textSecondary,
                             modifier = Modifier.padding(0.dp),
                             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                         )
@@ -133,7 +137,7 @@ fun PostCard(postDetails: PostDTOItem) {
                             "•",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF9E9E9E),
+                            color = MaterialTheme.colorScheme.textSecondary,
                             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                         )
 
@@ -141,7 +145,7 @@ fun PostCard(postDetails: PostDTOItem) {
                             getTimeAgoFromUtcString(postDetails.createdAt),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF9E9E9E),
+                            color = MaterialTheme.colorScheme.textSecondary,
                             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                         )
                     }
@@ -151,7 +155,7 @@ fun PostCard(postDetails: PostDTOItem) {
 
             Text(
                 postDetails.title,
-                color = MaterialTheme.colorScheme.cardTitleText,
+                color = MaterialTheme.colorScheme.textPrimary,
                 fontSize = 15.sp,
                 lineHeight = 20.sp
             )
@@ -159,7 +163,7 @@ fun PostCard(postDetails: PostDTOItem) {
             if (postDetails.type == "TEXT") {
                 Text(
                     postDetails.content,
-                    color = MaterialTheme.colorScheme.cardTitleText,
+                    color = MaterialTheme.colorScheme.textSecondary,
                     fontSize = 10.sp,
                     lineHeight = 14.sp,
                     modifier = Modifier
@@ -195,7 +199,7 @@ fun PostCard(postDetails: PostDTOItem) {
                     Icon(
                         painter = painterResource(id = R.drawable.arrow_upvote),
                         contentDescription = null,
-                        tint = if (postDetails.voteState == "UPVOTE") Color(0xFFFFA500) else Color.Black,
+                        tint = if (postDetails.voteState == "UPVOTE") colorUpvote else MaterialTheme.colorScheme.textSecondary,
                         modifier = Modifier.clickable(
                             onClick = {
                                 coroutineScope.launch {
@@ -204,7 +208,7 @@ fun PostCard(postDetails: PostDTOItem) {
                                         y = voteElementSize.height / 2f
                                     )
                                     val press = PressInteraction.Press(pressPosition);
-                                    voteBoxInteractionColor = Color(0xFFFFA500)
+                                    voteBoxInteractionColor = colorUpvote
                                     voteInteractionSource.emit(press)
                                     delay(300)
                                     voteInteractionSource.emit(PressInteraction.Release(press))
@@ -215,14 +219,14 @@ fun PostCard(postDetails: PostDTOItem) {
 
                     Text(
                         postDetails.score.toString(),
-                        color = MaterialTheme.colorScheme.cardTitleText,
+                        color = MaterialTheme.colorScheme.textPrimary,
                         fontSize = 12.sp,
                     )
 
                     Icon(
                         painter = painterResource(id = R.drawable.arrow_upvote),
                         contentDescription = null,
-                        tint = if (postDetails.voteState == "DOWNVOTE") Color.Blue else Color.Black,
+                        tint = if (postDetails.voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
                         modifier = Modifier.rotate(180f).clickable(
                             onClick = {
                                 coroutineScope.launch {
@@ -231,7 +235,7 @@ fun PostCard(postDetails: PostDTOItem) {
                                         y = voteElementSize.height / 2f
                                     )
                                     val press = PressInteraction.Press(pressPosition);
-                                    voteBoxInteractionColor = Color.Blue
+                                    voteBoxInteractionColor = colorDownvote
                                     voteInteractionSource.emit(press)
                                     delay(300)
                                     voteInteractionSource.emit(PressInteraction.Release(press))
@@ -252,13 +256,13 @@ fun PostCard(postDetails: PostDTOItem) {
                     Icon(
                         painter = painterResource(id = R.drawable.comment),
                         contentDescription = null,
-                        tint = if (postDetails.voteState == "UPVOTE") Color(0xFFFFA500) else Color.Black,
+                        tint = MaterialTheme.colorScheme.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
 
                     Text(
                         postDetails.commentCount.toString(),
-                        color = MaterialTheme.colorScheme.cardTitleText,
+                        color = MaterialTheme.colorScheme.textPrimary,
                         fontSize = 12.sp,
                     )
                 }
@@ -271,6 +275,43 @@ fun PostCard(postDetails: PostDTOItem) {
 @Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
+    val details: PostDTOItem = PostDTOItem(
+        id = "992e0a44-6682-4d13-b75e-834494679b65",
+        type = "TEXT",
+        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
+        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        score = 0,
+        voteState = Unit,
+        commentCount = 0,
+        author = Author(
+            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
+            username = "trungkhang1",
+            avatarUrl = "https://placehold.co/400.png"
+        ),
+        community = Community(
+            name = "pesocommunity",
+            logoUrl = "https://placehold.co/400.png"
+        ),
+        createdAt = "2024-05-13T05:57:03.877Z",
+        updatedAt = "2024-05-13T05:57:03.877Z"
+    )
+    BadditTheme {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                PostCard(details)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun PostCardDarkPreview() {
     val details: PostDTOItem = PostDTOItem(
         id = "992e0a44-6682-4d13-b75e-834494679b65",
         type = "TEXT",
