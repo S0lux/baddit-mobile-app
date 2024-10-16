@@ -1,6 +1,6 @@
 package com.example.baddit.di
 
-import com.example.baddit.data.remote.PostAPI
+import com.example.baddit.data.remote.BadditAPI
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,13 +25,12 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideAPI(): PostAPI {
+    fun provideAPI(): BadditAPI {
         return Retrofit.Builder()
             .baseUrl("https://api.baddit.life/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
-            .create(PostAPI::class.java)
+            .create(BadditAPI::class.java)
     }
-
 }

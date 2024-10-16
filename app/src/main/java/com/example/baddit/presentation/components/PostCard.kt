@@ -55,15 +55,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
-import com.example.baddit.data.model.posts.Author
-import com.example.baddit.data.model.posts.Community
-import com.example.baddit.data.model.posts.PostDTOItem
+import com.example.baddit.domain.model.posts.Author
+import com.example.baddit.domain.model.posts.Community
+import com.example.baddit.domain.model.posts.PostDTOItem
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.cardTitleText
 import getTimeAgoFromUtcString
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

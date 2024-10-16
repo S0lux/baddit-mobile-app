@@ -1,11 +1,11 @@
 package com.example.baddit.data.remote
 
-import com.example.baddit.data.model.posts.PostDTO
+import com.example.baddit.domain.model.posts.PostDTO
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface PostAPI {
+interface BadditAPI {
 
     @GET("/v1/posts")
     suspend fun getPosts(
