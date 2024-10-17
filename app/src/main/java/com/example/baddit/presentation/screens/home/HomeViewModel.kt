@@ -19,30 +19,35 @@ class HomeViewModel @Inject constructor(
     private val _postRepository: PostRepository
 ) : ViewModel() {
 
+    var isRefreshsing by mutableStateOf(false)
+        private set;
+
     var posts = mutableStateListOf<PostDTOItem>();
     var error by mutableStateOf("");
 
-    suspend fun refreshPosts() {
-        when (val fetchPosts = _postRepository.getPosts(null, null, null, null)) {
-            is Result.Error -> {
-                error = when (fetchPosts.error) {
-                    NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
-                    NetworkError.NO_INTERNET -> "No internet connection detected"
-                    NetworkError.UNKNOWN_ERROR -> "An unknown network error has occurred"
+    fun refreshPosts() {
+        viewModelScope.launch {
+            isRefreshsing = true;
+            when (val fetchPosts = _postRepository.getPosts(null, null, null, null)) {
+                is Result.Error -> {
+                    error = when (fetchPosts.error) {
+                        NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        NetworkError.NO_INTERNET -> "No internet connection detected"
+                        NetworkError.UNKNOWN_ERROR -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    posts.clear()
+                    error = "";
+                    fetchPosts.data.body()?.forEach { item -> posts.add(item) }
                 }
             }
-
-            is Result.Success -> {
-                posts.clear()
-                error = "";
-                fetchPosts.data.body()?.forEach { item -> posts.add(item) }
-            }
+            isRefreshsing = false;
         }
     }
 
     init {
-        viewModelScope.launch {
-            refreshPosts();
-        }
+        refreshPosts();
     }
 }
