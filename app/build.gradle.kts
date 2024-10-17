@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.example.baddit"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
 
@@ -104,6 +104,10 @@ dependencies {
 
     // desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    dependencies {
+        implementation("androidx.core:core-splashscreen:1.0.1")
+    }
 }
 
 kapt {

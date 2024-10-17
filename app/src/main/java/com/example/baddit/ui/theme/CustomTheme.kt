@@ -7,19 +7,19 @@ import androidx.compose.ui.graphics.Color
 
 
 object CustomTheme {
-    val ColorScheme.cardBackground: Color
-        @Composable
-        get() = if (isSystemInDarkTheme()) Color(0xfff2f4f5) else Color(0xffffffff)
-
-    val ColorScheme.cardHeaderText: Color
-        @Composable
-        get() = if (isSystemInDarkTheme()) Color(0xFF9E9E9E) else Color(0xFF9E9E9E)
-
-    val ColorScheme.cardTitleText: Color
+    val ColorScheme.textPrimary: Color
         @Composable
         get() = if (isSystemInDarkTheme()) Color(0xFFFFFFFF) else Color(0xFF000000)
 
+    val ColorScheme.textSecondary: Color
+        @Composable
+        get() = if (isSystemInDarkTheme()) Color(0xFF828282) else Color(0xFF828282)
+
+    val ColorScheme.cardBackground: Color
+        @Composable
+        get() = if (isSystemInDarkTheme()) Color(0xff1c1c1c) else Color(0xffffffff)
+
     val ColorScheme.cardForeground: Color
         @Composable
-        get() = if (isSystemInDarkTheme()) Color(0xFFFFFFFF) else Color(0xFFF2F4F5)
+        get() = if (isSystemInDarkTheme()) Color(0xFF222222) else Color(0xFFF2F4F5)
 }
