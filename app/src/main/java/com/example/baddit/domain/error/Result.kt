@@ -1,7 +1,5 @@
 package com.example.baddit.domain.error
 
-import com.example.baddit.domain.error.errors.Error
-
 typealias RootError = Error
 sealed interface Result<out D, out E: RootError> {
     data class Success<out D, out E: RootError>(val data: D): Result<D, E>;

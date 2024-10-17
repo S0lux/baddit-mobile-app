@@ -1,0 +1,20 @@
+package com.example.baddit.domain.error
+
+sealed interface DataError: Error {
+    enum class NetworkError: DataError {
+        NO_INTERNET,
+        INTERNAL_SERVER_ERROR,
+        UNAUTHORIZED,
+        CONFLICT,
+        UNKNOWN_ERROR,
+    }
+
+    enum class RegisterError: DataError {
+        USERNAME_TAKEN,
+        EMAIL_TAKEN,
+        NO_INTERNET,
+        INTERNAL_SERVER_ERROR,
+        UNKNOWN_ERROR,
+    }
+
+}
