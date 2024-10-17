@@ -3,13 +3,11 @@ package com.example.baddit.presentation.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,20 +16,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
@@ -59,7 +53,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
-import com.example.baddit.domain.model.posts.PostDTOItem
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
@@ -67,11 +61,10 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import getTimeAgoFromUtcString
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostCard(postDetails: PostDTOItem) {
+fun PostCard(postDetails: PostResponseDTOItem) {
     val colorUpvote = Color(0xFFFF7315)
     val colorDownvote = Color(0xFF3C15FF)
 
@@ -205,7 +198,7 @@ fun PostCard(postDetails: PostDTOItem) {
                         .clickable(
                             onClick = {},
                             interactionSource = voteInteractionSource,
-                            indication = rememberRipple(
+                            indication = ripple(
                                 bounded = true,
                                 color = if (voteState == "UPVOTE") colorUpvote else colorDownvote
                             )
@@ -276,7 +269,7 @@ fun PostCard(postDetails: PostDTOItem) {
 @Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
-    val details: PostDTOItem = PostDTOItem(
+    val details: PostResponseDTOItem = PostResponseDTOItem(
         id = "992e0a44-6682-4d13-b75e-834494679b65",
         type = "TEXT",
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",
@@ -313,7 +306,7 @@ fun PostCardPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PostCardDarkPreview() {
-    val details: PostDTOItem = PostDTOItem(
+    val details: PostResponseDTOItem = PostResponseDTOItem(
         id = "992e0a44-6682-4d13-b75e-834494679b65",
         type = "TEXT",
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",

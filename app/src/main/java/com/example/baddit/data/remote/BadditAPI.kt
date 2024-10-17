@@ -1,8 +1,14 @@
 package com.example.baddit.data.remote
 
-import com.example.baddit.domain.model.posts.PostDTO
+import com.example.baddit.data.dto.auth.LoginRequestBody
+import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
+import com.example.baddit.domain.model.auth.LoginResponseDTO
+import com.example.baddit.domain.model.posts.PostResponseDTO
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface BadditAPI {
@@ -12,8 +18,17 @@ interface BadditAPI {
         @Query("communityName") communityName: String?,
         @Query("authorName") authorName: String?,
         @Query("cursor") cursor: String?,
-        @Query("postTitle") postTitle: String?): Response<PostDTO>
+        @Query("postTitle") postTitle: String?): Response<PostResponseDTO>
 
     @GET("/v1/posts")
-    suspend fun getPost(@Query("postId") postId: String): Response<PostDTO>
+    suspend fun getPost(@Query("postId") postId: String): Response<PostResponseDTO>
+
+    @POST("/v1/auth/login")
+    suspend fun login(@Body loginBody: LoginRequestBody): Response<LoginResponseDTO>
+
+    @POST("/v1/auth/signup")
+    suspend fun signup(@Body loginBody: RegisterRequestBody): Response<Unit>
+
+    @GET("/v1/users/me")
+    suspend fun getMe(): Response<GetMeResponseDTO>
 }

@@ -1,6 +1,6 @@
 package com.example.baddit.domain.model.auth
 
-data class User(
+data class LoginUserResponseDTO(
     val avatarUrl: String,
     val email: String,
     val emailVerified: Boolean,

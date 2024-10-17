@@ -26,6 +26,7 @@ import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.ui.theme.BadditTheme
+import com.example.baddit.ui.theme.CustomTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
 
@@ -33,7 +34,9 @@ import kotlinx.serialization.Serializable
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContent {
             val navController = rememberNavController()
             BadditTheme {
@@ -42,6 +45,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    SignupScreen()
+                }
+            }
+        }
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {

@@ -1,8 +1,8 @@
 package com.example.baddit.domain.repository
 
+import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.error.errors.NetworkError
-import com.example.baddit.domain.model.posts.PostDTO
+import com.example.baddit.domain.model.posts.PostResponseDTO
 import retrofit2.Response
 
 interface PostRepository {
@@ -11,5 +11,5 @@ interface PostRepository {
         authorName: String?,
         cursor: String?,
         postTitle: String?
-    ): Result<Response<PostDTO>, NetworkError>;
+    ): Result<Response<PostResponseDTO>, DataError.NetworkError>;
 }
