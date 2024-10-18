@@ -44,6 +44,9 @@ class SignupViewModel @Inject constructor(
     var isLoading by mutableStateOf(false)
         private set;
 
+    var isSignupDone by mutableStateOf(false)
+        private set;
+
     private fun isValidEmail(email: String): Boolean {
         val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
         return email.matches(emailRegex)
@@ -108,6 +111,7 @@ class SignupViewModel @Inject constructor(
 
             is Result.Success -> {
                 isLoading = false;
+                isSignupDone = true;
                 return true;
             }
         }

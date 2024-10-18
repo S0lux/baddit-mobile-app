@@ -46,17 +46,20 @@ fun SignupScreen(viewModel: SignupViewModel = hiltViewModel()) {
             .verticalScroll(scrollState),
         contentAlignment = Alignment.Center,
     ) {
-        SignupContent(
-            pagerState = pagerState,
-            isDarkTheme = isDarkTheme,
-            viewModel = viewModel,
-            coroutineScope = coroutineScope
-        )
+        if (viewModel.isSignupDone) {
+            SignUpComplete()
+        } else
+            SignupProcess(
+                pagerState = pagerState,
+                isDarkTheme = isDarkTheme,
+                viewModel = viewModel,
+                coroutineScope = coroutineScope
+            )
     }
 }
 
 @Composable
-fun SignupContent(
+fun SignupProcess(
     pagerState: PagerState,
     isDarkTheme: Boolean,
     viewModel: SignupViewModel,
@@ -271,7 +274,7 @@ fun NavigationButton(
                     )
                 }
             } else
-                Text("Signup")
+                Text("Signup", color = MaterialTheme.colorScheme.textPrimary)
         }
     }
 }

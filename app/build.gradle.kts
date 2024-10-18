@@ -102,6 +102,9 @@ dependencies {
     // desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
+    // lottie
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
+
     dependencies {
         implementation("androidx.core:core-splashscreen:1.0.1")
     }
