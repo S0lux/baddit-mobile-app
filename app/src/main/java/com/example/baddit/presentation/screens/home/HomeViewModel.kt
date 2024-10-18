@@ -40,7 +40,7 @@ class HomeViewModel @Inject constructor(
                 is Result.Success -> {
                     posts.clear()
                     error = "";
-                    fetchPosts.data.body()?.forEach { item -> posts.add(item) }
+                    fetchPosts.data.forEach { item -> posts.add(item) }
                 }
             }
             isRefreshsing = false;

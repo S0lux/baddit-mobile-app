@@ -1,7 +1,6 @@
-package com.example.baddit.data.mapper
+package com.example.baddit.data.utils
 
 import com.example.baddit.domain.error.DataError
-import com.example.baddit.domain.error.Result
 
 fun httpToError(errCode: Int): DataError.NetworkError {
     return when (errCode) {

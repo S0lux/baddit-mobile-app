@@ -1,11 +1,11 @@
 package com.example.baddit.data.repository
 
-import android.util.Log
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
-import com.example.baddit.data.mapper.httpToError
+import com.example.baddit.data.utils.httpToError
 import com.example.baddit.data.remote.BadditAPI
+import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
@@ -42,16 +42,8 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(
         username: String,
         password: String
-    ): Result<Response<LoginResponseDTO>, DataError.NetworkError> {
-        return try {
-            val response = badditAPI.login(LoginRequestBody(username, password))
-            if (!response.isSuccessful) throw HttpException(response)
-            Result.Success(response)
-        } catch (err: IOException) {
-            Result.Error(DataError.NetworkError.NO_INTERNET)
-        } catch (err: HttpException) {
-            Result.Error(httpToError(err.code()))
-        }
+    ): Result<LoginResponseDTO, DataError.NetworkError> {
+        return safeApiCall { badditAPI.login(LoginRequestBody(username, password)) }
     }
 
     override suspend fun register(
@@ -59,40 +51,31 @@ class AuthRepositoryImpl @Inject constructor(
         username: String,
         password: String
     ): Result<Unit, DataError.RegisterError> {
-        return try {
-            val response = badditAPI.signup(RegisterRequestBody(email, username, password));
-            if (!response.isSuccessful) {
-                val errorBody =
-                    Gson().fromJson(response.errorBody()!!.string(), ErrorResponse::class.java)
-                return when (errorBody.error) {
-                    "USERNAME_TAKEN" -> Result.Error(DataError.RegisterError.USERNAME_TAKEN)
-                    "EMAIL_TAKEN" -> Result.Error(DataError.RegisterError.EMAIL_TAKEN)
-                    else -> throw HttpException(response)
+        return safeApiCall(
+            apiCall = { badditAPI.signup(RegisterRequestBody(email, username, password)) },
+            errorHandler = { response ->
+                val errorCode = response.code()
+                val errorBody = response.errorBody()?.string()
+                val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+                if (errorCode == 409) // Means there's a username/email conflict
+                    when (errorResponse.error) {
+                        "USERNAME_TAKEN" -> Result.Error(DataError.RegisterError.USERNAME_TAKEN)
+                        "EMAIL_TAKEN" -> Result.Error(DataError.RegisterError.EMAIL_TAKEN)
+                        else -> Result.Error(DataError.RegisterError.UNKNOWN_ERROR)
+                    }
+                else when(errorCode) {
+                    500 -> Result.Error(DataError.RegisterError.INTERNAL_SERVER_ERROR)
+                    else -> Result.Error(DataError.RegisterError.UNKNOWN_ERROR)
                 }
             }
-            Result.Success(Unit)
-        } catch (err: IOException) {
-            Result.Error(DataError.RegisterError.NO_INTERNET)
-        } catch (err: HttpException) {
-            Log.d("REGISTER", "Http catch hit!")
-            when (err.code()) {
-                500 -> Result.Error(DataError.RegisterError.INTERNAL_SERVER_ERROR)
-                else -> Result.Error(DataError.RegisterError.UNKNOWN_ERROR)
-            }
-        }
+        )
     }
 
-    override suspend fun getMe(): Result<Response<GetMeResponseDTO>, DataError.NetworkError> {
-        return try {
-            val response = badditAPI.getMe();
-            if (!response.isSuccessful) throw HttpException(response)
-            currentUser = response.body()
-            Result.Success(response);
-        } catch (err: IOException) {
-            Result.Error(DataError.NetworkError.NO_INTERNET)
-        } catch (err: HttpException) {
-            Result.Error(httpToError(err.code()))
+    override suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError> {
+        val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
+        if (result is Result.Success) {
+            currentUser = result.data;
         }
+        return result;
     }
-
 }

@@ -11,5 +11,5 @@ interface PostRepository {
         authorName: String?,
         cursor: String?,
         postTitle: String?
-    ): Result<Response<PostResponseDTO>, DataError.NetworkError>;
+    ): Result<PostResponseDTO, DataError.NetworkError>;
 }

@@ -7,7 +7,7 @@ import com.example.baddit.domain.model.auth.LoginResponseDTO
 import retrofit2.Response
 
 interface AuthRepository {
-    suspend fun login(username: String, password: String): Result<Response<LoginResponseDTO>, DataError.NetworkError>
+    suspend fun login(username: String, password: String): Result<LoginResponseDTO, DataError.NetworkError>
     suspend fun register(email: String, username: String, password: String): Result<Unit, DataError.RegisterError>
-    suspend fun getMe(): Result<Response<GetMeResponseDTO>, DataError.NetworkError>
+    suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError>
 }
