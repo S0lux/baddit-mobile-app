@@ -1,26 +1,37 @@
 package com.example.baddit.presentation.screens.signup
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
+import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.ui.theme.BadditTheme
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
+import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -97,16 +108,34 @@ fun AppLogo(isDarkTheme: Boolean) {
 
 @Composable
 fun SignupHeader() {
-    Text(
-        text = "Signup",
-        color = MaterialTheme.colorScheme.textPrimary,
-        fontWeight = FontWeight.Bold,
-        fontSize = 25.sp
-    )
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(
+            text = "Signup",
+            color = MaterialTheme.colorScheme.textPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 25.sp
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(
+                text = "Already has an account?",
+                color = MaterialTheme.colorScheme.textSecondary
+            )
+
+            Text(
+                text = "Login now",
+                color = MaterialTheme.colorScheme.mutedAppBlue,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+    }
+
 }
 
 @Composable
 fun UserCredentialsSection(viewModel: SignupViewModel) {
+    val focusManager = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val usernameError = viewModel.usernameFieldError
         val emailError = viewModel.emailFieldError
@@ -118,7 +147,16 @@ fun UserCredentialsSection(viewModel: SignupViewModel) {
             onValueChange = { username -> viewModel.setUsername(username) },
             supportingText = { Text(usernameError) },
             modifier = Modifier.fillMaxWidth(),
-            isError = usernameError.isNotEmpty()
+            isError = usernameError.isNotEmpty(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            colors = textFieldColors(),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.person),
+                    contentDescription = null
+                )
+            }
         )
 
         OutlinedTextField(
@@ -128,13 +166,21 @@ fun UserCredentialsSection(viewModel: SignupViewModel) {
             onValueChange = { email -> viewModel.setEmail(email) },
             supportingText = { Text(emailError) },
             isError = emailError.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = textFieldColors(),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.email),
+                    contentDescription = null
+                )
+            }
         )
     }
 }
 
 @Composable
 fun PasswordSection(viewModel: SignupViewModel) {
+    val focusManager = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val passwordError = viewModel.passwordFieldError
         val confirmPasswordError = viewModel.confirmPasswordFieldError
@@ -146,7 +192,17 @@ fun PasswordSection(viewModel: SignupViewModel) {
             onValueChange = { password -> viewModel.setPassword(password) },
             supportingText = { Text(passwordError) },
             modifier = Modifier.fillMaxWidth(),
-            isError = passwordError.isNotEmpty()
+            isError = passwordError.isNotEmpty(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            colors = textFieldColors(),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.key),
+                    contentDescription = null
+                )
+            },
+            visualTransformation = PasswordVisualTransformation()
         )
 
         OutlinedTextField(
@@ -156,7 +212,15 @@ fun PasswordSection(viewModel: SignupViewModel) {
             onValueChange = { password -> viewModel.setConfirmationPassword(password) },
             supportingText = { Text(confirmPasswordError) },
             isError = confirmPasswordError.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = textFieldColors(),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.key),
+                    contentDescription = null
+                )
+            },
+            visualTransformation = PasswordVisualTransformation()
         )
     }
 }
@@ -168,8 +232,9 @@ fun NavigationButton(
     coroutineScope: CoroutineScope
 ) {
     val isLoading = viewModel.isLoading
-    val canProceed = (pagerState.currentPage == 0 && viewModel.usernameField.isNotEmpty() && viewModel.emailField.isNotEmpty() && viewModel.usernameFieldError.isEmpty() && viewModel.emailFieldError.isEmpty())
-            || (pagerState.currentPage == 1 && viewModel.passwordField.isNotEmpty() && viewModel.confirmPasswordField.isNotEmpty() && viewModel.passwordFieldError.isEmpty() && viewModel.confirmPasswordFieldError.isEmpty())
+    val canProceed =
+        (pagerState.currentPage == 0 && viewModel.usernameField.isNotEmpty() && viewModel.emailField.isNotEmpty() && viewModel.usernameFieldError.isEmpty() && viewModel.emailFieldError.isEmpty())
+                || (pagerState.currentPage == 1 && viewModel.passwordField.isNotEmpty() && viewModel.confirmPasswordField.isNotEmpty() && viewModel.passwordFieldError.isEmpty() && viewModel.confirmPasswordFieldError.isEmpty())
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -186,22 +251,26 @@ fun NavigationButton(
                     }
                 }
             },
-            enabled = !isLoading && canProceed
+            enabled = !isLoading && canProceed,
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.mutedAppBlue
+            )
         ) {
-            Text(if (pagerState.currentPage == 0) "Next" else "Signup")
-        }
-    }
-}
-
-@Preview
-@Composable
-fun SignupScreenPreview() {
-    BadditTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            SignupScreen()
+            if (pagerState.currentPage == 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text("Next")
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_forward),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            } else
+                Text("Signup")
         }
     }
 }

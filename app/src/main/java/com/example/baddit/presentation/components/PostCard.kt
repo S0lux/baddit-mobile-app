@@ -55,6 +55,8 @@ import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.ui.theme.BadditTheme
+import com.example.baddit.ui.theme.CustomTheme.appBlue
+import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -65,8 +67,8 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCard(postDetails: PostResponseDTOItem) {
-    val colorUpvote = Color(0xFFFF7315)
-    val colorDownvote = Color(0xFF3C15FF)
+    val colorUpvote = MaterialTheme.colorScheme.appOrange
+    val colorDownvote = MaterialTheme.colorScheme.appBlue
 
     val voteInteractionSource = remember { MutableInteractionSource() }
     var voteState by remember { mutableStateOf(postDetails.voteState) }
