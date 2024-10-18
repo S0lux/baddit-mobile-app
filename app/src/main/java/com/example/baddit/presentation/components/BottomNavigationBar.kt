@@ -2,6 +2,8 @@ package com.example.baddit.presentation.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -39,7 +41,11 @@ fun BottomNavigationbar(
         BottomNavigationItem(icon = R.drawable.round_person_24, value = Auth)
     )
 
-    AnimatedVisibility(visible = bottomBarState.value) {
+    AnimatedVisibility(
+        visible = bottomBarState.value,
+        exit = slideOutVertically(),
+        enter = slideInVertically()
+    ) {
         NavigationBar {
             navitems.forEachIndexed { index, item ->
                 NavigationBarItem(
