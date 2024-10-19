@@ -1,9 +1,6 @@
 package com.example.baddit.presentation.screens.signup
 
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
@@ -17,103 +14,105 @@ import javax.inject.Inject
 class SignupViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    var emailField by mutableStateOf("")
-        private set;
 
-    var emailFieldError by mutableStateOf("")
-        private set;
+    // State data classes for grouping related states together
+    data class FieldState(
+        var value: String = "", var error: String = ""
+    )
 
-    var usernameField by mutableStateOf("")
-        private set;
+    var emailState by mutableStateOf(FieldState())
+        private set
 
-    var usernameFieldError by mutableStateOf("")
-        private set;
+    var usernameState by mutableStateOf(FieldState())
+        private set
 
-    var passwordField by mutableStateOf("")
-        private set;
+    var passwordState by mutableStateOf(FieldState())
+        private set
 
-    var passwordFieldError by mutableStateOf("")
-        private set;
-
-    var confirmPasswordField by mutableStateOf("")
-        private set;
-
-    var confirmPasswordFieldError by mutableStateOf("")
-        private set;
+    var confirmPasswordState by mutableStateOf(FieldState())
+        private set
 
     var isLoading by mutableStateOf(false)
-        private set;
+        private set
 
     var isSignupDone by mutableStateOf(false)
-        private set;
+        private set
 
+    // Validation methods
     private fun isValidEmail(email: String): Boolean {
         val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
         return email.matches(emailRegex)
     }
 
+    private fun validateEmail(input: String): String {
+        return if (!isValidEmail(input)) "Please enter a valid email." else ""
+    }
+
+    private fun validatePassword(input: String): String {
+        return if (input.length < 6) "Password is too short." else ""
+    }
+
+    private fun validateConfirmPassword(password: String, confirmPassword: String): String {
+        return if (password != confirmPassword) "Password mismatch." else ""
+    }
+
+    // State update methods
     fun setUsername(input: String) {
-        usernameField = input
+        usernameState = usernameState.copy(value = input, error = "")
     }
 
     fun setEmail(input: String) {
-        emailField = input
-        emailFieldError = if (!isValidEmail(emailField)) "Please enter a valid email."
-        else ""
+        emailState = emailState.copy(
+            value = input, error = validateEmail(input)
+        )
     }
 
     fun setPassword(input: String) {
-        passwordField = input
-        passwordFieldError = if (passwordField.length < 6) "Password is too short." else ""
+        passwordState = passwordState.copy(
+            value = input, error = validatePassword(input)
+        )
     }
 
     fun setConfirmationPassword(input: String) {
-        confirmPasswordField = input
-        confirmPasswordFieldError =
-            if (confirmPasswordField != passwordField) "Password mismatch." else ""
+        confirmPasswordState = confirmPasswordState.copy(
+            value = input, error = validateConfirmPassword(passwordState.value, input)
+        )
     }
 
-    suspend fun trySignUp(): Boolean {
-        isLoading = true;
-
-        when (val result =
-            authRepository.register(emailField, usernameField, passwordField)) {
-            is Result.Error -> {
-                when (result.error) {
-                    DataError.RegisterError.USERNAME_TAKEN -> {
-                        isLoading = false;
-                        usernameFieldError = "This username is already taken."
-                        return false;
-                    }
-
-                    DataError.RegisterError.EMAIL_TAKEN -> {
-                        isLoading = false;
-                        emailFieldError = "This email is already in use."
-                        return false;
-                    }
-
-                    DataError.RegisterError.NO_INTERNET -> {
-                        isLoading = false;
-                        return false;
-                    }
-
-                    DataError.RegisterError.INTERNAL_SERVER_ERROR -> {
-                        isLoading = false;
-                        return false;
-                    }
-
-                    DataError.RegisterError.UNKNOWN_ERROR -> {
-                        isLoading = false;
-                        return false;
-                    }
-                }
+    // Error handling method
+    private fun handleRegisterError(error: DataError.RegisterError) {
+        when (error) {
+            DataError.RegisterError.USERNAME_TAKEN -> {
+                usernameState = usernameState.copy(error = "This username is already taken.")
             }
 
-            is Result.Success -> {
-                isLoading = false;
-                isSignupDone = true;
-                return true;
+            DataError.RegisterError.EMAIL_TAKEN -> {
+                emailState = emailState.copy(error = "This email is already in use.")
+            }
+
+            DataError.RegisterError.NO_INTERNET,
+            DataError.RegisterError.INTERNAL_SERVER_ERROR,
+            DataError.RegisterError.UNKNOWN_ERROR -> {
+                // Handle other errors
             }
         }
+        isLoading = false
+    }
+
+    suspend fun trySignUp(): Result<Unit, DataError.RegisterError> {
+        isLoading = true
+
+        val result =
+            authRepository.register(emailState.value, usernameState.value, passwordState.value)
+
+        when (result) {
+            is Result.Error -> handleRegisterError(result.error)
+            is Result.Success -> {
+                isLoading = false
+                isSignupDone = true
+            }
+        }
+
+        return result;
     }
 }

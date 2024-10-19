@@ -44,7 +44,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpComplete() {
-    val scrollState = rememberScrollState()
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.email_send))
     val dynamicProperties = rememberLottieDynamicProperties(
         rememberLottieDynamicProperty(
@@ -96,7 +95,9 @@ fun SignUpComplete() {
         }
 
         Box(
-            modifier = Modifier.fillMaxWidth().padding(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(50.dp),
             contentAlignment = Alignment.CenterEnd
         ) {
             Button(

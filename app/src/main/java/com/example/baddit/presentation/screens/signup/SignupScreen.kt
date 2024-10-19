@@ -1,5 +1,10 @@
 package com.example.baddit.presentation.screens.signup
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -26,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
+import com.example.baddit.domain.error.Result
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -46,15 +52,26 @@ fun SignupScreen(viewModel: SignupViewModel = hiltViewModel()) {
             .verticalScroll(scrollState),
         contentAlignment = Alignment.Center,
     ) {
-        if (viewModel.isSignupDone) {
+        AnimatedVisibility(
+            visible = viewModel.isSignupDone,
+            enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 500))
+        ) {
             SignUpComplete()
-        } else
+        }
+
+        AnimatedVisibility(
+            visible = !viewModel.isSignupDone,
+            enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 500))
+        ) {
             SignupProcess(
                 pagerState = pagerState,
                 isDarkTheme = isDarkTheme,
                 viewModel = viewModel,
                 coroutineScope = coroutineScope
             )
+        }
     }
 }
 
@@ -141,17 +158,14 @@ fun SignupHeader() {
 fun UserCredentialsSection(viewModel: SignupViewModel) {
     val focusManager = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val usernameError = viewModel.usernameFieldError
-        val emailError = viewModel.emailFieldError
-
         OutlinedTextField(
             label = { Text("Username") },
             singleLine = true,
-            value = viewModel.usernameField,
+            value = viewModel.usernameState.value,
             onValueChange = { username -> viewModel.setUsername(username) },
-            supportingText = { Text(usernameError) },
+            supportingText = { Text(viewModel.usernameState.error) },
             modifier = Modifier.fillMaxWidth(),
-            isError = usernameError.isNotEmpty(),
+            isError = viewModel.usernameState.error.isNotEmpty(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             colors = textFieldColors(),
@@ -166,10 +180,10 @@ fun UserCredentialsSection(viewModel: SignupViewModel) {
         OutlinedTextField(
             label = { Text("Email") },
             singleLine = true,
-            value = viewModel.emailField,
+            value = viewModel.emailState.value,
             onValueChange = { email -> viewModel.setEmail(email) },
-            supportingText = { Text(emailError) },
-            isError = emailError.isNotEmpty(),
+            supportingText = { Text(viewModel.emailState.error) },
+            isError = viewModel.emailState.error.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
             colors = textFieldColors(),
             leadingIcon = {
@@ -186,17 +200,14 @@ fun UserCredentialsSection(viewModel: SignupViewModel) {
 fun PasswordSection(viewModel: SignupViewModel) {
     val focusManager = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val passwordError = viewModel.passwordFieldError
-        val confirmPasswordError = viewModel.confirmPasswordFieldError
-
         OutlinedTextField(
             label = { Text("Password") },
             singleLine = true,
-            value = viewModel.passwordField,
+            value = viewModel.passwordState.value,
             onValueChange = { password -> viewModel.setPassword(password) },
-            supportingText = { Text(passwordError) },
+            supportingText = { Text(viewModel.passwordState.error) },
             modifier = Modifier.fillMaxWidth(),
-            isError = passwordError.isNotEmpty(),
+            isError = viewModel.passwordState.error.isNotEmpty(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             colors = textFieldColors(),
@@ -212,10 +223,10 @@ fun PasswordSection(viewModel: SignupViewModel) {
         OutlinedTextField(
             label = { Text("Confirm password") },
             singleLine = true,
-            value = viewModel.confirmPasswordField,
+            value = viewModel.confirmPasswordState.value,
             onValueChange = { password -> viewModel.setConfirmationPassword(password) },
-            supportingText = { Text(confirmPasswordError) },
-            isError = confirmPasswordError.isNotEmpty(),
+            supportingText = { Text(viewModel.confirmPasswordState.error) },
+            isError = viewModel.confirmPasswordState.error.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
             colors = textFieldColors(),
             leadingIcon = {
@@ -237,8 +248,8 @@ fun NavigationButton(
 ) {
     val isLoading = viewModel.isLoading
     val canProceed =
-        (pagerState.currentPage == 0 && viewModel.usernameField.isNotEmpty() && viewModel.emailField.isNotEmpty() && viewModel.usernameFieldError.isEmpty() && viewModel.emailFieldError.isEmpty())
-                || (pagerState.currentPage == 1 && viewModel.passwordField.isNotEmpty() && viewModel.confirmPasswordField.isNotEmpty() && viewModel.passwordFieldError.isEmpty() && viewModel.confirmPasswordFieldError.isEmpty())
+        (pagerState.currentPage == 0 && viewModel.usernameState.value.isNotEmpty() && viewModel.emailState.value.isNotEmpty() && viewModel.usernameState.error.isEmpty() && viewModel.emailState.error.isEmpty())
+                || (pagerState.currentPage == 1 && viewModel.passwordState.value.isNotEmpty() && viewModel.confirmPasswordState.value.isNotEmpty() && viewModel.passwordState.error.isEmpty() && viewModel.confirmPasswordState.error.isEmpty())
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -248,10 +259,24 @@ fun NavigationButton(
             onClick = {
                 coroutineScope.launch {
                     if (pagerState.currentPage == 0) {
-                        pagerState.animateScrollToPage(1)
+                        pagerState.animateScrollToPage(
+                            page = 1,
+                            animationSpec = tween(
+                                durationMillis = 600,
+                                easing = FastOutSlowInEasing
+                            )
+                        )
                     } else {
-                        val isSuccess = viewModel.trySignUp()
-                        if (!isSuccess) pagerState.animateScrollToPage(0)
+                        val result = viewModel.trySignUp()
+                        if (result is Result.Error) {
+                            pagerState.animateScrollToPage(
+                                page = 0,
+                                animationSpec = tween(
+                                    durationMillis = 600,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        }
                     }
                 }
             },

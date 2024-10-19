@@ -7,6 +7,7 @@ object Auth
 
 @Serializable
 object Main
+
 @Serializable
 object Home
 
