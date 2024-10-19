@@ -43,7 +43,7 @@ import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignUpComplete() {
+fun SignUpComplete(navigateToLogin: () -> Unit) {
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.email_send))
     val dynamicProperties = rememberLottieDynamicProperties(
         rememberLottieDynamicProperty(
@@ -102,7 +102,7 @@ fun SignUpComplete() {
         ) {
             Button(
                 onClick = {
-                    TODO("Go to login page")
+                    navigateToLogin()
                 },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(

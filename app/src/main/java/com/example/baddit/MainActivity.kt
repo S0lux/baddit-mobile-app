@@ -28,11 +28,13 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
+import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CreatePost
 import com.example.baddit.presentation.utils.Home
+import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.ui.theme.BadditTheme
@@ -45,6 +47,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
+//          For testing single screen
+//            BadditTheme {
+//                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+//                    LoginScreen()
+//                }
+//            }
+
             val navController = rememberNavController()
             val bottomBarState = rememberSaveable { mutableStateOf(true) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -69,40 +78,52 @@ class MainActivity : ComponentActivity() {
                     // Hide BottomBar and TopBar
                     bottomBarState.value = false
                 }
+
+                "com.example.baddit.presentation.utils.Login" -> {
+                    bottomBarState.value = false
+                }
             }
 
 
             BadditTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Scaffold (bottomBar = { BottomNavigationBar(
-                        navController = navController,
-                        bottomBarState = bottomBarState
-                    )}) { it->
-                        NavHost(navController = navController, startDestination = Main, modifier = Modifier.padding(it)){
-                            navigation<Main>(startDestination = Home){
-                                composable<Home>{
+                    Scaffold(bottomBar = {
+                        BottomNavigationBar(
+                            navController = navController, bottomBarState = bottomBarState
+                        )
+                    }) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = Main,
+                            modifier = Modifier.padding(it)
+                        ) {
+                            navigation<Main>(startDestination = Home) {
+                                composable<Home> {
                                     SlideHorizontally {
                                         HomeScreen()
-
                                     }
                                 }
-                                composable<CreatePost>{
+                                composable<CreatePost> {
                                     SlideHorizontally {
                                         CreatePostScreen()
                                     }
                                 }
-                                composable<Community>{
+                                composable<Community> {
                                     SlideHorizontally {
                                         CommunityScreen()
                                     }
                                 }
                             }
-                            navigation<Auth>(startDestination = SignUp){
+                            navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
-                                    SignupScreen()
+                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
+                                }
+                                composable<Login> {
+                                    LoginScreen(
+                                        navigateToHome = { navController.navigate(Home) },
+                                        navigateToSignup = { navController.navigate(SignUp) })
                                 }
                             }
                         }
@@ -114,7 +135,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SlideHorizontally(content: @Composable () -> Unit){
+fun SlideHorizontally(content: @Composable () -> Unit) {
     AnimatedVisibility(
         visibleState = MutableTransitionState(
             initialState = false

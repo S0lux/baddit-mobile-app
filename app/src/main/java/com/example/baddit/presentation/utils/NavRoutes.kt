@@ -19,3 +19,6 @@ object Community
 
 @Serializable
 object SignUp
+
+@Serializable
+object Login

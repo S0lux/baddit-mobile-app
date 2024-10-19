@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
 import com.example.baddit.domain.error.Result
+import com.example.baddit.presentation.components.AppLogo
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -40,7 +42,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(viewModel: SignupViewModel = hiltViewModel()) {
+fun SignupScreen(viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -57,7 +59,7 @@ fun SignupScreen(viewModel: SignupViewModel = hiltViewModel()) {
             enter = fadeIn(animationSpec = tween(durationMillis = 500)),
             exit = fadeOut(animationSpec = tween(durationMillis = 500))
         ) {
-            SignUpComplete()
+            SignUpComplete(navigateToLogin)
         }
 
         AnimatedVisibility(
@@ -69,7 +71,8 @@ fun SignupScreen(viewModel: SignupViewModel = hiltViewModel()) {
                 pagerState = pagerState,
                 isDarkTheme = isDarkTheme,
                 viewModel = viewModel,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
+                navigateToLogin
             )
         }
     }
@@ -80,7 +83,8 @@ fun SignupProcess(
     pagerState: PagerState,
     isDarkTheme: Boolean,
     viewModel: SignupViewModel,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    navigateToLogin: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -94,7 +98,7 @@ fun SignupProcess(
                 .padding(50.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SignupHeader()
+                SignupHeader(navigateToLogin)
                 Spacer(modifier = Modifier.size(5.dp))
 
                 HorizontalPager(
@@ -118,17 +122,7 @@ fun SignupProcess(
 }
 
 @Composable
-fun AppLogo(isDarkTheme: Boolean) {
-    Icon(
-        painter = painterResource(id = R.drawable.baddit_white),
-        contentDescription = null,
-        modifier = Modifier.size(200.dp),
-        tint = if (isDarkTheme) Color.White else Color.Black
-    )
-}
-
-@Composable
-fun SignupHeader() {
+fun SignupHeader(onLoginClicked: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
             text = "Signup",
@@ -146,7 +140,8 @@ fun SignupHeader() {
             Text(
                 text = "Login now",
                 color = MaterialTheme.colorScheme.mutedAppBlue,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { onLoginClicked() }
             )
         }
 

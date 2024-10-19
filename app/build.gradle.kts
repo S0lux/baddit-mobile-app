@@ -109,6 +109,9 @@ dependencies {
     // lottie
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
+    // cookiejar
+    implementation("com.github.franmontiel:PersistentCookieJar:v1.0.1")
+
     dependencies {
         implementation("androidx.core:core-splashscreen:1.0.1")
     }

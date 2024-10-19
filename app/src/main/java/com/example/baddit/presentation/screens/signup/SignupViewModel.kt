@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.presentation.utils.FieldState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,11 +15,6 @@ import javax.inject.Inject
 class SignupViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-
-    // State data classes for grouping related states together
-    data class FieldState(
-        var value: String = "", var error: String = ""
-    )
 
     var emailState by mutableStateOf(FieldState())
         private set
