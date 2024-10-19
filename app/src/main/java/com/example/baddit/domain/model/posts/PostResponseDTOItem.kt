@@ -1,6 +1,6 @@
 package com.example.baddit.domain.model.posts
 
-data class PostDTOItem(
+data class PostResponseDTOItem(
     val author: Author,
     val commentCount: Int,
     val community: Community,

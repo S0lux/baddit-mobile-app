@@ -3,13 +3,11 @@ package com.example.baddit.presentation.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,20 +16,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,9 +34,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -49,47 +43,41 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
-import com.example.baddit.domain.model.posts.PostDTOItem
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.ui.theme.BadditTheme
+import com.example.baddit.ui.theme.CustomTheme.appBlue
+import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import getTimeAgoFromUtcString
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostCard(postDetails: PostDTOItem) {
-    val colorUpvote = Color(0xFFFF7315)
-    val colorDownvote = Color(0xFF3C15FF)
-
+fun PostCard(postDetails: PostResponseDTOItem) {
+    val colorUpvote = MaterialTheme.colorScheme.appOrange
+    val colorDownvote = MaterialTheme.colorScheme.appBlue
     val voteInteractionSource = remember { MutableInteractionSource() }
     var voteState by remember { mutableStateOf(postDetails.voteState) }
-
-    var votePosition by remember { mutableStateOf(IntOffset.Zero) }
+    var postScore by remember { mutableIntStateOf(postDetails.score) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(voteState) {
-        val pressPosition = Offset(
-            x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
-            y = voteElementSize.height / 2f
-        )
-
-        // If voteState is empty string then don't trigger ripple effect
-        if (voteState !== Unit) {
-            val press = PressInteraction.Press(pressPosition);
+        if (voteState != Unit) {
+            val pressPosition = Offset(
+                x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
+                y = voteElementSize.height / 2f
+            )
+            val press = PressInteraction.Press(pressPosition)
             voteInteractionSource.emit(press)
             delay(300)
             voteInteractionSource.emit(PressInteraction.Release(press))
@@ -102,173 +90,222 @@ fun PostCard(postDetails: PostDTOItem) {
             .fillMaxWidth()
             .padding(15.dp)
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(postDetails.community.logoUrl).build(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .height(32.dp)
-                        .aspectRatio(1f),
-                )
-
-                Column {
-                    Row {
-                        Text(
-                            "r/",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.textSecondary,
-                            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                        )
-
-                        Text(
-                            postDetails.community.name,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF2196F3),
-                            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                        )
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(
-                            postDetails.author.username,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.textSecondary,
-                            modifier = Modifier.padding(0.dp),
-                            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                        )
-
-                        Text(
-                            "•",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.textSecondary,
-                            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                        )
-
-                        Text(
-                            getTimeAgoFromUtcString(postDetails.createdAt),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.textSecondary,
-                            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                        )
-                    }
-                }
-
-            }
-
-            Text(
-                postDetails.title,
-                color = MaterialTheme.colorScheme.textPrimary,
-                fontSize = 15.sp,
-                lineHeight = 20.sp
-            )
-
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            PostHeader(postDetails = postDetails)
+            PostTitle(title = postDetails.title)
             if (postDetails.type == "TEXT") {
+                PostTextContent(content = postDetails.content)
+            }
+            PostActions(
+                // This is, in fact, not unnecessary
+                voteState = voteState?.toString(),
+                postScore = postScore,
+                voteInteractionSource = voteInteractionSource,
+                colorUpvote = colorUpvote,
+                colorDownvote = colorDownvote,
+                onUpvote = {
+                    when (voteState) {
+                        "UPVOTE" -> {
+                            voteState = Unit
+                            postScore--
+                        }
+                        "DOWNVOTE" -> {
+                            voteState = "UPVOTE"
+                            postScore += 2
+                        }
+                        else -> {
+                            voteState = "UPVOTE"
+                            postScore++
+                        }
+                    }
+                },
+                onDownvote = {
+                    when (voteState) {
+                        "UPVOTE" -> {
+                            voteState = "DOWNVOTE"
+                            postScore -= 2
+                        }
+                        "DOWNVOTE" -> {
+                            voteState = Unit
+                            postScore++
+                        }
+                        else -> {
+                            voteState = "DOWNVOTE"
+                            postScore--
+                        }
+                    }
+                },
+                commentCount = postDetails.commentCount,
+                onGloballyPositioned = { cords -> voteElementSize = cords.size }
+            )
+        }
+    }
+}
+
+@Composable
+fun PostHeader(postDetails: PostResponseDTOItem) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(postDetails.community.logoUrl).build(),
+            contentDescription = null,
+            modifier = Modifier
+                .clip(CircleShape)
+                .height(36.dp)
+                .aspectRatio(1f),
+        )
+
+        Column {
+            Row {
                 Text(
-                    postDetails.content,
+                    "r/",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.textSecondary,
-                    fontSize = 10.sp,
-                    lineHeight = 14.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10))
-                        .background(MaterialTheme.colorScheme.cardForeground)
-                        .padding(5.dp),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+                )
+                Text(
+                    postDetails.community.name,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2196F3),
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                 )
             }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            votePosition = coordinates
-                                .positionInWindow()
-                                .round()
-                            voteElementSize = coordinates.size
-                        }
-                        .clip(RoundedCornerShape(10))
-                        .clickable(
-                            onClick = {},
-                            interactionSource = voteInteractionSource,
-                            indication = rememberRipple(
-                                bounded = true,
-                                color = if (voteState == "UPVOTE") colorUpvote else colorDownvote
-                            )
-                        )
-                        .background(MaterialTheme.colorScheme.cardForeground)
-                        .padding(2.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.arrow_upvote),
-                        contentDescription = null,
-                        tint = if (postDetails.voteState == "UPVOTE") colorUpvote else MaterialTheme.colorScheme.textSecondary,
-                        modifier = Modifier.clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = { voteState = if (voteState == "UPVOTE") Unit else "UPVOTE" }
-                        )
-                    )
-
-                    Text(
-                        postDetails.score.toString(),
-                        color = MaterialTheme.colorScheme.textPrimary,
-                        fontSize = 12.sp,
-                    )
-
-                    Icon(
-                        painter = painterResource(id = R.drawable.arrow_upvote),
-                        contentDescription = null,
-                        tint = if (postDetails.voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
-                        modifier = Modifier
-                            .rotate(180f)
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() },
-                                onClick = {
-                                    voteState = if (voteState == "DOWNVOTE") Unit else "DOWNVOTE"
-                                }
-                            )
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10))
-                        .background(MaterialTheme.colorScheme.cardForeground)
-                        .padding(bottom = 2.dp, top = 2.dp, start = 6.dp, end = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.comment),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.textSecondary,
-                        modifier = Modifier.size(18.dp)
-                    )
-
-                    Text(
-                        postDetails.commentCount.toString(),
-                        color = MaterialTheme.colorScheme.textPrimary,
-                        fontSize = 12.sp,
-                    )
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    postDetails.author.username,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.textSecondary,
+                    modifier = Modifier.padding(0.dp),
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+                )
+                Text(
+                    "•",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.textSecondary,
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+                )
+                Text(
+                    getTimeAgoFromUtcString(postDetails.createdAt),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.textSecondary,
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+                )
             }
+        }
+    }
+}
 
+@Composable
+fun PostTitle(title: String) {
+    Text(
+        title,
+        color = MaterialTheme.colorScheme.textPrimary,
+        fontSize = 17.sp,
+        lineHeight = 20.sp
+    )
+}
+
+@Composable
+fun PostTextContent(content: String) {
+    Text(
+        content,
+        color = MaterialTheme.colorScheme.textSecondary,
+        fontSize = 12.sp,
+        lineHeight = 14.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10))
+            .background(MaterialTheme.colorScheme.cardForeground)
+            .padding(5.dp),
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
+fun PostActions(
+    voteState: String?,
+    postScore: Int,
+    voteInteractionSource: MutableInteractionSource,
+    colorUpvote: Color,
+    colorDownvote: Color,
+    onUpvote: () -> Unit,
+    onDownvote: () -> Unit,
+    commentCount: Int,
+    onGloballyPositioned: (LayoutCoordinates) -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .clip(RoundedCornerShape(10))
+                .onGloballyPositioned(onGloballyPositioned)
+                .clickable(
+                    onClick = {},
+                    interactionSource = voteInteractionSource,
+                    indication = ripple(
+                        bounded = true,
+                        color = if (voteState == "UPVOTE") colorUpvote else colorDownvote
+                    )
+                )
+                .background(MaterialTheme.colorScheme.cardForeground)
+                .padding(4.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_upvote),
+                contentDescription = null,
+                tint = if (voteState == "UPVOTE") colorUpvote else MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier.clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = onUpvote
+                )
+            )
+            Text(
+                postScore.toString(),
+                color = MaterialTheme.colorScheme.textPrimary,
+                fontSize = 12.sp,
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_upvote),
+                contentDescription = null,
+                tint = if (voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier
+                    .rotate(180f)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = onDownvote
+                    )
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier
+                .clip(RoundedCornerShape(10))
+                .background(MaterialTheme.colorScheme.cardForeground)
+                .padding(bottom = 4.dp, top = 4.dp, start = 8.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.comment),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                commentCount.toString(),
+                color = MaterialTheme.colorScheme.textPrimary,
+                fontSize = 12.sp,
+            )
         }
     }
 }
@@ -276,7 +313,7 @@ fun PostCard(postDetails: PostDTOItem) {
 @Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
-    val details: PostDTOItem = PostDTOItem(
+    val details = PostResponseDTOItem(
         id = "992e0a44-6682-4d13-b75e-834494679b65",
         type = "TEXT",
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",
@@ -313,7 +350,7 @@ fun PostCardPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PostCardDarkPreview() {
-    val details: PostDTOItem = PostDTOItem(
+    val details = PostResponseDTOItem(
         id = "992e0a44-6682-4d13-b75e-834494679b65",
         type = "TEXT",
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",

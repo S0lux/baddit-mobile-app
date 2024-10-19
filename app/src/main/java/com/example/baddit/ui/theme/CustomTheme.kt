@@ -22,4 +22,28 @@ object CustomTheme {
     val ColorScheme.cardForeground: Color
         @Composable
         get() = if (isSystemInDarkTheme()) Color(0xFF222222) else Color(0xFFF2F4F5)
+
+    val ColorScheme.appOrange: Color
+        @Composable
+        get() = Color(0xFFFF7315)
+
+    val ColorScheme.mutedAppOrange: Color
+        @Composable
+        get() = Color(0xFFD67945)
+
+    val ColorScheme.appBlue: Color
+        @Composable
+        get() = Color(0xFF153CFF)
+
+    val ColorScheme.mutedAppBlue: Color
+        @Composable
+        get() = Color(0xFF4E8DFA)
+
+    val ColorScheme.neutralGray: Color
+        @Composable
+        get() = if (isSystemInDarkTheme()) Color(0xFFB0B0B0) else Color(0xFF6E6E6E)
+
+    val ColorScheme.errorRed: Color
+        @Composable
+        get() = Color(0xFFE57373)
 }
