@@ -25,7 +25,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
     }
 
-    PullToRefreshBox(isRefreshing = viewModel.isRefreshsing, onRefresh = { viewModel.refreshPosts() }) {
+    PullToRefreshBox(
+        isRefreshing = viewModel.isRefreshsing,
+        onRefresh = { viewModel.refreshPosts() }) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize()
         ) {
