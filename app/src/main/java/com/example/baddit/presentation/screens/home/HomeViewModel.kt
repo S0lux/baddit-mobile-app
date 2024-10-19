@@ -32,7 +32,7 @@ class HomeViewModel @Inject constructor(
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
-                        DataError.NetworkError.NO_INTERNET -> "No internet connection detected"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
                         else -> "An unknown network error has occurred"
                     }
                 }
