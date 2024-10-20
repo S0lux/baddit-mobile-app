@@ -1,5 +1,11 @@
 package com.example.baddit.data.repository
 
+import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
@@ -14,6 +20,9 @@ import com.example.baddit.domain.repository.AuthRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import retrofit2.Response
@@ -21,16 +30,12 @@ import java.io.IOException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    val badditAPI: BadditAPI
+    private val badditAPI: BadditAPI
 ) : AuthRepository {
 
-    var isLoggedIn: Boolean = false
-        get() {
-            return currentUser?.id != null
-        }
-        private set
+    override val isLoggedIn: MutableState<Boolean> = mutableStateOf(false)
 
-    var currentUser: GetMeResponseDTO? = null
+    override var currentUser: GetMeResponseDTO? = null
         private set;
 
     init {
@@ -63,7 +68,7 @@ class AuthRepositoryImpl @Inject constructor(
                         "EMAIL_TAKEN" -> Result.Error(DataError.RegisterError.EMAIL_TAKEN)
                         else -> Result.Error(DataError.RegisterError.UNKNOWN_ERROR)
                     }
-                else when(errorCode) {
+                else when (errorCode) {
                     500 -> Result.Error(DataError.RegisterError.INTERNAL_SERVER_ERROR)
                     else -> Result.Error(DataError.RegisterError.UNKNOWN_ERROR)
                 }
@@ -74,6 +79,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError> {
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
         if (result is Result.Success) {
+            isLoggedIn.value = true;
             currentUser = result.data;
         }
         return result;

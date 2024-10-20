@@ -49,88 +49,88 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         setContent {
 //          For testing single screen
-            BadditTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ProfileScreen()
+//            BadditTheme {
+//                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+//                    ProfileScreen()
+//                }
+//            }
+
+            val navController = rememberNavController()
+            val bottomBarState = rememberSaveable { mutableStateOf(true) }
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+            when (navBackStackEntry?.destination?.route) {
+                "com.example.baddit.presentation.utils.Home" -> {
+                    // Show BottomBar and TopBar
+                    bottomBarState.value = true
+                }
+
+                "com.example.baddit.presentation.utils.CreatePost" -> {
+                    // Show BottomBar and TopBar
+                    bottomBarState.value = true
+                }
+
+                "com.example.baddit.presentation.utils.Community" -> {
+                    // Show BottomBar and TopBar
+                    bottomBarState.value = true
+                }
+
+                "com.example.baddit.presentation.utils.SignUp" -> {
+                    // Hide BottomBar and TopBar
+                    bottomBarState.value = false
+                }
+
+                "com.example.baddit.presentation.utils.Login" -> {
+                    bottomBarState.value = false
                 }
             }
 
-//            val navController = rememberNavController()
-//            val bottomBarState = rememberSaveable { mutableStateOf(true) }
-//            val navBackStackEntry by navController.currentBackStackEntryAsState()
-//
-//            when (navBackStackEntry?.destination?.route) {
-//                "com.example.baddit.presentation.utils.Home" -> {
-//                    // Show BottomBar and TopBar
-//                    bottomBarState.value = true
-//                }
-//
-//                "com.example.baddit.presentation.utils.CreatePost" -> {
-//                    // Show BottomBar and TopBar
-//                    bottomBarState.value = true
-//                }
-//
-//                "com.example.baddit.presentation.utils.Community" -> {
-//                    // Show BottomBar and TopBar
-//                    bottomBarState.value = true
-//                }
-//
-//                "com.example.baddit.presentation.utils.SignUp" -> {
-//                    // Hide BottomBar and TopBar
-//                    bottomBarState.value = false
-//                }
-//
-//                "com.example.baddit.presentation.utils.Login" -> {
-//                    bottomBarState.value = false
-//                }
-//            }
-//
-//
-//            BadditTheme {
-//                Surface(
-//                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
-//                ) {
-//                    Scaffold(bottomBar = {
-//                        BottomNavigationBar(
-//                            navController = navController, bottomBarState = bottomBarState
-//                        )
-//                    }) {
-//                        NavHost(
-//                            navController = navController,
-//                            startDestination = Main,
-//                            modifier = Modifier.padding(it)
-//                        ) {
-//                            navigation<Main>(startDestination = Home) {
-//                                composable<Home> {
-//                                    SlideHorizontally {
-//                                        HomeScreen()
-//                                    }
-//                                }
-//                                composable<CreatePost> {
-//                                    SlideHorizontally {
-//                                        CreatePostScreen()
-//                                    }
-//                                }
-//                                composable<Community> {
-//                                    SlideHorizontally {
-//                                        CommunityScreen()
-//                                    }
-//                                }
-//                            }
-//                            navigation<Auth>(startDestination = SignUp) {
-//                                composable<SignUp> {
-//                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
-//                                }
-//                                composable<Login> {
-//                                    LoginScreen(
-//                                        navigateToHome = { navController.navigate(Home) },
-//                                        navigateToSignup = { navController.navigate(SignUp) })
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+
+            BadditTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+                ) {
+                    Scaffold(bottomBar = {
+                        BottomNavigationBar(
+                            navController = navController, bottomBarState = bottomBarState
+                        )
+                    }) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = Main,
+                            modifier = Modifier.padding(it)
+                        ) {
+                            navigation<Main>(startDestination = Home) {
+                                composable<Home> {
+                                    SlideHorizontally {
+                                        HomeScreen { navController.navigate(Login) }
+                                    }
+                                }
+                                composable<CreatePost> {
+                                    SlideHorizontally {
+                                        CreatePostScreen()
+                                    }
+                                }
+                                composable<Community> {
+                                    SlideHorizontally {
+                                        CommunityScreen()
+                                    }
+                                }
+                            }
+                            navigation<Auth>(startDestination = SignUp) {
+                                composable<SignUp> {
+                                    SignupScreen { navController.navigate(Login) }
+                                }
+                                composable<Login> {
+                                    LoginScreen(
+                                        navigateToHome = { navController.navigate(Home) },
+                                        navigateToSignup = { navController.navigate(SignUp) })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
