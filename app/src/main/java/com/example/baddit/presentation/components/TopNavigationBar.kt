@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -26,13 +27,14 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Search
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(
+fun TopNavigationBar(
     navController: NavHostController,
     barState: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel()
@@ -65,7 +67,29 @@ fun TopBar(
                         contentDescription = null
                     )
                 }
-
+                if (viewModel.loggedIn.value) {
+                    viewModel.currentUser.value?.let { currentUser ->
+                        IconButton(onClick = { /*TODO*/ }) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(currentUser.avatarUrl)
+                                    .build(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .aspectRatio(1f)
+                                    .clip(CircleShape)
+                            )
+                        }
+                    }
+                } else {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            painter = painterResource(id = navItems[1].icon),
+                            contentDescription = null
+                        )
+                    }
+                }
             })
     }
 }

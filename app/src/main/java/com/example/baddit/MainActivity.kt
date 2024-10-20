@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.baddit.presentation.components.BottomNavigationBar
+import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
@@ -55,32 +56,32 @@ class MainActivity : ComponentActivity() {
 //            }
 
             val navController = rememberNavController()
-            val bottomBarState = rememberSaveable { mutableStateOf(true) }
+            val barState = rememberSaveable { mutableStateOf(true) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
 
             when (navBackStackEntry?.destination?.route) {
                 "com.example.baddit.presentation.utils.Home" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.CreatePost" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.Community" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.SignUp" -> {
                     // Hide BottomBar and TopBar
-                    bottomBarState.value = false
+                    barState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Login" -> {
-                    bottomBarState.value = false
+                    barState.value = false
                 }
             }
 
@@ -89,11 +90,16 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Scaffold(bottomBar = {
-                        BottomNavigationBar(
-                            navController = navController, bottomBarState = bottomBarState
-                        )
-                    }) {
+                    Scaffold(
+                        bottomBar = {
+                            BottomNavigationBar(
+                                navController = navController, barState = barState
+                            )
+                        },
+                        topBar = {
+                            TopNavigationBar(navController = navController, barState = barState)
+                        }
+                    ) {
                         NavHost(
                             navController = navController,
                             startDestination = Main,
@@ -118,7 +124,7 @@ class MainActivity : ComponentActivity() {
                             }
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
-                                    SignupScreen { navController.navigate(Login) }
+                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
                                 }
                                 composable<Login> {
                                     LoginScreen(

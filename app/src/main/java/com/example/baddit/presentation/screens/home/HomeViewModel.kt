@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.PostRepository
@@ -24,9 +25,10 @@ class HomeViewModel @Inject constructor(
         private set;
 
     var posts = mutableStateListOf<PostResponseDTOItem>();
+
     var error by mutableStateOf("");
 
-    val loggedIn = _authRepository.isLoggedIn
+    val loggedIn = _authRepository.isLoggedIn;
 
     private var lastPostId: String? = null;
 
