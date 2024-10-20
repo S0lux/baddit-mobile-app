@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +46,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.domain.error.DataError
+import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
@@ -57,19 +64,38 @@ import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
+import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
+import dagger.hilt.android.qualifiers.ApplicationContext
 import getTimeAgoFromUtcString
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @Composable
-fun PostCard(postDetails: PostResponseDTOItem) {
+fun PostCard(
+    postDetails: PostResponseDTOItem,
+    loggedIn: Boolean = false,
+    navigateLogin: () -> Unit,
+    votePost: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
+) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
     val voteInteractionSource = remember { MutableInteractionSource() }
     var voteState by remember { mutableStateOf(postDetails.voteState) }
     var postScore by remember { mutableIntStateOf(postDetails.score) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
+    var showLoginDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    if (showLoginDialog) {
+        LoginDialog(
+            navigateLogin = { navigateLogin() },
+            onDismiss = { showLoginDialog = false })
+    }
 
     LaunchedEffect(voteState) {
         if (voteState != Unit) {
@@ -104,40 +130,98 @@ fun PostCard(postDetails: PostResponseDTOItem) {
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
                 onUpvote = {
+                    if (!loggedIn) {
+                        showLoginDialog = true;
+                        return@PostActions
+                    }
+
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = Unit
                             postScore--
+                            handleVote(
+                                voteState= "UPVOTE",
+                                onError = { postScore++; voteState = "UPVOTE" },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
+
                         "DOWNVOTE" -> {
                             voteState = "UPVOTE"
                             postScore += 2
+                            handleVote(
+                                voteState= "UPVOTE",
+                                onError = { postScore -= 2; voteState = "DOWNVOTE" },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
+
                         else -> {
                             voteState = "UPVOTE"
                             postScore++
+                            handleVote(
+                                voteState= "UPVOTE",
+                                onError = { postScore--; voteState = Unit },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
                     }
                 },
                 onDownvote = {
+                    if (!loggedIn) {
+                        showLoginDialog = true;
+                        return@PostActions
+                    }
+
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = "DOWNVOTE"
                             postScore -= 2
+                            handleVote(
+                                voteState= "DOWNVOTE",
+                                onError = { postScore += 2; voteState = "UPVOTE" },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
+
                         "DOWNVOTE" -> {
                             voteState = Unit
                             postScore++
+                            handleVote(
+                                voteState= "DOWNVOTE",
+                                onError = { postScore--; voteState = "DOWNVOTE" },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
+
                         else -> {
                             voteState = "DOWNVOTE"
                             postScore--
+                            handleVote(
+                                voteState= "DOWNVOTE",
+                                onError = { postScore++; voteState = Unit },
+                                coroutineScope = coroutineScope,
+                                voteFn = votePost)
                         }
                     }
                 },
                 commentCount = postDetails.commentCount,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size }
             )
+        }
+    }
+}
+
+fun handleVote(
+    voteState: String,
+    onError: () -> Unit,
+    coroutineScope: CoroutineScope,
+    voteFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
+) {
+    coroutineScope.launch {
+        val result = voteFn(voteState)
+        if (result is Result.Error) {
+            onError()
         }
     }
 }
@@ -310,6 +394,17 @@ fun PostActions(
     }
 }
 
+@Composable
+fun LoginDialog(navigateLogin: () -> Unit, onDismiss: () -> Unit) {
+    BadditDialog(
+        title = "Login required",
+        text = "You need to login to perform this action.",
+        confirmText = "Login",
+        dismissText = "Cancel",
+        onConfirm = { navigateLogin() },
+        onDismiss = { onDismiss() })
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
@@ -341,7 +436,7 @@ fun PostCardPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details)
+                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
             }
         }
     }
@@ -378,7 +473,45 @@ fun PostCardDarkPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details)
+                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun DialogPreview() {
+    BadditTheme {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                LoginDialog(navigateLogin = { /*TODO*/ }) {
+
+                }
+            }
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun DialogDarkPreview() {
+    BadditTheme {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                LoginDialog(navigateLogin = { /*TODO*/ }) {
+
+                }
             }
         }
     }

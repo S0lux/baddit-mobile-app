@@ -1,5 +1,6 @@
 package com.example.baddit.data.repository
 
+import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.data.utils.httpToError
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import com.example.baddit.data.remote.BadditAPI
@@ -23,5 +24,12 @@ class PostRepositoryImpl @Inject constructor(
         postTitle: String?
     ): Result<PostResponseDTO, DataError.NetworkError> {
         return safeApiCall { badditAPI.getPosts() }
+    }
+
+    override suspend fun votePost(
+        postId: String,
+        voteState: String
+    ): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.votePost(postId, VotePostRequestBody(voteState)) }
     }
 }
