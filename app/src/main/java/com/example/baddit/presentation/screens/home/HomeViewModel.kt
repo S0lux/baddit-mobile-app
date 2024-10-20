@@ -47,9 +47,7 @@ class HomeViewModel @Inject constructor(
                     error = ""
                     lastPostId = fetchPosts.data.last().id
 
-                    fetchPosts.data.forEach { item ->
-                        posts.add(item)
-                    }
+                    posts.addAll(fetchPosts.data)
                 }
             }
             isRefreshing = false;
@@ -72,9 +70,7 @@ class HomeViewModel @Inject constructor(
                     error = ""
                     lastPostId = fetchPosts.data.last().id
 
-                    fetchPosts.data.forEach { item ->
-                        posts.add(item)
-                    }
+                    posts.addAll(fetchPosts.data)
                 }
             }
             isRefreshing = false;

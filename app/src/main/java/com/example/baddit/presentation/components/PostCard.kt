@@ -25,11 +25,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,11 +86,13 @@ fun PostCard(
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
+
     val voteInteractionSource = remember { MutableInteractionSource() }
-    var voteState by remember { mutableStateOf(postDetails.voteState) }
-    var postScore by remember { mutableIntStateOf(postDetails.score) }
+    var voteState by rememberSaveable { mutableStateOf(postDetails.voteState) }
+    var postScore by rememberSaveable { mutableIntStateOf(postDetails.score) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
-    var showLoginDialog by remember { mutableStateOf(false) }
+    var showLoginDialog by rememberSaveable { mutableStateOf(false) }
+    var hasUserInteracted by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     if (showLoginDialog) {
@@ -98,7 +102,7 @@ fun PostCard(
     }
 
     LaunchedEffect(voteState) {
-        if (voteState != Unit) {
+        if (hasUserInteracted && voteState != Unit) {
             val pressPosition = Offset(
                 x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
                 y = voteElementSize.height / 2f
@@ -123,44 +127,41 @@ fun PostCard(
                 PostTextContent(content = postDetails.content)
             }
             PostActions(
-                // This is, in fact, not unnecessary
                 voteState = voteState?.toString(),
                 postScore = postScore,
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
                 onUpvote = {
+                    hasUserInteracted = true
                     if (!loggedIn) {
-                        showLoginDialog = true;
+                        showLoginDialog = true
                         return@PostActions
                     }
-
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = Unit
                             postScore--
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore++; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
                         }
-
                         "DOWNVOTE" -> {
                             voteState = "UPVOTE"
                             postScore += 2
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore -= 2; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
                         }
-
                         else -> {
                             voteState = "UPVOTE"
                             postScore++
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore--; voteState = Unit },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
@@ -168,37 +169,35 @@ fun PostCard(
                     }
                 },
                 onDownvote = {
+                    hasUserInteracted = true
                     if (!loggedIn) {
-                        showLoginDialog = true;
+                        showLoginDialog = true
                         return@PostActions
                     }
-
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = "DOWNVOTE"
                             postScore -= 2
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore += 2; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
                         }
-
                         "DOWNVOTE" -> {
                             voteState = Unit
                             postScore++
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore--; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
                         }
-
                         else -> {
                             voteState = "DOWNVOTE"
                             postScore--
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore++; voteState = Unit },
                                 coroutineScope = coroutineScope,
                                 voteFn = votePost)
@@ -206,11 +205,12 @@ fun PostCard(
                     }
                 },
                 commentCount = postDetails.commentCount,
-                onGloballyPositioned = { cords -> voteElementSize = cords.size }
+                onGloballyPositioned = { cords -> voteElementSize = cords.size },
             )
         }
     }
 }
+
 
 fun handleVote(
     voteState: String,
@@ -324,7 +324,7 @@ fun PostActions(
     onUpvote: () -> Unit,
     onDownvote: () -> Unit,
     commentCount: Int,
-    onGloballyPositioned: (LayoutCoordinates) -> Unit
+    onGloballyPositioned: (LayoutCoordinates) -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
@@ -359,11 +359,10 @@ fun PostActions(
                 fontSize = 12.sp,
             )
             Icon(
-                painter = painterResource(id = R.drawable.arrow_upvote),
+                painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = if (voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
                 modifier = Modifier
-                    .rotate(180f)
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },

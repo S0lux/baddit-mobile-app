@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/App.Starting.Theme"
-        tools:targetApi="31">
+        android:hardwareAccelerated="true"
+        tools:targetApi="34">
         <activity
             android:name=".MainActivity"
             android:exported="true"
