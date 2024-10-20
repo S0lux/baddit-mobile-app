@@ -1,5 +1,6 @@
 package com.example.baddit
 
+//import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,13 +11,18 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
@@ -25,6 +31,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.baddit.presentation.components.BottomNavigationBar
+import com.example.baddit.presentation.components.CreatePostActionButton
+import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
@@ -42,6 +50,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -55,32 +64,35 @@ class MainActivity : ComponentActivity() {
 //            }
 
             val navController = rememberNavController()
-            val bottomBarState = rememberSaveable { mutableStateOf(true) }
+            val barState = rememberSaveable { mutableStateOf(true) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+            val sheetState = rememberModalBottomSheetState()
+            var showBottomSheet by remember { mutableStateOf(false) }
 
             when (navBackStackEntry?.destination?.route) {
                 "com.example.baddit.presentation.utils.Home" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.CreatePost" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.Community" -> {
                     // Show BottomBar and TopBar
-                    bottomBarState.value = true
+                    barState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.SignUp" -> {
                     // Hide BottomBar and TopBar
-                    bottomBarState.value = false
+                    barState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Login" -> {
-                    bottomBarState.value = false
+                    barState.value = false
                 }
             }
 
@@ -91,9 +103,22 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Scaffold(bottomBar = {
                         BottomNavigationBar(
-                            navController = navController, bottomBarState = bottomBarState
+                            navController = navController, bottomBarState = barState
                         )
-                    }) {
+                    },
+                        floatingActionButton = {
+                            if(barState.value){
+                                CreatePostActionButton(onClick = { showBottomSheet = true })
+                            }
+                        }) {
+
+                        if (showBottomSheet) {
+                            CreatePostBottomSheet(
+                                onDismissRequest = { showBottomSheet = false },
+                                sheetState = sheetState,
+                                navController = navController
+                            )
+                        }
                         NavHost(
                             navController = navController,
                             startDestination = Main,
@@ -116,7 +141,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                            navigation<Auth>(startDestination = SignUp) {
+                            navigation<Auth>(startDestination = Login) {
                                 composable<SignUp> {
                                     SignupScreen(navigateToLogin = { navController.navigate(Login) })
                                 }
