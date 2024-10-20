@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
                             navigation<Main>(startDestination = Home) {
                                 composable<Home> {
                                     SlideHorizontally {
-                                        HomeScreen()
+                                        HomeScreen { navController.navigate(Login) }
                                     }
                                 }
                                 composable<CreatePost> {
@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
                             }
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
-                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
+                                    SignupScreen { navController.navigate(Login) }
                                 }
                                 composable<Login> {
                                     LoginScreen(

@@ -7,9 +7,14 @@ import retrofit2.Response
 
 interface PostRepository {
     suspend fun getPosts(
-        communityName: String?,
-        authorName: String?,
-        cursor: String?,
-        postTitle: String?
+        communityName: String? = null,
+        authorName: String? = null,
+        cursor: String? = null,
+        postTitle: String? = null
     ): Result<PostResponseDTO, DataError.NetworkError>;
+
+    suspend fun votePost(
+        postId: String,
+        voteState: String
+    ): Result<Unit, DataError.NetworkError>
 }

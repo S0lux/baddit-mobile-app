@@ -2,6 +2,7 @@ package com.example.baddit.data.remote
 
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
@@ -9,6 +10,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface BadditAPI {
@@ -18,10 +20,17 @@ interface BadditAPI {
         @Query("communityName") communityName: String? = null,
         @Query("authorName") authorName: String? = null,
         @Query("cursor") cursor: String? = null,
-        @Query("postTitle") postTitle: String? = null): Response<PostResponseDTO>
+        @Query("postTitle") postTitle: String? = null
+    ): Response<PostResponseDTO>
 
     @GET("/v1/posts")
     suspend fun getPost(@Query("postId") postId: String): Response<PostResponseDTO>
+
+    @POST("/v1/posts/{postId}/votes")
+    suspend fun votePost(
+        @Path("postId") postId: String,
+        @Body voteBody: VotePostRequestBody
+    ): Response<Unit>
 
     @POST("/v1/auth/login")
     suspend fun login(@Body loginBody: LoginRequestBody): Response<LoginResponseDTO>
