@@ -37,5 +37,6 @@ fun BadditDialog(
             }
         },
         shape = RoundedCornerShape(10.dp),
+        containerColor = MaterialTheme.colorScheme.background
     )
 }
