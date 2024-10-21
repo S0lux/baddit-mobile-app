@@ -22,3 +22,6 @@ object SignUp
 
 @Serializable
 object Login
+
+@Serializable
+object Verify

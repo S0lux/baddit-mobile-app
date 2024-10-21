@@ -44,6 +44,7 @@ class LoginViewModel @Inject constructor(
                     DataError.NetworkError.UNAUTHORIZED -> "Wrong username/password"
                     DataError.NetworkError.CONFLICT -> "This error shouldn't happen unless something changed in the backend."
                     DataError.NetworkError.UNKNOWN_ERROR -> "An unknown error has occurred."
+                    DataError.NetworkError.FORBIDDEN -> "Email not verified."
                 }
             }
 

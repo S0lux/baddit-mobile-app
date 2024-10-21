@@ -5,6 +5,7 @@ sealed interface DataError: Error {
         NO_INTERNET,
         INTERNAL_SERVER_ERROR,
         UNAUTHORIZED,
+        FORBIDDEN,
         CONFLICT,
         UNKNOWN_ERROR,
     }
