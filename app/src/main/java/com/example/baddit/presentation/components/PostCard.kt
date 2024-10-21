@@ -16,16 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -48,7 +44,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +52,6 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
@@ -66,23 +60,19 @@ import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
-import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
-import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
-import dagger.hilt.android.qualifiers.ApplicationContext
 import getTimeAgoFromUtcString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 @Composable
 fun PostCard(
     postDetails: PostResponseDTOItem,
     loggedIn: Boolean = false,
     navigateLogin: () -> Unit,
-    votePost: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
+    votePostFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -146,7 +136,7 @@ fun PostCard(
                                 voteState = "UPVOTE",
                                 onError = { postScore++; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                         "DOWNVOTE" -> {
                             voteState = "UPVOTE"
@@ -155,7 +145,7 @@ fun PostCard(
                                 voteState = "UPVOTE",
                                 onError = { postScore -= 2; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                         else -> {
                             voteState = "UPVOTE"
@@ -164,7 +154,7 @@ fun PostCard(
                                 voteState = "UPVOTE",
                                 onError = { postScore--; voteState = Unit },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                     }
                 },
@@ -182,7 +172,7 @@ fun PostCard(
                                 voteState = "DOWNVOTE",
                                 onError = { postScore += 2; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                         "DOWNVOTE" -> {
                             voteState = Unit
@@ -191,7 +181,7 @@ fun PostCard(
                                 voteState = "DOWNVOTE",
                                 onError = { postScore--; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                         else -> {
                             voteState = "DOWNVOTE"
@@ -200,7 +190,7 @@ fun PostCard(
                                 voteState = "DOWNVOTE",
                                 onError = { postScore++; voteState = Unit },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                     }
                 },
@@ -435,7 +425,7 @@ fun PostCardPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
+                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
             }
         }
     }
@@ -472,7 +462,7 @@ fun PostCardDarkPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
+                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
             }
         }
     }
