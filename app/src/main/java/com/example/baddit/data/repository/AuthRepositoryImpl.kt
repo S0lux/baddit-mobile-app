@@ -1,6 +1,7 @@
 package com.example.baddit.data.repository
 
 import android.util.Log
+import androidx.annotation.Nullable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -35,8 +36,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override val isLoggedIn: MutableState<Boolean> = mutableStateOf(false)
 
-    override var currentUser: GetMeResponseDTO? = null
-        private set;
+    override val currentUser: MutableState<GetMeResponseDTO?> = mutableStateOf(null)
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -80,7 +80,14 @@ class AuthRepositoryImpl @Inject constructor(
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
         if (result is Result.Success) {
             isLoggedIn.value = true;
-            currentUser = result.data;
+            currentUser.value = result.data;
+            if(currentUser.value?.username!!.isEmpty()){
+                Log.d("heoconmap","empty");
+            }
+            else{
+                Log.d("heoconmap",currentUser.value!!.username);
+
+            }
         }
         return result;
     }

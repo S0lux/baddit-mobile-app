@@ -1,11 +1,13 @@
 package com.example.baddit.presentation.screens.login
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.presentation.utils.FieldState
@@ -25,6 +27,9 @@ class LoginViewModel @Inject constructor(
     var generalError by mutableStateOf("")
         private set;
 
+    val loggedIn = authRepository.isLoggedIn;
+    val currentUser = authRepository.currentUser;
+
     fun onUsernameChange(input: String) {
         usernameState = usernameState.copy(value = input, error = "")
     }
@@ -34,7 +39,8 @@ class LoginViewModel @Inject constructor(
     }
 
     suspend fun login(): Result<LoginResponseDTO, DataError.NetworkError> {
-        val result = authRepository.login(username = usernameState.value, password = passwordState.value)
+        val result =
+            authRepository.login(username = usernameState.value, password = passwordState.value)
 
         when (result) {
             is Result.Error -> {
@@ -53,7 +59,6 @@ class LoginViewModel @Inject constructor(
                 authRepository.getMe()
             }
         }
-
         return result;
     }
 }

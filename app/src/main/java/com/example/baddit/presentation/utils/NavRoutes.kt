@@ -25,3 +25,11 @@ object Login
 
 @Serializable
 object Verify
+
+object LeftSideBar
+
+@Serializable
+object UserSideBar
+
+@Serializable
+object Search

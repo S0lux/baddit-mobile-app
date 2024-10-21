@@ -29,7 +29,7 @@ import com.example.baddit.presentation.utils.SignUp
 @Composable
 fun BottomNavigationBar(
     navController: NavHostController,
-    bottomBarState: MutableState<Boolean>
+    barState: MutableState<Boolean>
 ) {
     var selectedIndex by remember { mutableIntStateOf(0) }
     val navItems = listOf(
@@ -42,7 +42,7 @@ fun BottomNavigationBar(
     )
 
     AnimatedVisibility(
-        visible = bottomBarState.value,
+        visible = barState.value,
         exit = slideOutVertically(),
         enter = slideInVertically()
     ) {
