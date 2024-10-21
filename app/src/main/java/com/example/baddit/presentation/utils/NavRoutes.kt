@@ -22,3 +22,12 @@ object SignUp
 
 @Serializable
 object Login
+
+@Serializable
+object LeftSideBar
+
+@Serializable
+object  UserSideBar
+
+@Serializable
+object Search

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun CommunityScreen(){
     Box(modifier = Modifier.fillMaxSize().background(Color.Red)) {
-        Text(text = "Create post screen", modifier = Modifier.align(Alignment.Center))
+        Text(text = "Create community screen", modifier = Modifier.align(Alignment.Center))
     }
+
 }

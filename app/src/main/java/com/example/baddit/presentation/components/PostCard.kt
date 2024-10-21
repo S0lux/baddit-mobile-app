@@ -222,15 +222,15 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(postDetails.community.logoUrl).build(),
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .height(36.dp)
-                .aspectRatio(1f),
-        )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(postDetails.community.logoUrl).build(),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .height(36.dp)
+                    .aspectRatio(1f),
+            )
 
         Column {
             Row {

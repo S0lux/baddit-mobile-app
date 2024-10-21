@@ -14,7 +14,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface BadditAPI {
-
     @GET("/v1/posts")
     suspend fun getPosts(
         @Query("communityName") communityName: String? = null,
