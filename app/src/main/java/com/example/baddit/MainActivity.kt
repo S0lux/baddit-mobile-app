@@ -34,7 +34,6 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.community.CommunityScreen
-import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
@@ -128,11 +127,6 @@ class MainActivity : ComponentActivity() {
                                 composable<Home> {
                                     SlideHorizontally {
                                         HomeScreen { navController.navigate(Login) }
-                                    }
-                                }
-                                composable<CreatePost> {
-                                    SlideHorizontally {
-                                        CreatePostScreen()
                                     }
                                 }
                                 composable<Community> {

@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components
 
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -11,7 +12,7 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @Composable
 fun CreatePostActionButton(onClick:()->Unit){
-    SmallFloatingActionButton(
+    FloatingActionButton(
         onClick = onClick,
         containerColor = MaterialTheme.colorScheme.PrimaryContainter,
         contentColor = MaterialTheme.colorScheme.textPrimary,
