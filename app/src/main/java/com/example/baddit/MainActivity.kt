@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostScreen
@@ -90,7 +91,8 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Scaffold(bottomBar = {
+
+                        Scaffold(bottomBar = {
                         BottomNavigationBar(
                             navController = navController, bottomBarState = bottomBarState
                         )
@@ -129,6 +131,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+
                 }
             }
         }
