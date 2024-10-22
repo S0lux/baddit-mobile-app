@@ -34,6 +34,7 @@ import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
+import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
@@ -42,6 +43,7 @@ import com.example.baddit.presentation.utils.CreatePost
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
@@ -63,31 +65,42 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(true) }
+            val userTopBarState = rememberSaveable { mutableStateOf(false) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
 
             when (navBackStackEntry?.destination?.route) {
                 "com.example.baddit.presentation.utils.Home" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.CreatePost" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Community" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.SignUp" -> {
                     // Hide BottomBar and TopBar
                     barState.value = false
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Login" -> {
                     barState.value = false
+                    userTopBarState.value = false
+                }
+
+                "com.example.baddit.presentation.utils.Profile" -> {
+                    barState.value = true
+                    userTopBarState.value = true
                 }
 
                 "com.example.baddit.presentation.utils.Verify" -> {
@@ -107,7 +120,7 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         topBar = {
-                            TopNavigationBar(navController = navController, barState = barState)
+                            TopNavigationBar(navController = navController, barState = barState ,userTopBarState = userTopBarState)
                         }
                     ) {
                         NavHost(
@@ -129,6 +142,11 @@ class MainActivity : ComponentActivity() {
                                 composable<Community> {
                                     SlideHorizontally {
                                         CommunityScreen()
+                                    }
+                                }
+                                composable<Profile> {
+                                    SlideHorizontally {
+                                        ProfileScreen()
                                     }
                                 }
                             }

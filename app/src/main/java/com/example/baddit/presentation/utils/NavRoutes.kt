@@ -33,3 +33,6 @@ object UserSideBar
 
 @Serializable
 object Search
+
+@Serializable
+object Profile
