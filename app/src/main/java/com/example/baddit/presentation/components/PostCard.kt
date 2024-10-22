@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,11 +28,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -46,7 +44,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,7 +52,6 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
@@ -64,31 +60,29 @@ import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.cardForeground
-import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
-import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
-import dagger.hilt.android.qualifiers.ApplicationContext
 import getTimeAgoFromUtcString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 @Composable
 fun PostCard(
     postDetails: PostResponseDTOItem,
     loggedIn: Boolean = false,
     navigateLogin: () -> Unit,
-    votePost: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
+    votePostFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
+
     val voteInteractionSource = remember { MutableInteractionSource() }
-    var voteState by remember { mutableStateOf(postDetails.voteState) }
-    var postScore by remember { mutableIntStateOf(postDetails.score) }
+    var voteState by rememberSaveable { mutableStateOf(postDetails.voteState) }
+    var postScore by rememberSaveable { mutableIntStateOf(postDetails.score) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
-    var showLoginDialog by remember { mutableStateOf(false) }
+    var showLoginDialog by rememberSaveable { mutableStateOf(false) }
+    var hasUserInteracted by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     if (showLoginDialog) {
@@ -98,7 +92,7 @@ fun PostCard(
     }
 
     LaunchedEffect(voteState) {
-        if (voteState != Unit) {
+        if (hasUserInteracted && voteState != Unit) {
             val pressPosition = Offset(
                 x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
                 y = voteElementSize.height / 2f
@@ -123,94 +117,90 @@ fun PostCard(
                 PostTextContent(content = postDetails.content)
             }
             PostActions(
-                // This is, in fact, not unnecessary
                 voteState = voteState?.toString(),
                 postScore = postScore,
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
                 onUpvote = {
+                    hasUserInteracted = true
                     if (!loggedIn) {
-                        showLoginDialog = true;
+                        showLoginDialog = true
                         return@PostActions
                     }
-
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = Unit
                             postScore--
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore++; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
-
                         "DOWNVOTE" -> {
                             voteState = "UPVOTE"
                             postScore += 2
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore -= 2; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
-
                         else -> {
                             voteState = "UPVOTE"
                             postScore++
                             handleVote(
-                                voteState= "UPVOTE",
+                                voteState = "UPVOTE",
                                 onError = { postScore--; voteState = Unit },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                     }
                 },
                 onDownvote = {
+                    hasUserInteracted = true
                     if (!loggedIn) {
-                        showLoginDialog = true;
+                        showLoginDialog = true
                         return@PostActions
                     }
-
                     when (voteState) {
                         "UPVOTE" -> {
                             voteState = "DOWNVOTE"
                             postScore -= 2
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore += 2; voteState = "UPVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
-
                         "DOWNVOTE" -> {
                             voteState = Unit
                             postScore++
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore--; voteState = "DOWNVOTE" },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
-
                         else -> {
                             voteState = "DOWNVOTE"
                             postScore--
                             handleVote(
-                                voteState= "DOWNVOTE",
+                                voteState = "DOWNVOTE",
                                 onError = { postScore++; voteState = Unit },
                                 coroutineScope = coroutineScope,
-                                voteFn = votePost)
+                                voteFn = votePostFn)
                         }
                     }
                 },
                 commentCount = postDetails.commentCount,
-                onGloballyPositioned = { cords -> voteElementSize = cords.size }
+                onGloballyPositioned = { cords -> voteElementSize = cords.size },
             )
         }
     }
 }
+
 
 fun handleVote(
     voteState: String,
@@ -232,15 +222,15 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(postDetails.community.logoUrl).build(),
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .height(36.dp)
-                .aspectRatio(1f),
-        )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(postDetails.community.logoUrl).build(),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .height(36.dp)
+                    .aspectRatio(1f),
+            )
 
         Column {
             Row {
@@ -324,7 +314,7 @@ fun PostActions(
     onUpvote: () -> Unit,
     onDownvote: () -> Unit,
     commentCount: Int,
-    onGloballyPositioned: (LayoutCoordinates) -> Unit
+    onGloballyPositioned: (LayoutCoordinates) -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
@@ -359,11 +349,10 @@ fun PostActions(
                 fontSize = 12.sp,
             )
             Icon(
-                painter = painterResource(id = R.drawable.arrow_upvote),
+                painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = if (voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
                 modifier = Modifier
-                    .rotate(180f)
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
@@ -436,7 +425,7 @@ fun PostCardPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
+                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
             }
         }
     }
@@ -473,7 +462,7 @@ fun PostCardDarkPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePost = { Result.Success(Unit) })
+                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
             }
         }
     }

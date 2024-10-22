@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.screens.signup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.LottieProperty
@@ -44,11 +46,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpComplete(navigateToLogin: () -> Unit) {
+    val isDarkMode = isSystemInDarkTheme()
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.email_send))
     val dynamicProperties = rememberLottieDynamicProperties(
         rememberLottieDynamicProperty(
             property = LottieProperty.COLOR_FILTER,
-            value = SimpleColorFilter(Color.White.toArgb()),
+            value = SimpleColorFilter(if (isDarkMode) Color.White.toArgb() else Color.Black.toArgb()),
             keyPath = arrayOf("**")
         ),
     )
