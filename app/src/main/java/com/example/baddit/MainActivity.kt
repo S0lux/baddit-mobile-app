@@ -64,50 +64,9 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         setContent {
             val navController = rememberNavController()
-            val barState = rememberSaveable { mutableStateOf(true) }
+            val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
-
-            when (navBackStackEntry?.destination?.route) {
-                "com.example.baddit.presentation.utils.Home" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.CreatePost" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Community" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.SignUp" -> {
-                    // Hide BottomBar and TopBar
-                    barState.value = false
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Login" -> {
-                    barState.value = false
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Profile" -> {
-                    barState.value = true
-                    userTopBarState.value = true
-                }
-
-                "com.example.baddit.presentation.utils.Verify" -> {
-                    barState.value = false
-                }
-            }
-
 
             BadditTheme {
                 Surface(
@@ -130,21 +89,33 @@ class MainActivity : ComponentActivity() {
                         ) {
                             navigation<Main>(startDestination = Home) {
                                 composable<Home> {
+                                    barState.value = true;
+                                    userTopBarState.value = true;
+
                                     SlideHorizontally {
                                         HomeScreen { navController.navigate(Login) }
                                     }
                                 }
                                 composable<CreatePost> {
+                                    barState.value = true;
+                                    userTopBarState.value = true;
+
                                     SlideHorizontally {
                                         CreatePostScreen()
                                     }
                                 }
                                 composable<Community> {
+                                    barState.value = true;
+                                    userTopBarState.value = true;
+
                                     SlideHorizontally {
                                         CommunityScreen()
                                     }
                                 }
                                 composable<Profile> {
+                                    barState.value = true;
+                                    userTopBarState.value = true;
+
                                     SlideHorizontally {
                                         ProfileScreen()
                                     }
@@ -152,14 +123,19 @@ class MainActivity : ComponentActivity() {
                             }
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
+                                    barState.value = false;
+                                    userTopBarState.value = false;
+
                                     SignupScreen(navigateToLogin = { navController.navigate(Login) })
                                 }
-                            }
+                                composable<Login> {
+                                    barState.value = false;
+                                    userTopBarState.value = false;
 
-                            composable<Login> {
-                                LoginScreen(
-                                    navigateToHome = { navController.navigate(Home) },
-                                    navigateToSignup = { navController.navigate(SignUp) })
+                                    LoginScreen(
+                                        navigateToHome = { navController.navigate(Home) },
+                                        navigateToSignup = { navController.navigate(SignUp) })
+                                }
                             }
                         }
                     }
