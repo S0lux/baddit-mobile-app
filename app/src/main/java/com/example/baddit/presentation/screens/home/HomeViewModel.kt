@@ -80,6 +80,6 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
-        refreshPosts();
+        // refreshPosts();
     }
 }

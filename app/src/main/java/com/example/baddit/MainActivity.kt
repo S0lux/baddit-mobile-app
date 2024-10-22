@@ -1,5 +1,8 @@
 package com.example.baddit
 
+import android.content.Intent
+import android.content.pm.verify.domain.DomainVerificationManager
+import android.content.pm.verify.domain.DomainVerificationUserState
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
@@ -31,6 +35,7 @@ import com.example.baddit.presentation.screens.createPost.CreatePostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
+import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CreatePost
@@ -38,8 +43,16 @@ import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.SignUp
+import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavDeepLink
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -48,13 +61,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
-//          For testing single screen
-//            BadditTheme {
-//                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-//                    LoginScreen()
-//                }
-//            }
-
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(true) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -81,6 +87,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 "com.example.baddit.presentation.utils.Login" -> {
+                    barState.value = false
+                }
+
+                "com.example.baddit.presentation.utils.Verify" -> {
                     barState.value = false
                 }
             }
@@ -126,11 +136,12 @@ class MainActivity : ComponentActivity() {
                                 composable<SignUp> {
                                     SignupScreen(navigateToLogin = { navController.navigate(Login) })
                                 }
-                                composable<Login> {
-                                    LoginScreen(
-                                        navigateToHome = { navController.navigate(Home) },
-                                        navigateToSignup = { navController.navigate(SignUp) })
-                                }
+                            }
+
+                            composable<Login> {
+                                LoginScreen(
+                                    navigateToHome = { navController.navigate(Home) },
+                                    navigateToSignup = { navController.navigate(SignUp) })
                             }
                         }
                     }

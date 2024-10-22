@@ -18,12 +18,21 @@
         tools:targetApi="34">
         <activity
             android:name=".MainActivity"
+            android:label="Baddit"
             android:exported="true"
             android:theme="@style/App.Starting.Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <data android:scheme="https" android:host="api.baddit.life" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="baddit.life" />
             </intent-filter>
         </activity>
     </application>
