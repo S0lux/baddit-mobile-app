@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.components
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -218,31 +220,54 @@ fun handleVote(
 
 @Composable
 fun PostHeader(postDetails: PostResponseDTOItem) {
+    val communityName = postDetails.community?.name.orEmpty()
+    val communityLogo = postDetails.community?.logoUrl.orEmpty()
+    val authorName = postDetails.author.username
+    val authorUrl = postDetails.author.avatarUrl
+    val titleText = if (communityName.isEmpty()) {
+        authorName
+    } else {
+        communityName
+    }
+    val subReddit = if (communityName.isEmpty()) {
+        "u/"
+    } else {
+        "r/"
+    }
+    val logo = if(communityLogo.isEmpty()){
+        authorUrl
+    }else{
+        communityLogo
+    }
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(postDetails.community.logoUrl).build(),
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .height(36.dp)
-                .aspectRatio(1f),
-        )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(logo).build(),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .height(36.dp)
+                    .aspectRatio(1f),
+                contentScale = ContentScale.Crop
+            )
 
         Column {
             Row {
+                Log.d("Heocon",titleText);
                 Text(
-                    "r/",
+                    subReddit,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.textSecondary,
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                 )
+
                 Text(
-                    postDetails.community.name,
+                    titleText,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF2196F3),

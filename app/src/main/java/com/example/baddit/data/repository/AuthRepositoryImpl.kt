@@ -1,10 +1,16 @@
 package com.example.baddit.data.repository
 
+import android.util.Log
+import androidx.annotation.Nullable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.utils.httpToError
 import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
@@ -15,7 +21,13 @@ import com.example.baddit.domain.repository.AuthRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import retrofit2.Response
+import java.io.IOException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -24,8 +36,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override val isLoggedIn: MutableState<Boolean> = mutableStateOf(false)
 
-    override var currentUser: GetMeResponseDTO? = null
-        private set;
+    override val currentUser: MutableState<GetMeResponseDTO?> = mutableStateOf(null)
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -69,7 +80,14 @@ class AuthRepositoryImpl @Inject constructor(
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
         if (result is Result.Success) {
             isLoggedIn.value = true;
-            currentUser = result.data;
+            currentUser.value = result.data;
+            if(currentUser.value?.username!!.isEmpty()){
+                Log.d("heoconmap","empty");
+            }
+            else{
+                Log.d("heoconmap",currentUser.value!!.username);
+
+            }
         }
         return result;
     }

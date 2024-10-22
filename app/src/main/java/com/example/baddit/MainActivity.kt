@@ -1,6 +1,5 @@
 package com.example.baddit
 
-//import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,8 +30,8 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
-import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.community.CommunityScreen
+import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
@@ -64,6 +62,7 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(true) }
+            val userTopBarState = rememberSaveable { mutableStateOf(false) }
             val navBackStackEntry by navController.currentBackStackEntryAsState()
 
             val sheetState = rememberModalBottomSheetState()
@@ -73,25 +72,35 @@ class MainActivity : ComponentActivity() {
                 "com.example.baddit.presentation.utils.Home" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.CreatePost" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Community" -> {
                     // Show BottomBar and TopBar
                     barState.value = true
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.SignUp" -> {
                     // Hide BottomBar and TopBar
                     barState.value = false
+                    userTopBarState.value = false
                 }
 
                 "com.example.baddit.presentation.utils.Login" -> {
                     barState.value = false
+                    userTopBarState.value = false
+                }
+
+                "com.example.baddit.presentation.utils.Profile" -> {
+                    barState.value = true
+                    userTopBarState.value = true
                 }
             }
 
@@ -100,6 +109,16 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
+                    Scaffold(
+                        bottomBar = {
+                            BottomNavigationBar(
+                                navController = navController, barState = barState
+                            )
+                        },
+                        topBar = {
+                            TopNavigationBar(navController = navController, barState = barState ,userTopBarState = userTopBarState)
+                        }
+                    ) {
                     Scaffold(bottomBar = {
                         BottomNavigationBar(
                             navController = navController, bottomBarState = barState
@@ -129,13 +148,19 @@ class MainActivity : ComponentActivity() {
                                         HomeScreen { navController.navigate(Login) }
                                     }
                                 }
+
                                 composable<Community> {
                                     SlideHorizontally {
                                         CommunityScreen()
                                     }
                                 }
+                                composable<Profile> {
+                                    SlideHorizontally {
+                                        ProfileScreen()
+                                    }
+                                }
                             }
-                            navigation<Auth>(startDestination = Login) {
+                            navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
                                     SignupScreen { navController.navigate(Login) }
                                 }
