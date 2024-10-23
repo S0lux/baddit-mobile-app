@@ -7,7 +7,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -118,7 +120,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = Main,
                             modifier = Modifier.padding(it)
                         ) {
-                            navigation<Main>(startDestination = Home) {
+                            navigation<Main>(startDestination = Profile) {
                                 composable<Home> {
                                     SlideHorizontally {
                                         HomeScreen { navController.navigate(Login) }
@@ -167,6 +169,20 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
         modifier = Modifier,
         enter = slideInHorizontally(),
         exit = slideOutHorizontally() + fadeOut(),
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun SlideVertically(content: @Composable ()->Unit){
+    AnimatedVisibility(
+        visibleState = MutableTransitionState(
+            initialState = false
+        ).apply { targetState = true },
+        modifier = Modifier,
+        enter = slideInVertically(),
+        exit = slideOutVertically() + fadeOut(),
     ) {
         content()
     }

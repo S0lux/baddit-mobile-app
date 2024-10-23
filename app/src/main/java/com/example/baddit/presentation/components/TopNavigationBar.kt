@@ -40,6 +40,8 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.SlideHorizontally
+import com.example.baddit.SlideVertically
 import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.presentation.utils.Home
@@ -76,36 +78,46 @@ fun TopNavigationBar(
         enter = slideInVertically()
     ) {
         if (!userTopBarState.value) {
-            TopAppBar(
-                colors = TopAppBarColors(
-                    containerColor = Color.Transparent.copy(alpha = 0.3f),
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White,
-                    scrolledContainerColor = Color.White,
-                    titleContentColor = Color.White
-                ),
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            painter = painterResource(id = navItems[0].icon),
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            painter = painterResource(id = navItems[1].icon),
-                            contentDescription = null
-                        )
-                    }
-                    if (loggedIn) {
-                        viewModel.currentUser.value?.let { currentUser ->
-                            IconButton(onClick = { navController.navigate(Profile) }) {
+            SlideVertically {
+                TopAppBar(
+
+                    title = { },
+                    navigationIcon = {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                painter = painterResource(id = navItems[0].icon),
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { }) {
+                            Icon(
+                                painter = painterResource(id = navItems[1].icon),
+                                contentDescription = null
+                            )
+                        }
+                        if (loggedIn) {
+                            viewModel.currentUser.value?.let { currentUser ->
+                                IconButton(onClick = { navController.navigate(Profile) }) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(currentUser.avatarUrl)
+                                            .build(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .height(33.dp)
+                                            .aspectRatio(1f)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        } else {
+                            IconButton(onClick = { showLoginDialog = true }) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data(currentUser.avatarUrl)
+                                        .data("https://i.imgur.com/mJQpR31.png")
                                         .build(),
                                     contentDescription = null,
                                     modifier = Modifier
@@ -116,42 +128,33 @@ fun TopNavigationBar(
                                 )
                             }
                         }
-                    } else {
-                        IconButton(onClick = { showLoginDialog = true }) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data("https://i.imgur.com/mJQpR31.png")
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .height(33.dp)
-                                    .aspectRatio(1f)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
+                    })
+            }
+        } else {
+            SlideVertically {
+                TopAppBar(
+                    title = {
+                        val titleText = if (viewModel.loggedIn.value) {
+                            ("u/" + viewModel.currentUser.value?.username) ?: "u/UnknownUser"
+                        } else {
+                            "u/UnknownUser"
+                        }
+                        Text(
+                            text = titleText,
+                            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate(Home) }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                                contentDescription = null
                             )
                         }
-                    }
-                })
-        } else {
-            TopAppBar(
-                title = {
-                    val titleText = if (viewModel.loggedIn.value) {
-                        ("u/" + viewModel.currentUser.value?.username) ?: "u/UnknownUser"
-                    } else {
-                        "u/UnknownUser"
-                    }
-                    Text(text = titleText, style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp))
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigate(Home) }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {},
-            )
+                    },
+                    actions = {},
+                )
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
+import com.example.baddit.SlideVertically
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
@@ -34,9 +35,11 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), navigateLogin: () -> 
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showLoginDialog) {
-        LoginDialog(
-            navigateLogin = { navigateLogin() },
-            onDismiss = { showLoginDialog = false })
+        SlideVertically {
+            LoginDialog(
+                navigateLogin = { navigateLogin() },
+                onDismiss = { showLoginDialog = false })
+        }
     }
 
     PullToRefreshBox(
