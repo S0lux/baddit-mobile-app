@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.baddit.presentation.components.BottomNavigationBar
@@ -39,7 +38,6 @@ import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
-import com.example.baddit.presentation.utils.CreatePost
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
@@ -137,17 +135,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-    @Composable
-    fun SlideHorizontally(content: @Composable () -> Unit) {
-        AnimatedVisibility(
-            visibleState = MutableTransitionState(
-                initialState = false
-            ).apply { targetState = true },
-            modifier = Modifier,
-            enter = slideInHorizontally(),
-            exit = slideOutHorizontally() + fadeOut(),
-        ) {
-            content()
-        }
+@Composable
+fun SlideHorizontally(content: @Composable () -> Unit) {
+    AnimatedVisibility(
+        visibleState = MutableTransitionState(
+            initialState = false
+        ).apply { targetState = true },
+        modifier = Modifier,
+        enter = slideInHorizontally(),
+        exit = slideOutHorizontally() + fadeOut(),
+    ) {
+        content()
     }
 }
