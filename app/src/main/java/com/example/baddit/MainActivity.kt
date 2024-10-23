@@ -25,22 +25,23 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
+import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
+import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
-import com.example.baddit.presentation.utils.CreatePost
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -63,47 +64,9 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(true) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
 
             val sheetState = rememberModalBottomSheetState()
             var showBottomSheet by remember { mutableStateOf(false) }
-
-            when (navBackStackEntry?.destination?.route) {
-                "com.example.baddit.presentation.utils.Home" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.CreatePost" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Community" -> {
-                    // Show BottomBar and TopBar
-                    barState.value = true
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.SignUp" -> {
-                    // Hide BottomBar and TopBar
-                    barState.value = false
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Login" -> {
-                    barState.value = false
-                    userTopBarState.value = false
-                }
-
-                "com.example.baddit.presentation.utils.Profile" -> {
-                    barState.value = true
-                    userTopBarState.value = true
-                }
-            }
-
 
             BadditTheme {
                 Surface(
@@ -116,58 +79,73 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         topBar = {
-                            TopNavigationBar(navController = navController, barState = barState ,userTopBarState = userTopBarState)
-                        }
-                    ) {
-                    Scaffold(bottomBar = {
-                        BottomNavigationBar(
-                            navController = navController, bottomBarState = barState
-                        )
-                    },
-                        floatingActionButton = {
-                            if(barState.value){
-                                CreatePostActionButton(onClick = { showBottomSheet = true })
-                            }
-                        }) {
-
-                        if (showBottomSheet) {
-                            CreatePostBottomSheet(
-                                onDismissRequest = { showBottomSheet = false },
-                                sheetState = sheetState,
-                                navController = navController
+                            TopNavigationBar(
+                                navController = navController,
+                                barState = barState,
+                                userTopBarState = userTopBarState
                             )
                         }
-                        NavHost(
-                            navController = navController,
-                            startDestination = Main,
-                            modifier = Modifier.padding(it)
-                        ) {
-                            navigation<Main>(startDestination = Home) {
-                                composable<Home> {
-                                    SlideHorizontally {
-                                        HomeScreen { navController.navigate(Login) }
-                                    }
+                    ) { it ->
+                        Scaffold(bottomBar = {
+                            BottomNavigationBar(
+                                navController = navController, barState = barState
+                            )
+                        },
+                            floatingActionButton = {
+                                if (barState.value) {
+                                    CreatePostActionButton(onClick = { showBottomSheet = true })
                                 }
+                            }) {
 
-                                composable<Community> {
-                                    SlideHorizontally {
-                                        CommunityScreen()
-                                    }
-                                }
-                                composable<Profile> {
-                                    SlideHorizontally {
-                                        ProfileScreen()
-                                    }
-                                }
+                            if (showBottomSheet) {
+                                CreatePostBottomSheet(
+                                    onDismissRequest = { showBottomSheet = false },
+                                    sheetState = sheetState,
+                                    navController = navController
+                                )
                             }
-                            navigation<Auth>(startDestination = SignUp) {
-                                composable<SignUp> {
-                                    SignupScreen { navController.navigate(Login) }
+                            NavHost(
+                                navController = navController,
+                                startDestination = Main,
+                                modifier = Modifier.padding(it)
+                            ) {
+                                navigation<Main>(startDestination = Home) {
+                                    composable<Home> {
+                                        barState.value = true
+                                        userTopBarState.value = false
+                                        SlideHorizontally {
+                                            HomeScreen { navController.navigate(Login) }
+                                        }
+                                    }
+
+                                    composable<Community> {
+                                        barState.value = true
+                                        userTopBarState.value = false
+                                        SlideHorizontally {
+                                            CommunityScreen()
+                                        }
+                                    }
+                                    composable<Profile> {
+                                        barState.value = true
+                                        userTopBarState.value = true
+                                        SlideHorizontally {
+                                            ProfileScreen()
+                                        }
+                                    }
                                 }
-                                composable<Login> {
-                                    LoginScreen(
-                                        navigateToHome = { navController.navigate(Home) },
-                                        navigateToSignup = { navController.navigate(SignUp) })
+                                navigation<Auth>(startDestination = Login) {
+                                    barState.value = false
+                                    userTopBarState.value = false
+                                    composable<SignUp> {
+                                        SignupScreen { navController.navigate(Login) }
+                                    }
+                                    composable<Login> {
+                                        barState.value = false
+                                        userTopBarState.value = false
+                                        LoginScreen(
+                                            navigateToHome = { navController.navigate(Home) },
+                                            navigateToSignup = { navController.navigate(SignUp) })
+                                    }
                                 }
                             }
                         }
@@ -176,18 +154,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun SlideHorizontally(content: @Composable () -> Unit) {
-    AnimatedVisibility(
-        visibleState = MutableTransitionState(
-            initialState = false
-        ).apply { targetState = true },
-        modifier = Modifier,
-        enter = slideInHorizontally(),
-        exit = slideOutHorizontally() + fadeOut(),
-    ) {
-        content()
+    @Composable
+    fun SlideHorizontally(content: @Composable () -> Unit) {
+        AnimatedVisibility(
+            visibleState = MutableTransitionState(
+                initialState = false
+            ).apply { targetState = true },
+            modifier = Modifier,
+            enter = slideInHorizontally(),
+            exit = slideOutHorizontally() + fadeOut(),
+        ) {
+            content()
+        }
     }
 }

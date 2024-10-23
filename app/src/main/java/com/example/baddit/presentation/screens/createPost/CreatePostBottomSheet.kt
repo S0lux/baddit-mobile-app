@@ -3,7 +3,6 @@ package com.example.baddit.presentation.screens.createPost
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.baddit.R
+import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.ui.theme.CustomTheme.PrimaryContainter
@@ -53,7 +52,6 @@ fun CreatePostBottomSheet(
     viewmodel: CreatePostViewodel = hiltViewModel(),
     navController: NavHostController
 ) {
-    val loggedIn by viewmodel.isLoggedIn
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
@@ -61,7 +59,14 @@ fun CreatePostBottomSheet(
             .fillMaxHeight()
             .fillMaxWidth()
     ) {
-        LoggedInScreen(viewmodel = viewmodel, onDismissRequest = onDismissRequest)
+        if (viewmodel.isLoggedIn.value) {
+            LoggedInScreen(viewmodel = viewmodel, onDismissRequest = onDismissRequest)
+        } else {
+            LoginDialog(navigateLogin = {
+                navController.navigate(Auth)
+                onDismissRequest()
+            }, onDismiss = onDismissRequest)
+        }
     }
 }
 
@@ -113,7 +118,7 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = "CREATE POST",
+            text = "Create a post",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(start = 13.dp)
@@ -137,7 +142,7 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
 
         if (viewmodel.linkTypeSelected) {
             TextField(
-                value = viewmodel.content,
+                value = viewmodel.link,
                 onValueChange = { viewmodel.content = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -150,7 +155,17 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
                 },
                 colors = textFieldColors(),
                 suffix = {
-                    IconButton(onClick = { viewmodel.linkTypeSelected = false }) {
+                    IconButton(
+                        onClick = {
+                            viewmodel.link = ""; viewmodel.linkTypeSelected = false
+                        },
+                        colors = IconButtonColors(
+                            containerColor = Color.LightGray,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContainerColor = Color.Transparent,
+                            disabledContentColor = Color.Transparent,
+                        )
+                    ) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = null)
                     }
                 }
@@ -158,9 +173,6 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
 
         }
 
-        if (viewmodel.mediaTypeSelected && viewmodel.selectedImage != null) {
-            AsyncImage(model = viewmodel.selectedImage, contentDescription = null)
-        }
 
         TextField(
             value = viewmodel.content,
@@ -169,7 +181,7 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
                 .fillMaxWidth()
                 .fillMaxHeight(),
             singleLine = false,
-            minLines = 20,
+            minLines = 5,
             textStyle = MaterialTheme.typography.bodyMedium,
             placeholder = {
                 Text(
@@ -184,7 +196,7 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
         Row {
             IconButton(
                 onClick = { viewmodel.linkTypeSelected = true },
-                enabled = !viewmodel.mediaTypeSelected
+                enabled = (viewmodel.selectedImage == null)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.round_insert_link_24),
@@ -193,11 +205,10 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
 
             }
             IconButton(onClick = {
-                viewmodel.mediaTypeSelected = true
                 singlePhotoPicker.launch(
                     PickVisualMediaRequest()
                 )
-            }, enabled = !viewmodel.linkTypeSelected) {
+            }, enabled = (!viewmodel.linkTypeSelected)) {
                 Icon(
                     painter = painterResource(id = R.drawable.outline_image_24),
                     contentDescription = null
@@ -205,6 +216,25 @@ private fun LoggedInScreen(viewmodel: CreatePostViewodel, onDismissRequest: () -
 
             }
 
+        }
+
+        if (viewmodel.selectedImage != null) {
+            Box(modifier = Modifier) {
+                AsyncImage(model = viewmodel.selectedImage, contentDescription = null)
+                IconButton(
+                    onClick = { viewmodel.selectedImage = null }, modifier = Modifier.align(
+                        Alignment.TopEnd
+                    ),
+                    colors = IconButtonColors(
+                        containerColor = Color.LightGray,
+                        contentColor = MaterialTheme.colorScheme.textPrimary,
+                        disabledContainerColor = Color.Transparent,
+                        disabledContentColor = Color.Transparent,
+                    )
+                ) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                }
+            }
         }
 
     }

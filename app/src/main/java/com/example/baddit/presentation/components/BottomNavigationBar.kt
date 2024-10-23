@@ -126,7 +126,7 @@ fun previewNavBar() {
         modifier = Modifier
             .wrapContentSize()
     ) {
-        BottomNavigationBar(navController = rememberNavController(), bottomBarState = remember {
+        BottomNavigationBar(navController = rememberNavController(), barState = remember {
             mutableStateOf(true)
         })
     }

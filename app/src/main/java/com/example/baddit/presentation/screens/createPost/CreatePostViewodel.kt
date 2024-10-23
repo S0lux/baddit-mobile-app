@@ -13,9 +13,9 @@ import javax.inject.Inject
 class CreatePostViewodel @Inject constructor(private val auth: AuthRepository) : ViewModel() {
     var title by mutableStateOf("")
     var content by mutableStateOf("")
-    var selectedImage by mutableStateOf<Uri?>(null)
+    var link by mutableStateOf("")
     var linkTypeSelected by mutableStateOf(false)
-    var mediaTypeSelected by mutableStateOf(false)
+    var selectedImage by mutableStateOf<Uri?>(null)
     var res by mutableStateOf("")
     val isLoggedIn = auth.isLoggedIn
 
