@@ -1,5 +1,6 @@
 package com.example.baddit.data.remote
 
+import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
@@ -36,6 +37,9 @@ interface BadditAPI {
 
     @POST("/v1/auth/signup")
     suspend fun signup(@Body loginBody: RegisterRequestBody): Response<Unit>
+
+    @POST("/v1/auth/verification")
+    suspend fun verify(@Body tokenBody: EmailVerificationRequestBody): Response<Unit>
 
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>

@@ -79,7 +79,11 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         topBar = {
-                            TopNavigationBar(navController = navController, barState = barState ,userTopBarState = userTopBarState)
+                            TopNavigationBar(
+                                navController = navController,
+                                barState = barState,
+                                userTopBarState = userTopBarState
+                            )
                         }
                     ) {
                         NavHost(
@@ -126,7 +130,9 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
+                                    SignupScreen(
+                                        navigateToLogin = { navController.navigate(Login) },
+                                        navigateHome = { navController.navigate(Home) })
                                 }
                                 composable<Login> {
                                     barState.value = false;
@@ -135,6 +141,17 @@ class MainActivity : ComponentActivity() {
                                     LoginScreen(
                                         navigateToHome = { navController.navigate(Home) },
                                         navigateToSignup = { navController.navigate(SignUp) })
+                                }
+                                composable<Verify>(
+                                    deepLinks = listOf(navDeepLink {
+                                        uriPattern = "https://baddit.life/auth?emailToken={token}"
+                                    })
+                                ) {
+                                    val token = it.arguments?.getString("token")
+                                    VerifyScreen(
+                                        navigateLogin = { navController.navigate(Login) },
+                                        navigateHome = { navController.navigate(Home) }, token
+                                    )
                                 }
                             }
                         }

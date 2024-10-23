@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.presentation.utils.FieldState
@@ -51,6 +50,7 @@ class LoginViewModel @Inject constructor(
                     DataError.NetworkError.CONFLICT -> "This error shouldn't happen unless something changed in the backend."
                     DataError.NetworkError.UNKNOWN_ERROR -> "An unknown error has occurred."
                     DataError.NetworkError.FORBIDDEN -> "Email not verified."
+                    else -> "This error shouldn't happen unless something changed in the backend."
                 }
             }
 

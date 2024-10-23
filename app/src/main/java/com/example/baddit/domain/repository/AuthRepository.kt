@@ -14,4 +14,5 @@
         suspend fun login(username: String, password: String): Result<LoginResponseDTO, DataError.NetworkError>
         suspend fun register(email: String, username: String, password: String): Result<Unit, DataError.RegisterError>
         suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError>
+        suspend fun verifyEmail(token: String): Result<Unit, DataError.NetworkError>
     }

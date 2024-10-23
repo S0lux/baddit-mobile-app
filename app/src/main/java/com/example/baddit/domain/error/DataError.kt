@@ -7,6 +7,7 @@ sealed interface DataError: Error {
         UNAUTHORIZED,
         FORBIDDEN,
         CONFLICT,
+        TOKEN_INVALID,
         UNKNOWN_ERROR,
     }
 

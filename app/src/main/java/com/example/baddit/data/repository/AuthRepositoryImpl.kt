@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.baddit.data.dto.ErrorResponse
+import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.utils.httpToError
@@ -90,5 +91,9 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
         return result;
+    }
+
+    override suspend fun verifyEmail(token: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.verify(EmailVerificationRequestBody(token)) }
     }
 }

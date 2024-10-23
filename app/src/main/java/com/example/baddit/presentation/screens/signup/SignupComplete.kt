@@ -1,5 +1,7 @@
 package com.example.baddit.presentation.screens.signup
 
+import android.annotation.SuppressLint
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.LottieProperty
@@ -39,35 +44,20 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieDynamicProperties
 import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.example.baddit.R
+import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignUpComplete(navigateToLogin: () -> Unit) {
-    val isDarkMode = isSystemInDarkTheme()
-    val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.email_send))
-    val dynamicProperties = rememberLottieDynamicProperties(
-        rememberLottieDynamicProperty(
-            property = LottieProperty.COLOR_FILTER,
-            value = SimpleColorFilter(if (isDarkMode) Color.White.toArgb() else Color.Black.toArgb()),
-            keyPath = arrayOf("**")
-        ),
-    )
-
+fun SignUpComplete(navigateHome: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LottieAnimation(
-            composition = composition,
-            dynamicProperties = dynamicProperties,
-            modifier = Modifier.size(300.dp),
-            iterations = 999,
-            speed = 0.25f
-        )
+        AnimatedLogo(R.raw.email_send)
 
         Box(
             modifier = Modifier
@@ -83,7 +73,7 @@ fun SignUpComplete(navigateToLogin: () -> Unit) {
                 )
 
                 Text(
-                    "We have sent you an email containing instructions on how to verify your account.",
+                    "We have sent you an email containing instructions on how to verify your account. You must verify your email before you can sign in.",
                     color = MaterialTheme.colorScheme.textSecondary
                 )
 
@@ -105,14 +95,14 @@ fun SignUpComplete(navigateToLogin: () -> Unit) {
         ) {
             Button(
                 onClick = {
-                    navigateToLogin()
+                    navigateHome()
                 },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.mutedAppBlue
                 )
             ) {
-                Text("Login", color = MaterialTheme.colorScheme.textPrimary)
+                Text("Home", color = MaterialTheme.colorScheme.textPrimary)
             }
         }
     }
