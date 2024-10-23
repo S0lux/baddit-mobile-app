@@ -24,10 +24,12 @@ object SignUp
 object Login
 
 @Serializable
+object Verify
+
 object LeftSideBar
 
 @Serializable
-object  UserSideBar
+object UserSideBar
 
 @Serializable
 object Search

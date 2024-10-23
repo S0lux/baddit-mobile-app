@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.components
 
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -58,10 +59,9 @@ fun TopNavigationBar(
     userTopBarState: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    var selectedIndex by remember { mutableIntStateOf(0) }
     val navItems = listOf(
-        BottomNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
-        BottomNavigationItem(icon = R.drawable.baseline_search_24, value = Search),
+        TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
+        TopNavigationItem(icon = R.drawable.baseline_search_24, value = Search),
     )
     val loggedIn by viewModel.loggedIn
 
@@ -158,3 +158,8 @@ fun TopNavigationBar(
         }
     }
 }
+
+data class TopNavigationItem(
+    @DrawableRes val icon: Int,
+    val value:Any
+)

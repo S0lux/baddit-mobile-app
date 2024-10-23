@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,7 +9,20 @@ plugins {
     id("kotlinx-serialization")
 }
 
+// Load keystore
+val keystorePropertiesFile = file("./signing/keystore.properties");
+val keystoreProperties = Properties()
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("./signing/baddit_key.jks")
+            storePassword = keystoreProperties["storePassword"].toString()
+            keyPassword = keystoreProperties["keyPassword"].toString()
+            keyAlias = keystoreProperties["keyAlias"].toString()
+        }
+    }
     namespace = "com.example.baddit"
     compileSdk = 34
 
