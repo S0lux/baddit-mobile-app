@@ -1,6 +1,7 @@
 package com.example.baddit
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -102,7 +103,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = Main,
                             modifier = Modifier.padding(it)
                         ) {
-                            navigation<Main>(startDestination = Profile) {
+                            navigation<Main>(startDestination = Home) {
                                 composable<Home> {
                                     barState.value = true
                                     userTopBarState.value = false
@@ -123,8 +124,12 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = false
 
+                                    var username = it.arguments?.getString("username");
                                     SlideHorizontally {
-                                        ProfileScreen()
+                                        ProfileScreen(
+                                            username = username!!,
+                                            navController = navController,
+                                        )
                                     }
                                 }
                             }
@@ -152,7 +157,6 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     barState.value = false;
                                     userTopBarState.value = false;
-
                                     val token = it.arguments?.getString("token")
                                     VerifyScreen(
                                         navigateLogin = { navController.navigate(Login) },
