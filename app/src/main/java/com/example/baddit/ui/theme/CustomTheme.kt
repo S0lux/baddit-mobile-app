@@ -33,7 +33,7 @@ object CustomTheme {
 
     val ColorScheme.appBlue: Color
         @Composable
-        get() = Color(0xFF153CFF)
+        get() = Color(0xFF0378FF)
 
     val ColorScheme.mutedAppBlue: Color
         @Composable
