@@ -50,4 +50,8 @@ object CustomTheme {
     val ColorScheme.PrimaryContainter:Color
         @Composable
         get() = if(!isSystemInDarkTheme()) Color(80, 211, 215) else Color(40, 170, 175)
+
+    val ColorScheme.scaffoldBackground: Color
+        @Composable
+        get() = if (isSystemInDarkTheme()) Color(0xFF181818) else Color(0xFFF0F0F0)
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
@@ -46,6 +47,8 @@ import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.Search
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,11 +79,11 @@ fun TopNavigationBar(
         if (!userTopBarState.value) {
             TopAppBar(
                 colors = TopAppBarColors(
-                    containerColor = Color.Transparent.copy(alpha = 0.3f),
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White,
-                    scrolledContainerColor = Color.White,
-                    titleContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.textPrimary
                 ),
                 title = { },
                 navigationIcon = {
