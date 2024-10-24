@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -40,6 +41,8 @@ import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.Search
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +71,7 @@ fun TopNavigationBar(
         enter = slideInVertically()
     ) {
         if (!userTopBarState.value) {
+<<<<<<< HEAD
             SlideVertically {
                 TopAppBar(
 
@@ -91,7 +95,7 @@ fun TopNavigationBar(
                             viewModel.currentUser.value?.let { currentUser ->
                                     IconButton(onClick = { navController.navigate(
                                         Profile(
-                                            "tranloc"
+                                            
                                         )
                                     ) }) {
                                     AsyncImage(
@@ -109,6 +113,35 @@ fun TopNavigationBar(
                             }
                         } else {
                             IconButton(onClick = { showLoginDialog = true }) {
+=======
+            TopAppBar(
+                colors = TopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.textPrimary
+                ),
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            painter = painterResource(id = navItems[0].icon),
+                            contentDescription = null
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            painter = painterResource(id = navItems[1].icon),
+                            contentDescription = null
+                        )
+                    }
+                    if (loggedIn) {
+                        viewModel.currentUser.value?.let { currentUser ->
+                            IconButton(onClick = { navController.navigate(Profile) }) {
+>>>>>>> origin/master
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data("https://i.imgur.com/mJQpR31.png")
