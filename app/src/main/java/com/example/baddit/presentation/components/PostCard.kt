@@ -394,114 +394,114 @@ fun LoginDialog(navigateLogin: () -> Unit, onDismiss: () -> Unit) {
         onDismiss = { onDismiss() })
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PostCardPreview() {
-    val details = PostResponseDTOItem(
-        id = "992e0a44-6682-4d13-b75e-834494679b65",
-        type = "TEXT",
-        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
-        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-        score = 0,
-        voteState = Unit,
-        commentCount = 0,
-        author = Author(
-            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
-            username = "trungkhang1",
-            avatarUrl = "https://placehold.co/400.png"
-        ),
-        community = Community(
-            name = "pesocommunity",
-            logoUrl = "https://placehold.co/400.png"
-        ),
-        createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z"
-    )
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun PostCardDarkPreview() {
-    val details = PostResponseDTOItem(
-        id = "992e0a44-6682-4d13-b75e-834494679b65",
-        type = "TEXT",
-        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
-        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-        score = 0,
-        voteState = Unit,
-        commentCount = 0,
-        author = Author(
-            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
-            username = "trungkhang1",
-            avatarUrl = "https://placehold.co/400.png"
-        ),
-        community = Community(
-            name = "pesocommunity",
-            logoUrl = "https://placehold.co/400.png"
-        ),
-        createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z"
-    )
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun DialogPreview() {
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                LoginDialog(navigateLogin = { /*TODO*/ }) {
-
-                }
-            }
-        }
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun DialogDarkPreview() {
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                LoginDialog(navigateLogin = { /*TODO*/ }) {
-
-                }
-            }
-        }
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PostCardPreview() {
+//    val details = PostResponseDTOItem(
+//        id = "992e0a44-6682-4d13-b75e-834494679b65",
+//        type = "TEXT",
+//        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
+//        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+//        score = 0,
+//        voteState = Unit,
+//        commentCount = 0,
+//        author = Author(
+//            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
+//            username = "trungkhang1",
+//            avatarUrl = "https://placehold.co/400.png"
+//        ),
+//        community = Community(
+//            name = "pesocommunity",
+//            logoUrl = "https://placehold.co/400.png"
+//        ),
+//        createdAt = "2024-05-13T05:57:03.877Z",
+//        updatedAt = "2024-05-13T05:57:03.877Z"
+//    )
+//    BadditTheme {
+//        Surface(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(250.dp),
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            Box(contentAlignment = Alignment.Center) {
+//                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
+//            }
+//        }
+//    }
+//}
+//
+//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+//@Composable
+//fun PostCardDarkPreview() {
+//    val details = PostResponseDTOItem(
+//        id = "992e0a44-6682-4d13-b75e-834494679b65",
+//        type = "TEXT",
+//        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
+//        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+//        score = 0,
+//        voteState = Unit,
+//        commentCount = 0,
+//        author = Author(
+//            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
+//            username = "trungkhang1",
+//            avatarUrl = "https://placehold.co/400.png"
+//        ),
+//        community = Community(
+//            name = "pesocommunity",
+//            logoUrl = "https://placehold.co/400.png"
+//        ),
+//        createdAt = "2024-05-13T05:57:03.877Z",
+//        updatedAt = "2024-05-13T05:57:03.877Z"
+//    )
+//    BadditTheme {
+//        Surface(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(250.dp),
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            Box(contentAlignment = Alignment.Center) {
+//                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
+//            }
+//        }
+//    }
+//}
+//
+//@Preview
+//@Composable
+//fun DialogPreview() {
+//    BadditTheme {
+//        Surface(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(250.dp),
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            Box(contentAlignment = Alignment.Center) {
+//                LoginDialog(navigateLogin = { /*TODO*/ }) {
+//
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+//@Composable
+//fun DialogDarkPreview() {
+//    BadditTheme {
+//        Surface(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(250.dp),
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            Box(contentAlignment = Alignment.Center) {
+//                LoginDialog(navigateLogin = { /*TODO*/ }) {
+//
+//                }
+//            }
+//        }
+//    }
+//}

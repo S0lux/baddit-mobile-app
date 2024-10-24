@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -16,28 +17,47 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileItem(icon: Painter, text: String){
-    Row(modifier = Modifier.fillMaxWidth().defaultMinSize(Dp.Unspecified,40.dp).height(70.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Row(modifier = Modifier ,horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-            Icon(modifier = Modifier.size(30.dp), painter = icon, contentDescription = "")
-            Spacer(modifier = Modifier.fillMaxWidth(0.01f))
-            Text(text = text)
+fun ProfileItem(icon: Painter, text: String, onClick: () -> Unit){
+    Row(
+        modifier = Modifier.clickable(
+            onClick = onClick
+        )
+            .fillMaxWidth()
+            .defaultMinSize(Dp.Unspecified, 40.dp)
+            .height(50.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier,
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(modifier = Modifier.size(27.dp), painter = icon, contentDescription = "")
+            Spacer(modifier = Modifier.fillMaxWidth(0.02f))
+            Text(text = text, fontSize = 20.sp)
         }
 
-        Icon(modifier = Modifier.size(30.dp), painter = painterResource(id = R.drawable.arrow_right_solid), contentDescription = "")
+        Icon(
+            modifier = Modifier.size(27.dp),
+            painter = painterResource(id = R.drawable.arrow_right),
+            contentDescription = ""
+        )
     }
 }
 
 @Preview
 @Composable
-fun ProfileItemPreview(){
-    ProfileItem(painterResource(id = R.drawable.comment),"Test")
+fun ProfileItemPreview() {
+    ProfileItem(painterResource(id = R.drawable.comment), onClick = {}, text = "Comments")
 }
