@@ -42,7 +42,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit) {
+fun SignupScreen(viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit, navigateHome: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -59,7 +59,7 @@ fun SignupScreen(viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: 
             enter = fadeIn(animationSpec = tween(durationMillis = 500)),
             exit = fadeOut(animationSpec = tween(durationMillis = 500))
         ) {
-            SignUpComplete(navigateToLogin)
+            SignUpComplete(navigateHome)
         }
 
         AnimatedVisibility(

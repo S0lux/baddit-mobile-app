@@ -29,6 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.components.TopNavigationBar
@@ -38,6 +39,7 @@ import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
+import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.Home
@@ -45,6 +47,7 @@ import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.SignUp
+import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -58,7 +61,7 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             val navController = rememberNavController()
-            val barState = rememberSaveable { mutableStateOf(true) }
+            val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
 
             val sheetState = rememberModalBottomSheetState()
@@ -86,9 +89,7 @@ class MainActivity : ComponentActivity() {
                                 CreatePostActionButton(onClick = { showBottomSheet = true })
                             }
                         }
-
                     ) {
-
                         if (showBottomSheet) {
                             CreatePostBottomSheet(
                                 onDismissRequest = { showBottomSheet = false },
@@ -103,17 +104,25 @@ class MainActivity : ComponentActivity() {
                         ) {
                             navigation<Main>(startDestination = Profile) {
                                 composable<Home> {
+                                    barState.value = true
+                                    userTopBarState.value = false
+
                                     SlideHorizontally {
                                         HomeScreen { navController.navigate(Login) }
                                     }
                                 }
-
                                 composable<Community> {
+                                    barState.value = true
+                                    userTopBarState.value = false
+
                                     SlideHorizontally {
                                         CommunityScreen()
                                     }
                                 }
                                 composable<Profile> {
+                                    barState.value = true
+                                    userTopBarState.value = false
+
                                     SlideHorizontally {
                                         ProfileScreen()
                                     }
@@ -121,12 +130,34 @@ class MainActivity : ComponentActivity() {
                             }
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
-                                    SignupScreen(navigateToLogin = { navController.navigate(Login) })
+                                    barState.value = false;
+                                    userTopBarState.value = false;
+
+                                    SignupScreen(
+                                        navigateToLogin = { navController.navigate(Login) },
+                                        navigateHome = { navController.navigate(Home) })
                                 }
                                 composable<Login> {
+                                    barState.value = false;
+                                    userTopBarState.value = false;
+
                                     LoginScreen(
                                         navigateToHome = { navController.navigate(Home) },
                                         navigateToSignup = { navController.navigate(SignUp) })
+                                }
+                                composable<Verify>(
+                                    deepLinks = listOf(navDeepLink {
+                                        uriPattern = "https://baddit.life/auth?emailToken={token}"
+                                    })
+                                ) {
+                                    barState.value = false;
+                                    userTopBarState.value = false;
+
+                                    val token = it.arguments?.getString("token")
+                                    VerifyScreen(
+                                        navigateLogin = { navController.navigate(Login) },
+                                        navigateHome = { navController.navigate(Home) }, token
+                                    )
                                 }
                             }
                         }
