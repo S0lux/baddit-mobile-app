@@ -14,6 +14,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -83,7 +84,7 @@ fun TopNavigationBar(
                             )
                         }
                     },
-                    actions = {
+                    actions = @androidx.compose.runtime.Composable {
                         IconButton(onClick = { }) {
                             Icon(
                                 painter = painterResource(id = navItems[1].icon),
@@ -92,11 +93,13 @@ fun TopNavigationBar(
                         }
                         if (loggedIn) {
                             viewModel.currentUser.value?.let { currentUser ->
-                                    IconButton(onClick = { navController.navigate(
+                                IconButton(onClick = {
+                                    navController.navigate(
                                         Profile(
-                                            
+                                            viewModel.currentUser.value!!.username
                                         )
-                                    ) }) {
+                                    )
+                                }) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(currentUser.avatarUrl)
@@ -112,60 +115,74 @@ fun TopNavigationBar(
                             }
                         } else {
                             IconButton(onClick = { showLoginDialog = true }) {
-            TopAppBar(
-                colors = TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                    scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
-                    titleContentColor = MaterialTheme.colorScheme.textPrimary
-                ),
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            painter = painterResource(id = navItems[0].icon),
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            painter = painterResource(id = navItems[1].icon),
-                            contentDescription = null
-                        )
-                    }
-                    if (loggedIn) {
-                        viewModel.currentUser.value?.let { currentUser ->
-                            IconButton(onClick = { navController.navigate(Profile) }) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data("https://i.imgur.com/mJQpR31.png")
-                                        .build(),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .height(33.dp)
-                                        .aspectRatio(1f)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
+                                TopAppBar(
+                                    colors = TopAppBarColors(
+                                        containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                                        navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                                        actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                                        scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                                        titleContentColor = MaterialTheme.colorScheme.textPrimary
+                                    ),
+                                    title = { },
+                                    navigationIcon = {
+                                        IconButton(onClick = { /*TODO*/ }) {
+                                            Icon(
+                                                painter = painterResource(id = navItems[0].icon),
+                                                contentDescription = null
+                                            )
+                                        }
+                                    },
+                                    actions = {
+                                        IconButton(onClick = { }) {
+                                            Icon(
+                                                painter = painterResource(id = navItems[1].icon),
+                                                contentDescription = null
+                                            )
+                                        }
+                                        if (loggedIn) {
+                                            viewModel.currentUser.value?.let { currentUser ->
+                                                IconButton(onClick = {
+                                                    navController.navigate(
+                                                        Profile
+                                                    )
+                                                }) {
+                                                    AsyncImage(
+                                                        model = ImageRequest.Builder(LocalContext.current)
+                                                            .data("https://i.imgur.com/mJQpR31.png")
+                                                            .build(),
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .height(33.dp)
+                                                            .aspectRatio(1f)
+                                                            .clip(CircleShape),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    })
                             }
+
                         }
                     })
             }
-        } else {
+        }
+        else{
             SlideVertically {
                 TopAppBar(
                     title = {
                         val titleText = if (viewModel.loggedIn.value) {
-                            ("u/" + viewModel.currentUser.value?.username) ?: "u/UnknownUser"
+                            ("u/" + viewModel.currentUser.value?.username)
+                                ?: "u/UnknownUser"
                         } else {
                             "u/UnknownUser"
                         }
                         Text(
                             text = titleText,
-                            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                            style = TextStyle(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 20.sp
+                            )
                         )
                     },
                     navigationIcon = {
@@ -185,5 +202,5 @@ fun TopNavigationBar(
 
 data class TopNavigationItem(
     @DrawableRes val icon: Int,
-    val value:Any
+    val value: Any
 )
