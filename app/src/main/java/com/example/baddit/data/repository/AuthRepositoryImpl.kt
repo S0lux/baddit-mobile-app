@@ -17,6 +17,7 @@ import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
+import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.google.gson.Gson
@@ -82,18 +83,15 @@ class AuthRepositoryImpl @Inject constructor(
         if (result is Result.Success) {
             isLoggedIn.value = true;
             currentUser.value = result.data;
-            if(currentUser.value?.username!!.isEmpty()){
-                Log.d("heoconmap","empty");
-            }
-            else{
-                Log.d("heoconmap",currentUser.value!!.username);
-
-            }
         }
         return result;
     }
 
     override suspend fun verifyEmail(token: String): Result<Unit, DataError.NetworkError> {
         return safeApiCall { badditAPI.verify(EmailVerificationRequestBody(token)) }
+    }
+
+    override suspend fun getOther(username: String): Result<GetOtherResponseDTO, DataError.NetworkError> {
+        return safeApiCall { badditAPI.getOther(username) }
     }
 }

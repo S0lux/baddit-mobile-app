@@ -1,13 +1,16 @@
 package com.example.baddit
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -121,8 +124,12 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = false
 
+                                    var username = it.arguments?.getString("username");
                                     SlideHorizontally {
-                                        ProfileScreen()
+                                        ProfileScreen(
+                                            username = username!!,
+                                            navController = navController,
+                                        )
                                     }
                                 }
                             }
@@ -150,7 +157,6 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     barState.value = false;
                                     userTopBarState.value = false;
-
                                     val token = it.arguments?.getString("token")
                                     VerifyScreen(
                                         navigateLogin = { navController.navigate(Login) },
@@ -175,6 +181,20 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
         modifier = Modifier,
         enter = slideInHorizontally(),
         exit = slideOutHorizontally() + fadeOut(),
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun SlideVertically(content: @Composable ()->Unit){
+    AnimatedVisibility(
+        visibleState = MutableTransitionState(
+            initialState = false
+        ).apply { targetState = true },
+        modifier = Modifier,
+        enter = slideInVertically(),
+        exit = slideOutVertically() + fadeOut(),
     ) {
         content()
     }

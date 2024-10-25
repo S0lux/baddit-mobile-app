@@ -35,4 +35,7 @@ object UserSideBar
 object Search
 
 @Serializable
-object Profile
+data class Profile(
+    val username: String
+)
+
