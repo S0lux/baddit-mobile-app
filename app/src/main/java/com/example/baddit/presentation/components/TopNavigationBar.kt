@@ -71,7 +71,6 @@ fun TopNavigationBar(
         enter = slideInVertically()
     ) {
         if (!userTopBarState.value) {
-<<<<<<< HEAD
             SlideVertically {
                 TopAppBar(
 
@@ -113,7 +112,6 @@ fun TopNavigationBar(
                             }
                         } else {
                             IconButton(onClick = { showLoginDialog = true }) {
-=======
             TopAppBar(
                 colors = TopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.scaffoldBackground,
@@ -141,7 +139,6 @@ fun TopNavigationBar(
                     if (loggedIn) {
                         viewModel.currentUser.value?.let { currentUser ->
                             IconButton(onClick = { navController.navigate(Profile) }) {
->>>>>>> origin/master
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data("https://i.imgur.com/mJQpR31.png")
