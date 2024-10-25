@@ -47,5 +47,8 @@ object CustomTheme {
         @Composable
         get() = Color(0xFFE57373)
 
+    val ColorScheme.PrimaryContainter:Color
+        @Composable
+        get() = if(!isSystemInDarkTheme()) Color(80, 211, 215) else Color(40, 170, 175)
 
 }
