@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 composable<Profile> {
                                     barState.value = true
-                                    userTopBarState.value = false
+                                    userTopBarState.value = true
 
                                     var username = it.arguments?.getString("username");
                                     SlideHorizontally {
