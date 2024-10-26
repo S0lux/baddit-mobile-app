@@ -69,10 +69,7 @@ class MainActivity : ComponentActivity() {
             val sheetState = rememberModalBottomSheetState()
             var showBottomSheet by remember { mutableStateOf(false) }
 
-            val bool = isSystemInDarkTheme();
-            val darkTheme = remember { mutableStateOf(bool) }
-
-            BadditTheme(darkTheme) {
+            BadditTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
