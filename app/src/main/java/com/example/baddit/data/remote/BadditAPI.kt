@@ -5,6 +5,7 @@ import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
+import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import retrofit2.Response
@@ -43,4 +44,7 @@ interface BadditAPI {
 
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>
+
+    @GET("v1/users/{username}")
+    suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
 }
