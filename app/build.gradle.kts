@@ -85,6 +85,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("me.saket.swipe:swipe:1.3.0")
 
     //navigation
     //implementation("androidx.navigation:navigation-compose:2.7.7")

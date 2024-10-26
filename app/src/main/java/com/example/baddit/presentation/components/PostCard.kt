@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -68,6 +69,8 @@ import getTimeAgoFromUtcString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.saket.swipe.SwipeAction
+import me.saket.swipe.SwipeableActionsBox
 
 @Composable
 fun PostCard(
@@ -106,13 +109,129 @@ fun PostCard(
         }
     }
 
-    Box(
-        Modifier
+    fun onUpvote() {
+        hasUserInteracted = true
+        if (!loggedIn) {
+            showLoginDialog = true
+            return
+        }
+        when (voteState) {
+            "UPVOTE" -> {
+                voteState = Unit
+                postScore--
+                handleVote(
+                    voteState = "UPVOTE",
+                    onError = { postScore++; voteState = "UPVOTE" },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+
+            "DOWNVOTE" -> {
+                voteState = "UPVOTE"
+                postScore += 2
+                handleVote(
+                    voteState = "UPVOTE",
+                    onError = { postScore -= 2; voteState = "DOWNVOTE" },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+
+            else -> {
+                voteState = "UPVOTE"
+                postScore++
+                handleVote(
+                    voteState = "UPVOTE",
+                    onError = { postScore--; voteState = Unit },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+        }
+    }
+
+    fun onDownvote() {
+        hasUserInteracted = true
+        if (!loggedIn) {
+            showLoginDialog = true
+            return
+        }
+        when (voteState) {
+            "UPVOTE" -> {
+                voteState = "DOWNVOTE"
+                postScore -= 2
+                handleVote(
+                    voteState = "DOWNVOTE",
+                    onError = { postScore += 2; voteState = "UPVOTE" },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+
+            "DOWNVOTE" -> {
+                voteState = Unit
+                postScore++
+                handleVote(
+                    voteState = "DOWNVOTE",
+                    onError = { postScore--; voteState = "DOWNVOTE" },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+
+            else -> {
+                voteState = "DOWNVOTE"
+                postScore--
+                handleVote(
+                    voteState = "DOWNVOTE",
+                    onError = { postScore++; voteState = Unit },
+                    coroutineScope = coroutineScope,
+                    voteFn = votePostFn
+                )
+            }
+        }
+    }
+
+    val upvoteSwipe = SwipeAction(
+        icon = {
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_upvote),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        background = colorUpvote,
+        onSwipe = { onUpvote() },
+        weight = 1.0,
+    )
+
+    val downvoteSwipe = SwipeAction(
+        icon = {
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_downvote),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        background = colorDownvote,
+        onSwipe = { onDownvote() },
+        weight = 3.0,
+    )
+
+    SwipeableActionsBox(
+        modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
-            .fillMaxWidth()
-            .padding(15.dp)
+            .fillMaxWidth(),
+        endActions = listOf(upvoteSwipe, downvoteSwipe),
+        swipeThreshold = 40.dp
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(15.dp)
+        ) {
             PostHeader(postDetails = postDetails)
             PostTitle(title = postDetails.title)
             if (postDetails.type == "TEXT") {
@@ -124,85 +243,14 @@ fun PostCard(
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
-                onUpvote = {
-                    hasUserInteracted = true
-                    if (!loggedIn) {
-                        showLoginDialog = true
-                        return@PostActions
-                    }
-                    when (voteState) {
-                        "UPVOTE" -> {
-                            voteState = Unit
-                            postScore--
-                            handleVote(
-                                voteState = "UPVOTE",
-                                onError = { postScore++; voteState = "UPVOTE" },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                        "DOWNVOTE" -> {
-                            voteState = "UPVOTE"
-                            postScore += 2
-                            handleVote(
-                                voteState = "UPVOTE",
-                                onError = { postScore -= 2; voteState = "DOWNVOTE" },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                        else -> {
-                            voteState = "UPVOTE"
-                            postScore++
-                            handleVote(
-                                voteState = "UPVOTE",
-                                onError = { postScore--; voteState = Unit },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                    }
-                },
-                onDownvote = {
-                    hasUserInteracted = true
-                    if (!loggedIn) {
-                        showLoginDialog = true
-                        return@PostActions
-                    }
-                    when (voteState) {
-                        "UPVOTE" -> {
-                            voteState = "DOWNVOTE"
-                            postScore -= 2
-                            handleVote(
-                                voteState = "DOWNVOTE",
-                                onError = { postScore += 2; voteState = "UPVOTE" },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                        "DOWNVOTE" -> {
-                            voteState = Unit
-                            postScore++
-                            handleVote(
-                                voteState = "DOWNVOTE",
-                                onError = { postScore--; voteState = "DOWNVOTE" },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                        else -> {
-                            voteState = "DOWNVOTE"
-                            postScore--
-                            handleVote(
-                                voteState = "DOWNVOTE",
-                                onError = { postScore++; voteState = Unit },
-                                coroutineScope = coroutineScope,
-                                voteFn = votePostFn)
-                        }
-                    }
-                },
+                onUpvote = { onUpvote() },
+                onDownvote = { onDownvote() },
                 commentCount = postDetails.commentCount,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size },
             )
         }
     }
 }
-
 
 fun handleVote(
     voteState: String,
@@ -234,9 +282,9 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
     } else {
         "r/"
     }
-    val logo = if(communityLogo.isEmpty()){
+    val logo = if (communityLogo.isEmpty()) {
         authorUrl
-    }else{
+    } else {
         communityLogo
     }
 
@@ -244,20 +292,20 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(logo).build(),
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .height(36.dp)
-                    .aspectRatio(1f),
-                contentScale = ContentScale.Crop
-            )
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(logo).build(),
+            contentDescription = null,
+            modifier = Modifier
+                .clip(CircleShape)
+                .height(36.dp)
+                .aspectRatio(1f),
+            contentScale = ContentScale.Crop
+        )
 
         Column {
             Row {
-                Log.d("Heocon",titleText);
+                Log.d("Heocon", titleText);
                 Text(
                     subReddit,
                     fontSize = 12.sp,
