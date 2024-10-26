@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.components
 
 import android.content.res.Configuration
+import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -50,7 +52,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
@@ -91,9 +96,7 @@ fun PostCard(
     val coroutineScope = rememberCoroutineScope()
 
     if (showLoginDialog) {
-        LoginDialog(
-            navigateLogin = { navigateLogin() },
-            onDismiss = { showLoginDialog = false })
+        LoginDialog(navigateLogin = { navigateLogin() }, onDismiss = { showLoginDialog = false })
     }
 
     LaunchedEffect(voteState) {
@@ -229,14 +232,20 @@ fun PostCard(
         swipeThreshold = 40.dp
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(15.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(15.dp)
         ) {
             PostHeader(postDetails = postDetails)
+
             PostTitle(title = postDetails.title)
+
             if (postDetails.type == "TEXT") {
                 PostTextContent(content = postDetails.content)
             }
+
+            if (postDetails.type == "MEDIA") {
+                PostMediaContent(mediaUrls = postDetails.mediaUrls)
+            }
+
             PostActions(
                 voteState = voteState?.toString(),
                 postScore = postScore,
@@ -293,8 +302,7 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(logo).build(),
+            model = ImageRequest.Builder(LocalContext.current).data(logo).build(),
             contentDescription = null,
             modifier = Modifier
                 .clip(CircleShape)
@@ -353,10 +361,7 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
 @Composable
 fun PostTitle(title: String) {
     Text(
-        title,
-        color = MaterialTheme.colorScheme.textPrimary,
-        fontSize = 17.sp,
-        lineHeight = 20.sp
+        title, color = MaterialTheme.colorScheme.textPrimary, fontSize = 17.sp, lineHeight = 20.sp
     )
 }
 
@@ -378,6 +383,35 @@ fun PostTextContent(content: String) {
 }
 
 @Composable
+fun PostMediaContent(mediaUrls: List<String>) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.cardForeground)
+            .fillMaxWidth()
+            .heightIn(50.dp, 650.dp), contentAlignment = Alignment.Center
+    ) {
+        val context = LocalContext.current
+        val imageLoader = ImageLoader.Builder(context).components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }.build()
+
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current).data(mediaUrls.first()).build(),
+            imageLoader = imageLoader,
+            contentDescription = null,
+            modifier = Modifier
+                .heightIn(50.dp, 650.dp),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
 fun PostActions(
     voteState: String?,
     postScore: Int,
@@ -396,9 +430,7 @@ fun PostActions(
                 .clip(RoundedCornerShape(10))
                 .onGloballyPositioned(onGloballyPositioned)
                 .clickable(
-                    onClick = {},
-                    interactionSource = voteInteractionSource,
-                    indication = ripple(
+                    onClick = {}, interactionSource = voteInteractionSource, indication = ripple(
                         bounded = true,
                         color = if (voteState == "UPVOTE") colorUpvote else colorDownvote
                     )
@@ -425,12 +457,11 @@ fun PostActions(
                 painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = if (voteState == "DOWNVOTE") colorDownvote else MaterialTheme.colorScheme.textSecondary,
-                modifier = Modifier
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = onDownvote
-                    )
+                modifier = Modifier.clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = onDownvote
+                )
             )
         }
         Row(
@@ -458,8 +489,7 @@ fun PostActions(
 
 @Composable
 fun LoginDialog(navigateLogin: () -> Unit, onDismiss: () -> Unit) {
-    BadditDialog(
-        title = "Login required",
+    BadditDialog(title = "Login required",
         text = "You need to login to perform this action.",
         confirmText = "Login",
         dismissText = "Cancel",
@@ -484,11 +514,11 @@ fun PostCardPreview() {
             avatarUrl = "https://placehold.co/400.png"
         ),
         community = Community(
-            name = "pesocommunity",
-            logoUrl = "https://placehold.co/400.png"
+            name = "pesocommunity", logoUrl = "https://placehold.co/400.png"
         ),
         createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z"
+        updatedAt = "2024-05-13T05:57:03.877Z",
+        mediaUrls = ArrayList(),
     )
     BadditTheme {
         Surface(
@@ -521,11 +551,11 @@ fun PostCardDarkPreview() {
             avatarUrl = "https://placehold.co/400.png"
         ),
         community = Community(
-            name = "pesocommunity",
-            logoUrl = "https://placehold.co/400.png"
+            name = "pesocommunity", logoUrl = "https://placehold.co/400.png"
         ),
         createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z"
+        updatedAt = "2024-05-13T05:57:03.877Z",
+        mediaUrls = ArrayList(),
     )
     BadditTheme {
         Surface(

@@ -11,5 +11,6 @@ data class PostResponseDTOItem(
     val title: String,
     val type: String,
     val updatedAt: String,
-    val voteState: Any
+    val voteState: Any,
+    val mediaUrls: ArrayList<String>
 )

@@ -102,6 +102,7 @@ dependencies {
     // coil
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil-svg:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
 
     // material 3
     implementation("androidx.compose.material3:material3:1.2.1")
