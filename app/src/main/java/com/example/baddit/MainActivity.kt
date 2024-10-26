@@ -32,6 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
+import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.components.TopNavigationBar
@@ -69,7 +70,10 @@ class MainActivity : ComponentActivity() {
             val sheetState = rememberModalBottomSheetState()
             var showBottomSheet by remember { mutableStateOf(false) }
 
+            var showAvatarMenu = remember { mutableStateOf(false) }
+
             BadditTheme {
+                AvatarMenu(show = showAvatarMenu, navController = navController)
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
@@ -83,7 +87,8 @@ class MainActivity : ComponentActivity() {
                             TopNavigationBar(
                                 navController = navController,
                                 barState = barState,
-                                userTopBarState = userTopBarState
+                                userTopBarState = userTopBarState,
+                                showAvatarMenu = showAvatarMenu
                             )
                         },
                         floatingActionButton = {

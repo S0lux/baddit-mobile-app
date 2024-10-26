@@ -51,7 +51,8 @@ fun TopNavigationBar(
     navController: NavHostController,
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(),
+    showAvatarMenu: MutableState<Boolean>
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
@@ -94,11 +95,12 @@ fun TopNavigationBar(
                         if (loggedIn) {
                             viewModel.currentUser.value?.let { currentUser ->
                                 IconButton(onClick = {
-                                    navController.navigate(
-                                        Profile(
-                                            viewModel.currentUser.value!!.username
-                                        )
-                                    )
+//                                    navController.navigate(
+//                                        Profile(
+//                                            viewModel.currentUser.value!!.username
+//                                        )
+//                                    )
+                                    showAvatarMenu.value = true;
                                 }) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(LocalContext.current)

@@ -61,13 +61,17 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.IntOffset
+import androidx.navigation.NavHostController
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 
 @Composable
 fun AvatarMenu(
-    show: MutableState<Boolean>, viewModel: LoginViewModel = hiltViewModel(),
-    darkTheme: MutableState<Boolean>,
+    show: MutableState<Boolean>,
+    viewModel: LoginViewModel = hiltViewModel(),
+    navController: NavHostController
 ) {
 
     var currentUser = viewModel.currentUser.value;
@@ -107,14 +111,15 @@ fun AvatarMenu(
                             modifier = Modifier
                                 .fillMaxWidth(0.8f)
                                 .wrapContentHeight()
-                                .padding(start = 10.dp, end = 10.dp),
+                                .padding(start = 20.dp, end = 20.dp),
                             verticalArrangement = Arrangement.Top,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
                                 modifier = Modifier
                                     .align(Alignment.Start)
-                                    .fillMaxWidth(),
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 if (currentUser != null) {
@@ -124,7 +129,7 @@ fun AvatarMenu(
                                             .build(),
                                         contentDescription = null,
                                         modifier = Modifier
-                                            .height(40.dp)
+                                            .height(45.dp)
                                             .aspectRatio(1f)
                                             .clip(CircleShape)
                                     )
@@ -135,20 +140,22 @@ fun AvatarMenu(
                                         .padding(10.dp, 14.dp, 10.dp, 10.dp)
                                 ) {
                                     Text(
-                                        text = "Username",
+                                        text = currentUser?.username ?: "Username",
                                         style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
+                                        modifier = Modifier,
+                                        color = MaterialTheme.colorScheme.textPrimary
                                     )
                                     Text(
-                                        text = "Email",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
+                                        text = currentUser?.email ?: "Email",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier,
+                                        color = MaterialTheme.colorScheme.textPrimary
                                     )
                                 }
 
                                 Spacer(modifier = Modifier.weight(1f))
 
-                                if (darkTheme.value) {
+                                if (isSystemInDarkTheme()) {
                                     Icon(
                                         modifier = Modifier.size(27.dp),
                                         painter = painterResource(id = R.drawable.baseline_dark_mode_24),
@@ -163,7 +170,7 @@ fun AvatarMenu(
                                             }),
                                         painter = painterResource(id = R.drawable.baseline_light_mode_24),
                                         contentDescription = "",
-                                        )
+                                    )
                                 }
 
                             }
@@ -179,7 +186,14 @@ fun AvatarMenu(
                                 ProfileItem(
                                     painterResource(id = R.drawable.person),
                                     "Profile",
-                                    onClick = {})
+                                    onClick = {
+                                        navController.navigate(
+                                        Profile(
+                                            viewModel.currentUser.value!!.username
+                                        )
+                                    )
+                                        show.value = false;
+                                    })
                                 ProfileItem(
                                     painterResource(id = R.drawable.baseline_settings_24),
                                     "Setting", onClick = {}
@@ -199,8 +213,8 @@ fun AvatarMenu(
 }
 
 
-@Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun AvatarMenuPreview() {
-    AvatarMenu(remember { mutableStateOf(true) }, darkTheme =  remember { mutableStateOf(true) })
-}
+//@Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFFFFFFF)
+//@Composable
+//fun AvatarMenuPreview() {
+//    AvatarMenu(remember { mutableStateOf(true) }, darkTheme =  remember { mutableStateOf(true) })
+//}
