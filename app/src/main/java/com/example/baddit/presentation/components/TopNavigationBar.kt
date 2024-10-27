@@ -53,7 +53,12 @@ fun TopNavigationBar(
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
 <<<<<<< HEAD
+<<<<<<< HEAD
     viewModel: ProfileViewModel = hiltViewModel()
+=======
+    viewModel: LoginViewModel = hiltViewModel(),
+    showAvatarMenu: MutableState<Boolean>
+>>>>>>> origin/master
 =======
     viewModel: LoginViewModel = hiltViewModel(),
     showAvatarMenu: MutableState<Boolean>
