@@ -37,6 +37,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.SlideVertically
 import com.example.baddit.presentation.screens.login.LoginViewModel
+import com.example.baddit.presentation.screens.profile.ProfileViewModel
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
@@ -51,13 +52,23 @@ fun TopNavigationBar(
     navController: NavHostController,
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
+<<<<<<< HEAD
+<<<<<<< HEAD
+    viewModel: ProfileViewModel = hiltViewModel()
+=======
     viewModel: LoginViewModel = hiltViewModel(),
     showAvatarMenu: MutableState<Boolean>
+>>>>>>> origin/master
+=======
+    viewModel: LoginViewModel = hiltViewModel(),
+    showAvatarMenu: MutableState<Boolean>
+>>>>>>> origin/master
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
         TopNavigationItem(icon = R.drawable.baseline_search_24, value = Search),
     )
+
     val loggedIn by viewModel.loggedIn
 
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
@@ -68,14 +79,21 @@ fun TopNavigationBar(
             onDismiss = { showLoginDialog = false })
     }
     AnimatedVisibility(
-        visible = barState.value,
+        visible = barState.value && !userTopBarState.value,
         exit = slideOutVertically(),
         enter = slideInVertically()
     ) {
-        if (!userTopBarState.value) {
-            SlideVertically {
-                TopAppBar(
+        SlideVertically {
+            TopAppBar(
 
+<<<<<<< HEAD
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            painter = painterResource(id = navItems[0].icon),
+                            contentDescription = null
+=======
                     title = { },
                     navigationIcon = {
                         IconButton(onClick = { /*TODO*/ }) {
@@ -185,19 +203,57 @@ fun TopNavigationBar(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 20.sp
                             )
+>>>>>>> origin/master
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigate(Home) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                                contentDescription = null
-                            )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            painter = painterResource(id = navItems[1].icon),
+                            contentDescription = null
+                        )
+                    }
+                    if (loggedIn) {
+                        viewModel.me.value?.let {
+                            IconButton(onClick = {
+                                navController.navigate(
+                                    Profile(
+                                        viewModel.me.value!!.username
+                                    )
+                                )
+                            }) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(viewModel.me.value!!.avatarUrl)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .height(33.dp)
+                                        .aspectRatio(1f)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
-                    },
-                    actions = {},
-                )
-            }
+                    } else {
+                        IconButton(onClick = { showLoginDialog = true }) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data("https://i.imgur.com/mJQpR31.png")
+                                    .build(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(33.dp)
+                                    .aspectRatio(1f)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+
+                        }
+
+                    }
+                })
         }
     }
 }
