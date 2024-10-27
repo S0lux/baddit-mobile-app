@@ -52,17 +52,8 @@ fun TopNavigationBar(
     navController: NavHostController,
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
-<<<<<<< HEAD
-<<<<<<< HEAD
-    viewModel: ProfileViewModel = hiltViewModel()
-=======
     viewModel: LoginViewModel = hiltViewModel(),
     showAvatarMenu: MutableState<Boolean>
->>>>>>> origin/master
-=======
-    viewModel: LoginViewModel = hiltViewModel(),
-    showAvatarMenu: MutableState<Boolean>
->>>>>>> origin/master
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
@@ -85,125 +76,19 @@ fun TopNavigationBar(
     ) {
         SlideVertically {
             TopAppBar(
-
-<<<<<<< HEAD
                 title = { },
+                colors = TopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.textPrimary
+                ),
                 navigationIcon = {
                     IconButton(onClick = { /*TODO*/ }) {
                         Icon(
                             painter = painterResource(id = navItems[0].icon),
                             contentDescription = null
-=======
-                    title = { },
-                    navigationIcon = {
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(
-                                painter = painterResource(id = navItems[0].icon),
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    actions = @androidx.compose.runtime.Composable {
-                        IconButton(onClick = { }) {
-                            Icon(
-                                painter = painterResource(id = navItems[1].icon),
-                                contentDescription = null
-                            )
-                        }
-                        if (loggedIn) {
-                            viewModel.currentUser.value?.let { currentUser ->
-                                IconButton(onClick = {
-//                                    navController.navigate(
-//                                        Profile(
-//                                            viewModel.currentUser.value!!.username
-//                                        )
-//                                    )
-                                    showAvatarMenu.value = true;
-                                }) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(currentUser.avatarUrl)
-                                            .build(),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .height(33.dp)
-                                            .aspectRatio(1f)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                        } else {
-                            IconButton(onClick = { showLoginDialog = true }) {
-                                TopAppBar(
-                                    colors = TopAppBarColors(
-                                        containerColor = MaterialTheme.colorScheme.scaffoldBackground,
-                                        navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                                        actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                                        scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
-                                        titleContentColor = MaterialTheme.colorScheme.textPrimary
-                                    ),
-                                    title = { },
-                                    navigationIcon = {
-                                        IconButton(onClick = { /*TODO*/ }) {
-                                            Icon(
-                                                painter = painterResource(id = navItems[0].icon),
-                                                contentDescription = null
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        IconButton(onClick = { }) {
-                                            Icon(
-                                                painter = painterResource(id = navItems[1].icon),
-                                                contentDescription = null
-                                            )
-                                        }
-                                        if (loggedIn) {
-                                            viewModel.currentUser.value?.let { currentUser ->
-                                                IconButton(onClick = {
-                                                    navController.navigate(
-                                                        Profile
-                                                    )
-                                                }) {
-                                                    AsyncImage(
-                                                        model = ImageRequest.Builder(LocalContext.current)
-                                                            .data("https://i.imgur.com/mJQpR31.png")
-                                                            .build(),
-                                                        contentDescription = null,
-                                                        modifier = Modifier
-                                                            .height(33.dp)
-                                                            .aspectRatio(1f)
-                                                            .clip(CircleShape),
-                                                        contentScale = ContentScale.Crop
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    })
-                            }
-
-                        }
-                    })
-            }
-        }
-        else{
-            SlideVertically {
-                TopAppBar(
-                    title = {
-                        val titleText = if (viewModel.loggedIn.value) {
-                            ("u/" + viewModel.currentUser.value?.username)
-                                ?: "u/UnknownUser"
-                        } else {
-                            "u/UnknownUser"
-                        }
-                        Text(
-                            text = titleText,
-                            style = TextStyle(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
->>>>>>> origin/master
                         )
                     }
                 },
@@ -215,17 +100,13 @@ fun TopNavigationBar(
                         )
                     }
                     if (loggedIn) {
-                        viewModel.me.value?.let {
+                        viewModel.currentUser.value?.let { currentUser ->
                             IconButton(onClick = {
-                                navController.navigate(
-                                    Profile(
-                                        viewModel.me.value!!.username
-                                    )
-                                )
+                                showAvatarMenu.value = true;
                             }) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
-                                        .data(viewModel.me.value!!.avatarUrl)
+                                        .data(currentUser.avatarUrl)
                                         .build(),
                                     contentDescription = null,
                                     modifier = Modifier
@@ -236,26 +117,25 @@ fun TopNavigationBar(
                                 )
                             }
                         }
-                    } else {
-                        IconButton(onClick = { showLoginDialog = true }) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data("https://i.imgur.com/mJQpR31.png")
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .height(33.dp)
-                                    .aspectRatio(1f)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-
-                        }
-
+                    }else{
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data("https://i.imgur.com/mJQpR31.png")
+                                .build(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(33.dp)
+                                .aspectRatio(1f)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
                     }
-                })
+
+                }
+            )
         }
     }
+
 }
 
 data class TopNavigationItem(
