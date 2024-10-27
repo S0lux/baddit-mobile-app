@@ -54,4 +54,5 @@ object CustomTheme {
     val ColorScheme.scaffoldBackground: Color
         @Composable
         get() = if (isSystemInDarkTheme()) Color(0xFF181818) else Color(0xFFF0F0F0)
+
 }
