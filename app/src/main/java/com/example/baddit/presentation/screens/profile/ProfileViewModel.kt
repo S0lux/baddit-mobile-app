@@ -54,7 +54,8 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     posts.clear()
                     error = ""
-                    lastPostId = fetchPosts.data.last().id
+                    if(!fetchPosts.data.isEmpty())
+                        lastPostId = fetchPosts.data.last().id
                     posts.addAll(fetchPosts.data)
                 }
             }
