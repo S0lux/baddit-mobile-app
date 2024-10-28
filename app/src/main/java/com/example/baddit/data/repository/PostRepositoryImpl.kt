@@ -23,7 +23,7 @@ class PostRepositoryImpl @Inject constructor(
         cursor: String?,
         postTitle: String?
     ): Result<PostResponseDTO, DataError.NetworkError> {
-        return safeApiCall { badditAPI.getPosts() }
+        return safeApiCall { badditAPI.getPosts(communityName,authorName,cursor,postTitle) }
     }
 
     override suspend fun votePost(

@@ -55,11 +55,9 @@ class ProfileViewModel @Inject constructor(
                     posts.clear()
                     error = ""
                     lastPostId = fetchPosts.data.last().id
-
                     posts.addAll(fetchPosts.data)
                 }
             }
-
             isRefreshing = false
         }
     }
@@ -84,11 +82,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onPostsSelected() {
-        refreshPosts(user.value!!.username)
+    fun onPostsSelected(username: String) {
+        refreshPosts(username)
     }
 
     fun onCommentsSelected() {
 
     }
+
 }
