@@ -33,7 +33,7 @@ object CustomTheme {
 
     val ColorScheme.appBlue: Color
         @Composable
-        get() = Color(0xFF153CFF)
+        get() = Color(0xFF0378FF)
 
     val ColorScheme.mutedAppBlue: Color
         @Composable
@@ -50,4 +50,9 @@ object CustomTheme {
     val ColorScheme.PrimaryContainter:Color
         @Composable
         get() = if(!isSystemInDarkTheme()) Color(80, 211, 215) else Color(40, 170, 175)
+
+    val ColorScheme.scaffoldBackground: Color
+        @Composable
+        get() = if (isSystemInDarkTheme()) Color(0xFF181818) else Color(0xFFF0F0F0)
+
 }

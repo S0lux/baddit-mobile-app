@@ -25,12 +25,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -38,8 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.baddit.R
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.Home
-import com.example.baddit.ui.theme.CustomTheme.cardBackground
-import com.example.baddit.ui.theme.CustomTheme.cardForeground
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 
@@ -72,14 +69,14 @@ fun BottomNavigationBar(
     ) {
         NavigationBar(
             modifier = Modifier.height(60.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.scaffoldBackground
         ) {
             navItems.forEachIndexed { index, item ->
                 NavigationBarItem(
                     selected = index == selectedIndex,
                     modifier = Modifier.fillMaxHeight(),
                     colors = NavigationBarItemColors(
-                        selectedIconColor = Color.Black,
+                        selectedIconColor = MaterialTheme.colorScheme.textPrimary,
                         selectedTextColor = Color.Transparent,
                         selectedIndicatorColor = Color.Transparent,
                         unselectedIconColor = MaterialTheme.colorScheme.textSecondary,

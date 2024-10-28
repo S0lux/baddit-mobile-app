@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.baddit"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -78,12 +78,14 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.3.0-beta01")
+    implementation("androidx.wear.compose:compose-material3:1.0.0-alpha23")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("me.saket.swipe:swipe:1.3.0")
 
     //navigation
     //implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -101,6 +103,7 @@ dependencies {
     // coil
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil-svg:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
 
     // material 3
     implementation("androidx.compose.material3:material3:1.2.1")

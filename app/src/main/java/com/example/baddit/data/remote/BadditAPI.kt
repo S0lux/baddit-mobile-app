@@ -5,6 +5,7 @@ import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
+import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.community.CommunityDTO
 import com.example.baddit.domain.model.community.CommunityResponseDTO
@@ -48,4 +49,7 @@ interface BadditAPI {
 
     @GET("v1/communities")
     suspend fun getCommunities(@Query("name") name: String?):Response<CommunityResponseDTO>
+
+    @GET("v1/users/{username}")
+    suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
 }
