@@ -1,7 +1,6 @@
 package com.example.baddit
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -11,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +30,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
@@ -40,6 +40,7 @@ import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
+import com.example.baddit.presentation.screens.post.PostScreen
 import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
@@ -48,11 +49,14 @@ import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
+import com.example.baddit.presentation.utils.Post
+import com.example.baddit.presentation.utils.PostResponseNavType
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -96,7 +100,7 @@ class MainActivity : ComponentActivity() {
                                 CreatePostActionButton(onClick = { showBottomSheet = true })
                             }
                         }
-                    ) {
+                    ) { it ->
                         if (showBottomSheet) {
                             CreatePostBottomSheet(
                                 onDismissRequest = { showBottomSheet = false },
@@ -115,7 +119,12 @@ class MainActivity : ComponentActivity() {
                                     userTopBarState.value = false
 
                                     SlideHorizontally {
-                                        HomeScreen { navController.navigate(Login) }
+                                        HomeScreen(
+                                            navigateLogin = { navController.navigate(Login) },
+                                            navigatePost = { details: PostResponseDTOItem -> navController.navigate(Post(
+                                                postDetails = details
+                                            )) }
+                                        )
                                     }
                                 }
                                 composable<Community> {
@@ -130,7 +139,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = true
 
-                                    var username = it.arguments?.getString("username");
+                                    val username = it.arguments?.getString("username");
                                     SlideHorizontally {
                                         ProfileScreen(
                                             username = username!!,
@@ -138,7 +147,22 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }
+                                composable<Post>(
+                                    typeMap = mapOf(
+                                        typeOf<PostResponseDTOItem>() to PostResponseNavType
+                                    )
+                                ) {
+                                    barState.value = true
+                                    userTopBarState.value = true
+
+                                    val details = it.toRoute<Post>().postDetails
+
+                                    SlideVertically {
+                                        PostScreen(navigateLogin = { navController.navigate(Login) }, postDetails = details)
+                                    }
+                                }
                             }
+
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
                                     barState.value = false;
@@ -193,7 +217,7 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun SlideVertically(content: @Composable ()->Unit){
+fun SlideVertically(content: @Composable () -> Unit) {
     AnimatedVisibility(
         visibleState = MutableTransitionState(
             initialState = false

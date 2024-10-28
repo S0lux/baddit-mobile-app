@@ -7,6 +7,7 @@ import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
+import com.example.baddit.domain.model.comment.CommentResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import retrofit2.Response
 import retrofit2.http.Body
@@ -45,6 +46,14 @@ interface BadditAPI {
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>
 
-    @GET("v1/users/{username}")
+    @GET("/v1/users/{username}")
     suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
+
+    @GET("/v1/comments")
+    suspend fun getComments(
+        @Query("postId") postId: String,
+        @Query("parentId") parentId: String? = null,
+        @Query("authorId") authorId: String? = null,
+        @Query("cursor") cursor: String? = null
+    ): Response<CommentResponseDTO>
 }

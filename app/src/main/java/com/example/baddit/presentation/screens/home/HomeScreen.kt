@@ -5,25 +5,53 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), navigateLogin: () -> Unit) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    navigateLogin: () -> Unit,
+    navigatePost: (PostResponseDTOItem) -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .map { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                val lastItem = listState.layoutInfo.totalItemsCount - 1
+                lastVisibleItem?.index == lastItem
+            }
+            .distinctUntilChanged()
+            .collect { isAtEnd ->
+                if (isAtEnd) {
+                    viewModel.loadMorePosts()
+                }
+            }
+    }
 
     val posts = viewModel.posts
     val error = viewModel.error
@@ -33,7 +61,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), navigateLogin: () -> 
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
     }
 
-    var showLoginDialog by rememberSaveable { mutableStateOf(false) }
+    var showLoginDialog by remember { mutableStateOf(false) }
 
     if (showLoginDialog) {
         LoginDialog(
@@ -41,24 +69,39 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel(), navigateLogin: () -> 
             onDismiss = { showLoginDialog = false })
     }
 
+    if (viewModel.showNoPostAlert) {
+        BadditDialog(
+            title = "Woah",
+            text = "It seems like you have scrolled to the end of of all posts. Impressive!",
+            confirmText = "Okay",
+            dismissText = "Cancel",
+            onConfirm = { viewModel.showNoPostAlert = false }) {
+
+        }
+    }
+
     PullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
         onRefresh = { viewModel.refreshPosts() }) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize()
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier.fillMaxSize(),
+            state = listState
         ) {
             if (error.isEmpty()) {
                 items(items = posts) { item ->
                     PostCard(
                         postDetails = item,
-                        loggedIn,
-                        navigateLogin,
+                        loggedIn = loggedIn,
+                        navigateLogin = { navigateLogin() },
                         votePostFn = { voteState: String ->
                             viewModel.postRepository.votePost(
                                 item.id,
                                 voteState
                             )
-                        })
+                        },
+                        navigatePost = navigatePost
+                    )
                 }
             }
         }

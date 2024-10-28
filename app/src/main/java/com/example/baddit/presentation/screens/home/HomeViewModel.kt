@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.PostRepository
@@ -28,11 +27,16 @@ class HomeViewModel @Inject constructor(
 
     var error by mutableStateOf("");
 
+    var showNoPostAlert by mutableStateOf(false)
+
     val loggedIn = _authRepository.isLoggedIn;
+
+    var endReached = false;
 
     private var lastPostId: String? = null;
 
     fun refreshPosts() {
+        endReached = false
         viewModelScope.launch {
             isRefreshing = true;
             when (val fetchPosts = postRepository.getPosts()) {
@@ -57,6 +61,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadMorePosts() {
+        if (endReached) return
+
         viewModelScope.launch {
             isRefreshing = true;
             when (val fetchPosts = postRepository.getPosts(cursor = lastPostId)) {
@@ -70,9 +76,14 @@ class HomeViewModel @Inject constructor(
 
                 is Result.Success -> {
                     error = ""
-                    lastPostId = fetchPosts.data.last().id
-
-                    posts.addAll(fetchPosts.data)
+                    if (fetchPosts.data.isNotEmpty()) {
+                        lastPostId = fetchPosts.data.last().id
+                        posts.addAll(fetchPosts.data)
+                    }
+                    else {
+                        showNoPostAlert = true
+                        endReached = true
+                    }
                 }
             }
             isRefreshing = false;
