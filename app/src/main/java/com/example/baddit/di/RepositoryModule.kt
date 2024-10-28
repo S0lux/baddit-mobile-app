@@ -1,8 +1,10 @@
 package com.example.baddit.di
 
 import com.example.baddit.data.repository.AuthRepositoryImpl
+import com.example.baddit.data.repository.CommentRepositoryImpl
 import com.example.baddit.data.repository.PostRepositoryImpl
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
 import dagger.Binds
 import dagger.Module
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommentRepository(impl: CommentRepositoryImpl): CommentRepository
 }
