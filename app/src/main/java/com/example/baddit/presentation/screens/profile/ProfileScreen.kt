@@ -49,6 +49,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.model.profile.UserProfile
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
@@ -61,6 +62,7 @@ import com.example.baddit.presentation.utils.Login
 fun ProfileScreen(
     username: String,
     navController: NavController,
+    navigatePost: (PostResponseDTOItem) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val posts = viewModel.posts
@@ -145,14 +147,16 @@ fun ProfileScreen(
                     items(items = posts) { item ->
                         PostCard(
                             postDetails = item,
-                            viewModel.loggedIn.value,
-                            {navController.navigate(Login)},
+                            loggedIn = loggedIn,
+                            navigateLogin = { navController.navigate(Login) },
                             votePostFn = { voteState: String ->
                                 viewModel.postRepository.votePost(
                                     item.id,
                                     voteState
                                 )
-                            })
+                            },
+                            navigatePost = navigatePost
+                        )
                     }
                 }
             }
