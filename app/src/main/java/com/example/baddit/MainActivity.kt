@@ -144,6 +144,9 @@ class MainActivity : ComponentActivity() {
                                         ProfileScreen(
                                             username = username!!,
                                             navController = navController,
+                                            navigatePost = { details: PostResponseDTOItem -> navController.navigate(Post(
+                                                postDetails = details
+                                            )) }
                                         )
                                     }
                                 }
