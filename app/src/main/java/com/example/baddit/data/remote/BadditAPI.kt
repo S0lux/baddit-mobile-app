@@ -8,6 +8,9 @@ import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.comment.CommentResponseDTO
+import com.example.baddit.domain.model.community.Community
+import com.example.baddit.domain.model.community.GetACommunityResponseDTO
+import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import retrofit2.Response
 import retrofit2.http.Body
@@ -46,7 +49,7 @@ interface BadditAPI {
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>
 
-    @GET("/v1/users/{username}")
+    @GET("v1/users/{username}")
     suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
 
     @GET("/v1/comments")
@@ -56,4 +59,13 @@ interface BadditAPI {
         @Query("authorId") authorName: String? = null,
         @Query("cursor") cursor: String? = null
     ): Response<CommentResponseDTO>
+
+    // community
+    @GET("v1/communities")
+    suspend fun getCommunities(): Response<GetCommunityListResponseDTO>
+
+    @GET("v1/communities/{communityName}")
+    suspend fun getCommunity(@Path("communityName") communityName: String): Response<GetACommunityResponseDTO>
+
+
 }
