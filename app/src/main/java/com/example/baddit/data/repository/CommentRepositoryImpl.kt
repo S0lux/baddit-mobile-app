@@ -12,11 +12,11 @@ class CommentRepositoryImpl @Inject constructor(
     private val badditAPI: BadditAPI
 ): CommentRepository {
     override suspend fun getComments(
-        postId: String,
-        parentId: String?,
-        authorId: String?,
+        postId: String?,
+        commentId: String?,
+        authorName: String?,
         cursor: String?
     ): Result<CommentResponseDTO, DataError.NetworkError> {
-        return safeApiCall { badditAPI.getComments(postId, parentId, authorId, cursor) }
+        return safeApiCall { badditAPI.getComments(postId, commentId, authorName, cursor) }
     }
 }
