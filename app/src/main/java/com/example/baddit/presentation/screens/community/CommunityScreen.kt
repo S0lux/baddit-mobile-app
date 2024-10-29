@@ -1,7 +1,5 @@
 package com.example.baddit.presentation.screens.community
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,10 +8,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -23,6 +22,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,6 +47,7 @@ import com.example.baddit.presentation.components.CommunityList
 import com.example.baddit.presentation.components.CreateCommunity
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.launch
 
@@ -53,7 +55,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun CommunityScreen(
     navController: NavController,
-    viewModel: CommunityViewModel = hiltViewModel()) {
+    viewModel: CommunityViewModel = hiltViewModel()
+) {
     val communityList = viewModel.communityList
     val isRefreshing = viewModel.isRefreshing
     val error = viewModel.error
@@ -64,7 +67,7 @@ fun CommunityScreen(
 
     val scopeCreateCommunity = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState()
-    var showBottomSheetCreateComunity by remember { mutableStateOf(false) }
+    var showBottomSheetCreateCommunity by remember { mutableStateOf(false) }
 
 
     Column(
@@ -91,31 +94,35 @@ fun CommunityScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(
                         modifier = Modifier.padding(start = 30.dp),
-                        onClick = { showBottomSheet = true  }
+                        onClick = { showBottomSheet = true }
                     ) {
                         Icon(Icons.Default.Search, contentDescription = null)
                     }
                 }
             },
             navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home)  }) {
+                IconButton(onClick = { navController.navigate(Home) }) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                         contentDescription = null
                     )
                 }
-            }
-
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
         )
 
         if (showBottomSheet) {
             ModalBottomSheet(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                 onDismissRequest = {
                     showBottomSheet = false
                 },
                 sheetState = sheetState,
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.textPrimary
             ) {
                 // Sheet content
                 BodyBottomSheet(communityList.value) {
@@ -128,20 +135,24 @@ fun CommunityScreen(
             }
         }
 
-        if (showBottomSheetCreateComunity) {
+        if (showBottomSheetCreateCommunity) {
             ModalBottomSheet(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                 onDismissRequest = {
-                    showBottomSheetCreateComunity = false
+                    showBottomSheetCreateCommunity = false
                 },
                 sheetState = sheetState,
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.textPrimary
             ) {
                 // Sheet content
-                CreateCommunity(){
+                CreateCommunity() {
                     scopeCreateCommunity.launch { bottomSheetState.hide() }.invokeOnCompletion {
                         if (!bottomSheetState.isVisible) {
-                            showBottomSheetCreateComunity = false
+                            showBottomSheetCreateCommunity = false
                         }
                     }
                 }
@@ -155,12 +166,13 @@ fun CommunityScreen(
                 .fillMaxSize()
                 .padding(10.dp)
         ) {
-
-
-            Column(modifier = Modifier.padding(0.dp)){
-                OutlinedButton(onClick = { showBottomSheetCreateComunity = true }) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Text(text = "Create Community")
+            Column(modifier = Modifier.padding(0.dp)) {
+                OutlinedButton(
+                    onClick = { showBottomSheetCreateCommunity = true },
+                    colors = ButtonDefaults.outlinedButtonColors()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.textPrimary)
+                    Text(text = "Create Community", color = MaterialTheme.colorScheme.textPrimary)
                 }
                 when {
                     isRefreshing -> {
@@ -174,7 +186,7 @@ fun CommunityScreen(
                         )
                     }
 
-                    communityList != null -> {
+                    communityList.value.isNotEmpty() -> {
                         CommunityList(
                             paddingValues = PaddingValues(10.dp),
                             communities = communityList.value

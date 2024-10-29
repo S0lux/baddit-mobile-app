@@ -32,11 +32,11 @@ import coil.request.ImageRequest
 import com.example.baddit.domain.model.community.Community
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityList(paddingValues: PaddingValues, communities: GetCommunityListResponseDTO) {
-
     LazyColumn(contentPadding = paddingValues) {
         items(communities) { community ->
             CommunityRow(community = community)
@@ -64,7 +64,7 @@ fun CommunityRow(community: Community) {
         Spacer(modifier = Modifier.width(10.dp))
         Column {
             Text(community.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.textPrimary)
-            Text("${community.memberCount} members", color = MaterialTheme.colorScheme.textPrimary)
+            Text("${community.memberCount} members", color = MaterialTheme.colorScheme.textSecondary)
         }
     }
 }
