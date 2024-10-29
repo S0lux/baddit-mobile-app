@@ -156,7 +156,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 ) {
                                     barState.value = true
-                                    userTopBarState.value = true
+                                    userTopBarState.value = false
 
                                     val details = it.toRoute<Post>().postDetails
 

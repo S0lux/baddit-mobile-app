@@ -6,9 +6,9 @@ import com.example.baddit.domain.model.comment.CommentResponseDTO
 
 interface CommentRepository {
     suspend fun getComments(
-        postId: String,
-        parentId: String? = null,
-        authorId: String? = null,
+        postId: String?=null,
+        commentId: String? = null,
+        authorName: String? = null,
         cursor: String? = null
     ): Result<CommentResponseDTO, DataError.NetworkError>
 }
