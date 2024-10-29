@@ -14,6 +14,7 @@ import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.utils.decodePostResponseDTOItem
 
 @Composable
 fun PostScreen(
@@ -21,9 +22,10 @@ fun PostScreen(
     postDetails: PostResponseDTOItem,
     viewModel: PostViewModel = hiltViewModel()
 ) {
+    val decoded = decodePostResponseDTOItem(postDetails)
 
     LaunchedEffect(true) {
-        viewModel.loadComments(postDetails.id)
+        viewModel.loadComments(decoded.id)
     }
 
     if (viewModel.error.isNotEmpty()) {
@@ -33,12 +35,12 @@ fun PostScreen(
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         PostCard(
-            postDetails = postDetails,
+            postDetails = decoded,
             loggedIn = viewModel.isLoggedIn,
             navigateLogin = { navigateLogin() },
             votePostFn = { voteState: String ->
                 viewModel.postRepository.votePost(
-                    postDetails.id, voteState
+                    decoded.id, voteState
                 )
             },
             isExpanded = true,

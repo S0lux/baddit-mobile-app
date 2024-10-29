@@ -1,9 +1,8 @@
 package com.example.baddit.presentation.utils
 
 import android.os.Bundle
+import android.util.Log
 import androidx.navigation.NavType
-import com.example.baddit.domain.model.posts.Author
-import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -30,8 +29,10 @@ val PostResponseNavType = object : NavType<PostResponseDTOItem>(
         val encodedAuthorUrl =
             URLEncoder.encode(value.author.avatarUrl, StandardCharsets.UTF_8.toString())
 
-        val encodedCommunityUrl =
-            URLEncoder.encode(value.community?.logoUrl, StandardCharsets.UTF_8.toString())
+        val encodedCommunityUrl = if (value.community?.name != null) URLEncoder.encode(
+            value.community.logoUrl,
+            StandardCharsets.UTF_8.toString()
+        ) else null
 
         val encodedContent = URLEncoder.encode(value.content, StandardCharsets.UTF_8.toString())
         val encodedTitle = URLEncoder.encode(value.title, StandardCharsets.UTF_8.toString())
@@ -41,7 +42,7 @@ val PostResponseNavType = object : NavType<PostResponseDTOItem>(
 
         val temp = value.copy(
             author = value.author.copy(avatarUrl = encodedAuthorUrl),
-            community = value.community?.copy(logoUrl = encodedCommunityUrl ?: ""),
+            community = if (encodedCommunityUrl != null) value.community!!.copy(logoUrl = encodedAuthorUrl) else null,
             content = encodedContent,
             title = encodedTitle,
             mediaUrls = encodedMediaUrls
@@ -49,5 +50,4 @@ val PostResponseNavType = object : NavType<PostResponseDTOItem>(
 
         return Json.encodeToString(temp)
     }
-
 }
