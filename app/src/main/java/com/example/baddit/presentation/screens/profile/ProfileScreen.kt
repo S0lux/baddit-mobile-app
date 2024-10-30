@@ -2,6 +2,11 @@ package com.example.baddit.presentation.screens.profile
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,20 +21,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,15 +59,23 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.SlideHorizontally
+import com.example.baddit.SlideVertically
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.model.profile.UserProfile
+import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.screens.post.CommentSection
 import com.example.baddit.presentation.styles.gradientBackGroundBrush
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,17 +85,20 @@ fun ProfileScreen(
     navigatePost: (PostResponseDTOItem) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
+
     val posts = viewModel.posts
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
+
+    var isPostSectionSelected by remember { mutableStateOf(true) }
 
     if (error.isNotEmpty()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
     }
 
+
     LaunchedEffect(username) {
         viewModel.fetchUserProfile(username)
-        viewModel.refreshPosts(username)
     }
 
     Column(
@@ -84,6 +107,13 @@ fun ProfileScreen(
             .fillMaxHeight()
     ) {
         TopAppBar(
+            colors = TopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                titleContentColor = MaterialTheme.colorScheme.textPrimary
+            ),
             title = {
                 val titleText = if (viewModel.loggedIn.value) {
                     viewModel.user.value?.username?.let {
@@ -110,7 +140,7 @@ fun ProfileScreen(
             },
             actions = {},
         )
-        ProfileHeader(loggedIn = loggedIn, currentUser = viewModel.user.value, isGetMe = true)
+        ProfileHeader(loggedIn = loggedIn, currentUser = viewModel.user.value)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,13 +151,13 @@ fun ProfileScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(125.dp)
             ) {
-                TextButton(onClick = { /*TODO*/ }) {
+                TextButton(onClick = { isPostSectionSelected = true }) {
                     Text(
                         text = "Posts",
                         style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     )
                 }
-                TextButton(onClick = { /*TODO*/ }) {
+                TextButton(onClick = { isPostSectionSelected = false }) {
                     Text(
                         text = "Comments",
                         style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
@@ -136,32 +166,20 @@ fun ProfileScreen(
 
             }
         }
-        //this is for scrollable content and also refresh
-        PullToRefreshBox(
-            isRefreshing = viewModel.isRefreshing,
-            onRefresh = { viewModel.refreshPosts(username) }) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize()
-            ) {
-                if (viewModel.error.isEmpty()) {
-                    items(items = posts) { item ->
-                        PostCard(
-                            postDetails = item,
-                            loggedIn = loggedIn,
-                            navigateLogin = { navController.navigate(Login) },
-                            votePostFn = { voteState: String ->
-                                viewModel.postRepository.votePost(
-                                    item.id,
-                                    voteState
-                                )
-                            },
-                            navigatePost = navigatePost
-                        )
-                    }
-                }
-            }
-
-        }
+        ProfilePostSection(
+            username = username,
+            loggedIn = loggedIn,
+            navigateLogin = { navController.navigate(Login) },
+            navigatePost = navigatePost,
+            viewModel = viewModel,
+            posts = posts,
+            isPostSectionSelected = isPostSectionSelected
+        )
+        ProfileCommentsSection(
+            username = username,
+            viewModel = viewModel,
+            isPostSectionSelected = isPostSectionSelected
+        )
     }
 }
 
@@ -169,8 +187,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileHeader(
     loggedIn: Boolean,
-    currentUser: GetOtherResponseDTO?,
-    isGetMe: Boolean
+    currentUser: GetOtherResponseDTO?
 ) {
     val gradientList = listOf(
         Color(0xFF2193b0),
@@ -231,6 +248,94 @@ fun ProfileHeader(
 
             ) {
 
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfilePostSection(
+    username: String,
+    loggedIn: Boolean,
+    navigateLogin: () -> Unit,
+    navigatePost: (PostResponseDTOItem) -> Unit,
+    posts: MutableList<PostResponseDTOItem>,
+    viewModel: ProfileViewModel,
+    isPostSectionSelected: Boolean
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .map { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                val lastItem = listState.layoutInfo.totalItemsCount - 1
+                Log.d("ProfilePostSection", "totalItemCount: ${listState.layoutInfo.totalItemsCount}, lastItem: $lastItem")
+                lastVisibleItem?.index == lastItem
+            }
+            .distinctUntilChanged()
+            .collect { isAtEnd ->
+                Log.d("ProfilePostSection", "isAtEnd: $isAtEnd")
+                if (isAtEnd) {
+                    Log.d("ProfilePostSection", "Loading more posts...")
+                    viewModel.loadMorePosts()
+                }
+            }
+    }
+
+    AnimatedVisibility(
+        visible = isPostSectionSelected,
+        exit = slideOutHorizontally() + fadeOut(),
+        enter = slideInHorizontally()
+    ) {
+        PullToRefreshBox(
+            isRefreshing = viewModel.isRefreshing,
+            onRefresh = { viewModel.refreshPosts(username) }) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize()
+            ) {
+                if (viewModel.error.isEmpty()) {
+                    items(items = posts) { item ->
+                        PostCard(
+                            postDetails = item,
+                            loggedIn = loggedIn,
+                            navigateLogin = navigateLogin,
+                            votePostFn = { voteState: String ->
+                                viewModel.postRepository.votePost(
+                                    item.id,
+                                    voteState
+                                )
+                            },
+                            navigatePost = navigatePost
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileCommentsSection(
+    username: String,
+    viewModel: ProfileViewModel,
+    isPostSectionSelected: Boolean
+) {
+    AnimatedVisibility(
+        visible = !isPostSectionSelected,
+        exit = slideOutHorizontally() + fadeOut(),
+        enter = slideInHorizontally()
+    ) {
+        PullToRefreshBox(
+            isRefreshing = viewModel.isRefreshing,
+            onRefresh = { viewModel.refreshComments(username) }) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                items(items = viewModel.comments) { it ->
+                    CommentCard(it)
+                }
             }
         }
     }
