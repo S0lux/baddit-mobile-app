@@ -215,7 +215,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    SignupScreen(
+                                    SignupScreen(isDarkMode = bool.value,
                                         navigateToLogin = { navController.navigate(Login) },
                                         navigateHome = { navController.navigate(Home) })
                                 }
@@ -223,7 +223,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    LoginScreen(
+                                    LoginScreen(isDarkMode = bool.value,
                                         navigateToHome = { navController.navigate(Home) },
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }

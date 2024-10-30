@@ -42,11 +42,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit, navigateHome: () -> Unit) {
+fun SignupScreen(isDarkMode: Boolean = isSystemInDarkTheme(),viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit, navigateHome: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = isDarkMode;
 
     Box(
         modifier = Modifier
@@ -121,6 +121,7 @@ fun SignupProcess(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SignupHeader(onLoginClicked: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -131,7 +132,7 @@ fun SignupHeader(onLoginClicked: () -> Unit) {
             fontSize = 25.sp
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(
                 text = "Already has an account?",
                 color = MaterialTheme.colorScheme.textSecondary

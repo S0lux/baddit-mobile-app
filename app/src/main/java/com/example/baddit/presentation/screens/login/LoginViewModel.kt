@@ -61,4 +61,8 @@ class LoginViewModel @Inject constructor(
         }
         return result;
     }
+
+    suspend fun logout() {
+        authRepository.logout()
+    }
 }

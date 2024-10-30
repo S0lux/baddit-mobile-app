@@ -9,12 +9,15 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -50,12 +53,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(
+fun LoginScreen(isDarkMode: Boolean = isSystemInDarkTheme(),
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToHome: () -> Unit,
     navigateToSignup: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
+    val isDarkMode = isDarkMode;
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -91,6 +94,7 @@ fun LoginScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LoginHeader(onSignupClicked: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -101,10 +105,10 @@ fun LoginHeader(onSignupClicked: () -> Unit) {
             fontSize = 25.sp
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(
                 text = "Don't have an account?",
-                color = MaterialTheme.colorScheme.textSecondary
+                color = MaterialTheme.colorScheme.textSecondary,
             )
 
             Text(

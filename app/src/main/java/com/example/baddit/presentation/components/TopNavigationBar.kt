@@ -5,6 +5,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
@@ -126,7 +127,11 @@ fun TopNavigationBar(
                             modifier = Modifier
                                 .height(33.dp)
                                 .aspectRatio(1f)
-                                .clip(CircleShape),
+                                .clip(CircleShape).clickable(
+                                    onClick = {
+                                        showAvatarMenu.value = true;
+                                    }
+                                ),
                             contentScale = ContentScale.Crop
                         )
                     }

@@ -80,6 +80,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError> {
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
+        Log.d("GetMe", "getMe: ")
         if (result is Result.Success) {
             isLoggedIn.value = true;
             currentUser.value = result.data;
@@ -93,5 +94,19 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getOther(username: String): Result<GetOtherResponseDTO, DataError.NetworkError> {
         return safeApiCall { badditAPI.getOther(username) }
+    }
+
+    override suspend fun logout(): Result<Unit, DataError.NetworkError> {
+        val result = safeApiCall<Unit, DataError.NetworkError> { badditAPI.logout() }
+
+        if (result is Result.Success) {
+            CoroutineScope(Dispatchers.IO).launch {
+                isLoggedIn.value = false;
+                currentUser.value = null;
+                getMe()
+            }
+        }
+
+        return result
     }
 }
