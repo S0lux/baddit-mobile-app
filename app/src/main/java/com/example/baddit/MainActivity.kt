@@ -265,7 +265,6 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
 
 @Composable
 fun SlideVertically(content: @Composable () -> Unit) {
-fun SlideVertically(content: @Composable () -> Unit) {
     AnimatedVisibility(
         visibleState = MutableTransitionState(
             initialState = false
