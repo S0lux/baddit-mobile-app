@@ -52,8 +52,8 @@ interface BadditAPI {
     @GET("/v1/comments")
     suspend fun getComments(
         @Query("postId") postId: String?=null,
-        @Query("parentId") commentId: String? = null,
-        @Query("authorId") authorName: String? = null,
+        @Query("commentId") commentId: String? = null,
+        @Query("authorName") authorName: String? = null,
         @Query("cursor") cursor: String? = null
     ): Response<CommentResponseDTO>
 }
