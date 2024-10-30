@@ -20,7 +20,7 @@ import javax.inject.Inject
 class PostViewModel @Inject constructor(
     authRepository: AuthRepository,
     val postRepository: PostRepository,
-    val commentRepository: CommentRepository,
+    private val commentRepository: CommentRepository,
 ) : ViewModel() {
     var error by mutableStateOf("")
     val isLoggedIn by authRepository.isLoggedIn
@@ -28,7 +28,7 @@ class PostViewModel @Inject constructor(
     val comments: MutableList<CommentResponseDTOItem> = mutableStateListOf()
     val lastCommentId: String? = null
 
-    fun loadComments(postId: String, cursor: String? = null) {
+    fun loadComments(postId: String) {
         viewModelScope.launch {
             when (val result = commentRepository.getComments(postId)) {
                 is Result.Error -> {
@@ -42,7 +42,8 @@ class PostViewModel @Inject constructor(
                 is Result.Success -> {
                     error = ""
                     val dto = result.data
-                    dto.forEach { comment -> comments.add(comment) }
+                    comments.clear()
+                    comments.addAll(dto)
                 }
             }
         }

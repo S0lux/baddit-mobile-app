@@ -129,10 +129,10 @@ class MainActivity : ComponentActivity() {
                                 }
                                 composable<Community> {
                                     barState.value = true
-                                    userTopBarState.value = false
+                                    userTopBarState.value = true
 
                                     SlideHorizontally {
-                                        CommunityScreen()
+                                        CommunityScreen(navController)
                                     }
                                 }
                                 composable<Profile> {
