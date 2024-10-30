@@ -1,26 +1,33 @@
 package com.example.baddit.data.repository
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.baddit.data.utils.Constants
+import com.example.baddit.data.utils.Constants.USER_SETTING
+import com.example.baddit.domain.repository.LocalThemeManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ThemeRepository(private val dataStore: DataStore<Preferences>) {
-    private companion object {
-        val IS_DARK_THEME = booleanPreferencesKey("darkTheme")
-    }
+class LocalThemeRepositoryImpl( private val context: Context): LocalThemeManager {
 
-    val isDarkTheme: Flow<Boolean> =
-        dataStore.data.map { preferences ->
-            preferences[IS_DARK_THEME] ?: false
-        }
-
-    suspend fun setDarkTheme(darkTheme: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[IS_DARK_THEME] = darkTheme
+    override suspend fun saveDarkTheme(boolean: Boolean) {
+        context.dataStore.edit{ settings ->
+            settings[PreferencesKeys.DARK_THEME] = boolean;
         }
     }
 
+    override fun readDarkTheme(): Flow<Boolean> {
+        return context.dataStore.data.map{
+            preferences -> preferences[PreferencesKeys.DARK_THEME]?: false
+        }
+    }
+}
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_SETTING);
+
+private object PreferencesKeys{
+    val DARK_THEME = booleanPreferencesKey(name = Constants.DARK_THEME)
 }

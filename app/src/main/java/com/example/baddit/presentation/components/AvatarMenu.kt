@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.components
 
 import android.graphics.drawable.Icon
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,20 +63,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavHostController
+import com.example.baddit.domain.usecases.SaveDarkTheme
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import kotlinx.coroutines.Job
 
 
 @Composable
 fun AvatarMenu(
     show: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel(),
-    navController: NavHostController
+    navController: NavHostController,
+    switchTheme: suspend () -> Unit,
+    isDarkTheme: Boolean
 ) {
 
     var currentUser = viewModel.currentUser.value;
 
+    val coroutineScope = rememberCoroutineScope();
 
     if (!show.value) {
         return
@@ -104,7 +110,7 @@ fun AvatarMenu(
                                 interactionSource = remember { MutableInteractionSource() }
                             )
                             .offset(0.dp, 100.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.cardBackground),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
                         elevation = CardDefaults.cardElevation(8.dp),
                     ) {
                         Column(
@@ -155,21 +161,33 @@ fun AvatarMenu(
 
                                 Spacer(modifier = Modifier.weight(1f))
 
-                                if (isSystemInDarkTheme()) {
+                                if (isDarkTheme) {
                                     Icon(
-                                        modifier = Modifier.size(27.dp),
+                                        modifier = Modifier
+                                            .size(27.dp)
+                                            .clickable(
+                                                onClick = {
+                                                    coroutineScope.launch {
+                                                        switchTheme();
+                                                    }
+                                                }
+                                            ),
                                         painter = painterResource(id = R.drawable.baseline_dark_mode_24),
-                                        contentDescription = ""
+                                        contentDescription = "",
+                                        tint = Color.White
                                     )
                                 } else {
                                     Icon(
                                         modifier = Modifier
                                             .size(27.dp)
                                             .clickable(onClick = {
-                                                //viewModel.toggleDarkMode()
+                                                coroutineScope.launch {
+                                                    switchTheme();
+                                                }
                                             }),
                                         painter = painterResource(id = R.drawable.baseline_light_mode_24),
                                         contentDescription = "",
+                                        tint = Color.Black
                                     )
                                 }
 

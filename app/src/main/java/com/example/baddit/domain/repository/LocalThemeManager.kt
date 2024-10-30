@@ -2,8 +2,8 @@ package com.example.baddit.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 
-interface LocalUserManager {
-    suspend fun saveAppEntry()
+interface LocalThemeManager {
+    suspend fun saveDarkTheme(boolean: Boolean)
 
-    fun readAppEntry(): Flow<Boolean>
+    fun readDarkTheme(): Flow<Boolean>
 }
