@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.profile
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,12 +25,12 @@ class ProfileViewModel @Inject constructor(
 
     ) : ViewModel() {
 
+    val user = mutableStateOf<GetOtherResponseDTO?>(null)
 
+    val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
 
     var posts = mutableListOf<PostResponseDTOItem>();
-
-    val currentUser = mutableStateOf<UserProfile?>(null)
 
     private var lastPostId: String? = null;
 
@@ -53,56 +54,41 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     posts.clear()
                     error = ""
-                    lastPostId = fetchPosts.data.last().id
-
+                    if(!fetchPosts.data.isEmpty())
+                        lastPostId = fetchPosts.data.last().id
                     posts.addAll(fetchPosts.data)
                 }
             }
-
             isRefreshing = false
         }
     }
 
-    fun fetchUserProfile(username:String) {
+    fun fetchUserProfile(username: String) {
         viewModelScope.launch {
-            if (username === authRepository.currentUser.value!!.username) {
-                currentUser.value = UserProfile.Me(authRepository.currentUser.value!!)
-            } else {
-
-                when (val result = authRepository.getOther(username)) {
-                    is Result.Error -> {
-                        error = when (result.error) {
-                            DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
-                            DataError.NetworkError.NO_INTERNET -> "No internet connection"
-                            else -> "An unknown network error has occurred"
-                        }
-                    }
-
-                    is Result.Success -> {
-                        currentUser.value = UserProfile.OtherUser(result.data)
-                        error = ""
+            when (val result = authRepository.getOther(username)) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
                     }
                 }
+
+                is Result.Success -> {
+                    user.value = result.data
+                    error = ""
+                }
             }
+
         }
     }
 
-    fun onPostsSelected() {
-        when (currentUser.value) {
-            is UserProfile.Me -> {
-                val username = (currentUser.value as UserProfile.Me).data.username
-                refreshPosts(username)
-            }
-            is UserProfile.OtherUser -> {
-                val username = (currentUser.value as UserProfile.OtherUser).data.username
-                refreshPosts(username)
-            }
-
-            else -> TODO()
-        }
+    fun onPostsSelected(username: String) {
+        refreshPosts(username)
     }
 
     fun onCommentsSelected() {
 
     }
+
 }

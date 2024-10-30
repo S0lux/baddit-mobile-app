@@ -6,7 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
-    id("kotlinx-serialization")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 // Load keystore
@@ -60,7 +60,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -103,6 +103,7 @@ dependencies {
     // coil
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil-svg:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
 
     // material 3
     implementation("androidx.compose.material3:material3:1.2.1")

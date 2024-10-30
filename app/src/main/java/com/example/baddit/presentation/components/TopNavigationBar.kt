@@ -37,6 +37,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.SlideVertically
 import com.example.baddit.presentation.screens.login.LoginViewModel
+import com.example.baddit.presentation.screens.profile.ProfileViewModel
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
@@ -58,6 +59,7 @@ fun TopNavigationBar(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
         TopNavigationItem(icon = R.drawable.baseline_search_24, value = Search),
     )
+
     val loggedIn by viewModel.loggedIn
 
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
@@ -68,138 +70,72 @@ fun TopNavigationBar(
             onDismiss = { showLoginDialog = false })
     }
     AnimatedVisibility(
-        visible = barState.value,
+        visible = barState.value && !userTopBarState.value,
         exit = slideOutVertically(),
         enter = slideInVertically()
     ) {
-        if (!userTopBarState.value) {
-            SlideVertically {
-                TopAppBar(
-
-                    title = { },
-                    navigationIcon = {
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(
-                                painter = painterResource(id = navItems[0].icon),
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    actions = @androidx.compose.runtime.Composable {
-                        IconButton(onClick = { }) {
-                            Icon(
-                                painter = painterResource(id = navItems[1].icon),
-                                contentDescription = null
-                            )
-                        }
-                        if (loggedIn) {
-                            viewModel.currentUser.value?.let { currentUser ->
-                                IconButton(onClick = {
-//                                    navController.navigate(
-//                                        Profile(
-//                                            viewModel.currentUser.value!!.username
-//                                        )
-//                                    )
-                                    showAvatarMenu.value = true;
-                                }) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(currentUser.avatarUrl)
-                                            .build(),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .height(33.dp)
-                                            .aspectRatio(1f)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                        } else {
-                            IconButton(onClick = { showLoginDialog = true }) {
-                                TopAppBar(
-                                    colors = TopAppBarColors(
-                                        containerColor = MaterialTheme.colorScheme.scaffoldBackground,
-                                        navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                                        actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                                        scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
-                                        titleContentColor = MaterialTheme.colorScheme.textPrimary
-                                    ),
-                                    title = { },
-                                    navigationIcon = {
-                                        IconButton(onClick = { /*TODO*/ }) {
-                                            Icon(
-                                                painter = painterResource(id = navItems[0].icon),
-                                                contentDescription = null
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        IconButton(onClick = { }) {
-                                            Icon(
-                                                painter = painterResource(id = navItems[1].icon),
-                                                contentDescription = null
-                                            )
-                                        }
-                                        if (loggedIn) {
-                                            viewModel.currentUser.value?.let { currentUser ->
-                                                IconButton(onClick = {
-                                                    navController.navigate(
-                                                        Profile
-                                                    )
-                                                }) {
-                                                    AsyncImage(
-                                                        model = ImageRequest.Builder(LocalContext.current)
-                                                            .data("https://i.imgur.com/mJQpR31.png")
-                                                            .build(),
-                                                        contentDescription = null,
-                                                        modifier = Modifier
-                                                            .height(33.dp)
-                                                            .aspectRatio(1f)
-                                                            .clip(CircleShape),
-                                                        contentScale = ContentScale.Crop
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    })
-                            }
-
-                        }
-                    })
-            }
-        }
-        else{
-            SlideVertically {
-                TopAppBar(
-                    title = {
-                        val titleText = if (viewModel.loggedIn.value) {
-                            ("u/" + viewModel.currentUser.value?.username)
-                                ?: "u/UnknownUser"
-                        } else {
-                            "u/UnknownUser"
-                        }
-                        Text(
-                            text = titleText,
-                            style = TextStyle(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
+        SlideVertically {
+            TopAppBar(
+                title = { },
+                colors = TopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
+                    scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.textPrimary
+                ),
+                navigationIcon = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            painter = painterResource(id = navItems[0].icon),
+                            contentDescription = null
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigate(Home) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                                contentDescription = null
-                            )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            painter = painterResource(id = navItems[1].icon),
+                            contentDescription = null
+                        )
+                    }
+                    if (loggedIn) {
+                        viewModel.currentUser.value?.let { currentUser ->
+                            IconButton(onClick = {
+                                showAvatarMenu.value = true;
+                            }) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(currentUser.avatarUrl)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .height(33.dp)
+                                        .aspectRatio(1f)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
-                    },
-                    actions = {},
-                )
-            }
+                    }else{
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data("https://i.imgur.com/mJQpR31.png")
+                                .build(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(33.dp)
+                                .aspectRatio(1f)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                }
+            )
         }
     }
+
 }
 
 data class TopNavigationItem(
