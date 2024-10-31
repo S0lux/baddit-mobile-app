@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavHostController
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.usecases.SaveDarkTheme
+import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -76,6 +77,7 @@ import kotlinx.coroutines.Job
 fun AvatarMenu(
     show: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
     switchTheme: suspend () -> Unit,
     isDarkTheme: Boolean
@@ -228,6 +230,7 @@ fun AvatarMenu(
                                         "Logout", onClick = {
                                             coroutineScope.launch {
                                                 viewModel.logout()
+                                                homeViewModel.refreshPosts();
                                                 show.value = false;
                                             }
                                         }

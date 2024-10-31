@@ -80,11 +80,13 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getMe(): Result<GetMeResponseDTO, DataError.NetworkError> {
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
-        Log.d("GetMe", "getMe: ")
+
         if (result is Result.Success) {
             isLoggedIn.value = true;
             currentUser.value = result.data;
         }
+
+        Log.d("GetMe", "getMe: ${currentUser.value?.username ?: "null"}")
         return result;
     }
 

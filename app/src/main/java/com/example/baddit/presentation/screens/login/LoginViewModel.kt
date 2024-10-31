@@ -63,6 +63,6 @@ class LoginViewModel @Inject constructor(
     }
 
     suspend fun logout() {
-        authRepository.logout()
+         authRepository.logout()
     }
 }
