@@ -3,6 +3,7 @@ package com.example.baddit.data.remote
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.posts.UploadPostRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -10,12 +11,17 @@ import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.community.CommunityDTO
 import com.example.baddit.domain.model.community.CommunityResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import java.io.File
 
 interface BadditAPI {
     @GET("/v1/posts")
@@ -47,9 +53,21 @@ interface BadditAPI {
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>
 
-    @GET("v1/communities")
+    @GET("/v1/communities")
     suspend fun getCommunities(@Query("name") name: String?):Response<CommunityResponseDTO>
 
-    @GET("v1/users/{username}")
+    @GET("/v1/users/{username}")
     suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
+
+
+    @Multipart
+    @POST("/v1/posts")
+    suspend fun upLoadPost(
+        @Part("title") title: RequestBody ,
+        @Part("content") content: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("communityName") communityName: RequestBody,
+        @Part image: MultipartBody.Part?
+    )
+    :Response<Unit>
 }

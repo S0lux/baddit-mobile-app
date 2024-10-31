@@ -3,7 +3,7 @@ package com.example.baddit.domain.repository
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.PostResponseDTO
-import retrofit2.Response
+import java.io.File
 
 interface PostRepository {
     suspend fun getPosts(
@@ -16,5 +16,13 @@ interface PostRepository {
     suspend fun votePost(
         postId: String,
         voteState: String
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun upLoadPost(
+        title: String,
+        content: String,
+        type: String,
+        communityName: String,
+        image: File?
     ): Result<Unit, DataError.NetworkError>
 }

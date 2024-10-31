@@ -1,7 +1,6 @@
 package com.example.baddit
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -11,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +35,9 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
+import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
+import com.example.baddit.presentation.screens.createPost.CreateTextPostScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.profile.ProfileScreen
@@ -45,6 +45,8 @@ import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Community
+import com.example.baddit.presentation.utils.CreateMediaPost
+import com.example.baddit.presentation.utils.CreateTextPost
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
@@ -138,6 +140,23 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }
+                                composable<CreateTextPost> {
+                                    barState.value = false
+                                    userTopBarState.value = false
+
+                                    SlideHorizontally {
+                                        CreateTextPostScreen(navController = navController)
+                                    }
+                                }
+
+                                composable<CreateMediaPost> {
+                                    barState.value = false
+                                    userTopBarState.value = false
+
+                                    SlideHorizontally {
+                                        CreateMediaPostSCcreen(navController = navController)
+                                    }
+                                }
                             }
                             navigation<Auth>(startDestination = SignUp) {
                                 composable<SignUp> {
@@ -193,7 +212,7 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun SlideVertically(content: @Composable ()->Unit){
+fun SlideVertically(content: @Composable () -> Unit) {
     AnimatedVisibility(
         visibleState = MutableTransitionState(
             initialState = false
