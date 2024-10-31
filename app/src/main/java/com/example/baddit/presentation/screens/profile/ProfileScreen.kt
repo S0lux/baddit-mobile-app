@@ -86,7 +86,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
 
-    val posts = viewModel.posts
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
 
@@ -99,6 +98,8 @@ fun ProfileScreen(
 
     LaunchedEffect(username) {
         viewModel.fetchUserProfile(username)
+        viewModel.refreshPosts(username)
+        viewModel.refreshComments(username)
     }
 
     Column(
@@ -172,7 +173,6 @@ fun ProfileScreen(
             navigateLogin = { navController.navigate(Login) },
             navigatePost = navigatePost,
             viewModel = viewModel,
-            posts = posts,
             isPostSectionSelected = isPostSectionSelected
         )
         ProfileCommentsSection(
@@ -260,26 +260,22 @@ fun ProfilePostSection(
     loggedIn: Boolean,
     navigateLogin: () -> Unit,
     navigatePost: (PostResponseDTOItem) -> Unit,
-    posts: MutableList<PostResponseDTOItem>,
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean
 ) {
-    val listState = rememberLazyListState()
 
-    LaunchedEffect(listState) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(username,listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
                 val lastVisibleItem = visibleItems.lastOrNull()
                 val lastItem = listState.layoutInfo.totalItemsCount - 1
-                Log.d("ProfilePostSection", "totalItemCount: ${listState.layoutInfo.totalItemsCount}, lastItem: $lastItem")
                 lastVisibleItem?.index == lastItem
             }
             .distinctUntilChanged()
             .collect { isAtEnd ->
-                Log.d("ProfilePostSection", "isAtEnd: $isAtEnd")
                 if (isAtEnd) {
-                    Log.d("ProfilePostSection", "Loading more posts...")
-                    viewModel.loadMorePosts()
+                    viewModel.loadMorePosts(username)
                 }
             }
     }
@@ -293,10 +289,10 @@ fun ProfilePostSection(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshPosts(username) }) {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize(), state = listState
             ) {
                 if (viewModel.error.isEmpty()) {
-                    items(items = posts) { item ->
+                    items(items = viewModel.posts) { item ->
                         PostCard(
                             postDetails = item,
                             loggedIn = loggedIn,
@@ -324,6 +320,25 @@ fun ProfileCommentsSection(
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean
 ) {
+
+    val listState = rememberLazyListState()
+    LaunchedEffect(username,listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .map { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                val lastItem = listState.layoutInfo.totalItemsCount - 1
+                lastVisibleItem?.index == lastItem
+            }
+            .distinctUntilChanged()
+            .collect { isAtEnd ->
+                if (isAtEnd) {
+                    //viewModel.loadMorePosts(username)
+                }
+            }
+    }
+
+    val comments = viewModel.comments
+
     AnimatedVisibility(
         visible = !isPostSectionSelected,
         exit = slideOutHorizontally() + fadeOut(),
@@ -332,8 +347,8 @@ fun ProfileCommentsSection(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                items(items = viewModel.comments) { it ->
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp) , state = listState) {
+                items(items = comments) { it ->
                     CommentCard(it)
                 }
             }

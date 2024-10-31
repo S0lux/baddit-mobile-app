@@ -33,7 +33,7 @@ class ProfileViewModel @Inject constructor(
     val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
     //posts
-    var posts = mutableListOf<PostResponseDTOItem>();
+    val posts : MutableList<PostResponseDTOItem> = mutableStateListOf();
     private var lastPostId: String? = null;
     var endReached = false;
     //comments
@@ -69,12 +69,12 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false
         }
     }
-    fun loadMorePosts(){
+    fun loadMorePosts(username: String){
         if (endReached)
             return;
         viewModelScope.launch {
             isRefreshing = true;
-            when (val fetchPosts = postRepository.getPosts(cursor = lastPostId)) {
+            when (val fetchPosts = postRepository.getPosts(cursor = lastPostId , authorName = username)) {
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -121,8 +121,6 @@ class ProfileViewModel @Inject constructor(
     }
     fun fetchUserProfile(username: String) {
         viewModelScope.launch {
-            refreshPosts(username)
-            refreshComments(username)
             when (val result = authRepository.getOther(username)) {
                 is Result.Error -> {
                     error = when (result.error) {
@@ -140,6 +138,5 @@ class ProfileViewModel @Inject constructor(
 
         }
     }
-
 
 }
