@@ -43,6 +43,9 @@ interface BadditAPI {
     @POST("/v1/auth/signup")
     suspend fun signup(@Body loginBody: RegisterRequestBody): Response<Unit>
 
+    @POST("/v1/auth/logout")
+    suspend fun logout(): Response<Unit>
+
     @POST("/v1/auth/verification")
     suspend fun verify(@Body tokenBody: EmailVerificationRequestBody): Response<Unit>
 

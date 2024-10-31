@@ -1,6 +1,9 @@
 package com.example.baddit
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -10,6 +13,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,6 +22,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +31,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
@@ -32,6 +44,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.data.utils.Constants
+import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
@@ -57,16 +71,21 @@ import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.reflect.typeOf
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var localThemes: LocalThemeUseCases
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
-
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
@@ -76,8 +95,33 @@ class MainActivity : ComponentActivity() {
 
             var showAvatarMenu = remember { mutableStateOf(false) }
 
-            BadditTheme {
-                AvatarMenu(show = showAvatarMenu, navController = navController)
+            var bool = remember { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                lifecycleScope.launch {
+                    localThemes.readDarkTheme().collect{
+                        bool.value = it
+                    }
+                }
+            }
+
+            val switchTheme = suspend {
+                if (bool.value) {
+                    bool.value = false;
+                    localThemes.saveDarkTheme(b = bool.value)
+                } else {
+                    bool.value = true;
+                    localThemes.saveDarkTheme(b = bool.value)
+                }
+            }
+
+            BadditTheme(darkTheme = bool.value) {
+                AvatarMenu(
+                    show = showAvatarMenu,
+                    navController = navController,
+                    switchTheme = switchTheme,
+                    isDarkTheme = bool.value
+                )
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
@@ -171,7 +215,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    SignupScreen(
+                                    SignupScreen(isDarkMode = bool.value,
                                         navigateToLogin = { navController.navigate(Login) },
                                         navigateHome = { navController.navigate(Home) })
                                 }
@@ -179,7 +223,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    LoginScreen(
+                                    LoginScreen(isDarkMode = bool.value,
                                         navigateToHome = { navController.navigate(Home) },
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }
