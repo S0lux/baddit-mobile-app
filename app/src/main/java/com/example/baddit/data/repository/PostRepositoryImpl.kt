@@ -7,6 +7,7 @@ import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.repository.PostRepository
 import retrofit2.HttpException
 import retrofit2.Response
@@ -31,6 +32,10 @@ class PostRepositoryImpl @Inject constructor(
                 postTitle = postTitle
             )
         }
+    }
+
+    override suspend fun getPost(postId: String): Result<PostResponseDTO, DataError.NetworkError> {
+        return safeApiCall { badditAPI.getPost(postId) }
     }
 
     override suspend fun votePost(

@@ -11,4 +11,9 @@ interface CommentRepository {
         authorName: String? = null,
         cursor: String? = null
     ): Result<CommentResponseDTO, DataError.NetworkError>
+
+    suspend fun voteComment(
+        commentId: String,
+        state: String
+    ): Result<Unit, DataError.NetworkError>
 }

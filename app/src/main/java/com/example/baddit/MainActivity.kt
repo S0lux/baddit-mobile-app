@@ -158,10 +158,8 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = false
 
-                                    val details = it.toRoute<Post>().postDetails
-
                                     SlideVertically {
-                                        PostScreen(navigateLogin = { navController.navigate(Login) }, postDetails = details)
+                                        PostScreen(navigateLogin = { navController.navigate(Login) })
                                     }
                                 }
                             }

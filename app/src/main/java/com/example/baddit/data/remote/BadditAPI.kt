@@ -3,6 +3,7 @@ package com.example.baddit.data.remote
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -67,5 +68,6 @@ interface BadditAPI {
     @GET("v1/communities/{communityName}")
     suspend fun getCommunity(@Path("communityName") communityName: String): Response<GetACommunityResponseDTO>
 
-
+    @POST("/v1/comments/votes")
+    suspend fun voteComment(@Body voteBody: VoteCommentRequestBody): Response<Unit>
 }
