@@ -4,7 +4,9 @@ import android.graphics.Paint.Align
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -46,7 +48,7 @@ fun PostScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             if (viewModel.error.isNotEmpty()) return@LazyColumn
@@ -64,6 +66,8 @@ fun PostScreen(
                     isExpanded = true,
                     navigatePost = { _: PostResponseDTOItem -> Unit }
                 )
+                
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
             items(items = viewModel.comments) { it ->

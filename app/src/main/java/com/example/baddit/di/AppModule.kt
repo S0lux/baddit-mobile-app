@@ -1,7 +1,13 @@
 package com.example.baddit.di
 
+import android.app.Application
 import android.content.Context
 import com.example.baddit.data.remote.BadditAPI
+import com.example.baddit.data.repository.LocalThemeRepositoryImpl
+import com.example.baddit.domain.repository.LocalThemeManager
+import com.example.baddit.domain.usecases.LocalThemeUseCases
+import com.example.baddit.domain.usecases.ReadDarkTheme
+import com.example.baddit.domain.usecases.SaveDarkTheme
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
@@ -41,4 +47,16 @@ class AppModule {
             .create(BadditAPI::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideLocalThemeManager(application: Application):LocalThemeManager = LocalThemeRepositoryImpl(application)
+
+    @Provides
+    @Singleton
+    fun provideAppEntryUseCases(
+        localThemeManager: LocalThemeManager
+    ) = LocalThemeUseCases(
+        readDarkTheme = ReadDarkTheme(localThemeManager),
+        saveDarkTheme = SaveDarkTheme(localThemeManager)
+    )
 }

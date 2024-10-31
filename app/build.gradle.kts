@@ -131,9 +131,13 @@ dependencies {
     // cookiejar
     implementation("com.github.franmontiel:PersistentCookieJar:v1.0.1")
 
+    // splash screen
     dependencies {
         implementation("androidx.core:core-splashscreen:1.0.1")
     }
+
+    // add DataStore preferences
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
 
 kapt {

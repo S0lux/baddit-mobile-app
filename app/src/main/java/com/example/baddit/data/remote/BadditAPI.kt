@@ -44,6 +44,9 @@ interface BadditAPI {
     @POST("/v1/auth/signup")
     suspend fun signup(@Body loginBody: RegisterRequestBody): Response<Unit>
 
+    @POST("/v1/auth/logout")
+    suspend fun logout(): Response<Unit>
+
     @POST("/v1/auth/verification")
     suspend fun verify(@Body tokenBody: EmailVerificationRequestBody): Response<Unit>
 
@@ -56,8 +59,8 @@ interface BadditAPI {
     @GET("/v1/comments")
     suspend fun getComments(
         @Query("postId") postId: String?=null,
-        @Query("parentId") commentId: String? = null,
-        @Query("authorId") authorName: String? = null,
+        @Query("commentId") commentId: String? = null,
+        @Query("authorName") authorName: String? = null,
         @Query("cursor") cursor: String? = null
     ): Response<CommentResponseDTO>
 

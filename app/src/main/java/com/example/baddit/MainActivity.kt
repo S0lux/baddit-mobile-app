@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,13 +26,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.CreatePostActionButton
@@ -57,16 +59,20 @@ import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.reflect.typeOf
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var localThemes: LocalThemeUseCases
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
-
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
@@ -76,8 +82,33 @@ class MainActivity : ComponentActivity() {
 
             var showAvatarMenu = remember { mutableStateOf(false) }
 
-            BadditTheme {
-                AvatarMenu(show = showAvatarMenu, navController = navController)
+            var bool = remember { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                lifecycleScope.launch {
+                    localThemes.readDarkTheme().collect{
+                        bool.value = it
+                    }
+                }
+            }
+
+            val switchTheme = suspend {
+                if (bool.value) {
+                    bool.value = false;
+                    localThemes.saveDarkTheme(b = bool.value)
+                } else {
+                    bool.value = true;
+                    localThemes.saveDarkTheme(b = bool.value)
+                }
+            }
+
+            BadditTheme(darkTheme = bool.value) {
+                AvatarMenu(
+                    show = showAvatarMenu,
+                    navController = navController,
+                    switchTheme = switchTheme,
+                    isDarkTheme = bool.value
+                )
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
@@ -146,7 +177,8 @@ class MainActivity : ComponentActivity() {
                                             navController = navController,
                                             navigatePost = { details: PostResponseDTOItem -> navController.navigate(Post(
                                                 postDetails = details
-                                            )) }
+                                            )) },
+                                            navigateLogin = { navController.navigate(Login) }
                                         )
                                     }
                                 }
@@ -169,7 +201,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    SignupScreen(
+                                    SignupScreen(isDarkMode = bool.value,
                                         navigateToLogin = { navController.navigate(Login) },
                                         navigateHome = { navController.navigate(Home) })
                                 }
@@ -177,7 +209,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    LoginScreen(
+                                    LoginScreen(isDarkMode = bool.value,
                                         navigateToHome = { navController.navigate(Home) },
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }
