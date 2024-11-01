@@ -24,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,7 +70,6 @@ fun CommunityScreen(
     val scopeCreateCommunity = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheetCreateCommunity by remember { mutableStateOf(false) }
-
 
     Column(
         modifier = Modifier
@@ -149,7 +150,7 @@ fun CommunityScreen(
                 contentColor = MaterialTheme.colorScheme.textPrimary
             ) {
                 // Sheet content
-                CreateCommunity() {
+                CreateCommunity(viewModel) {
                     scopeCreateCommunity.launch { bottomSheetState.hide() }.invokeOnCompletion {
                         if (!bottomSheetState.isVisible) {
                             showBottomSheetCreateCommunity = false
@@ -158,8 +159,6 @@ fun CommunityScreen(
                 }
             }
         }
-
-
 
         Column(
             modifier = Modifier
@@ -174,6 +173,7 @@ fun CommunityScreen(
                     Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.textPrimary)
                     Text(text = "Create Community", color = MaterialTheme.colorScheme.textPrimary)
                 }
+                Spacer(modifier = Modifier.padding(10.dp))
                 when {
                     isRefreshing -> {
                         CircularProgressIndicator()
@@ -197,11 +197,10 @@ fun CommunityScreen(
                         Text(text = "No communities found")
                     }
                 }
+
             }
         }
     }
 
-
-    // Fetch community list when the screen is displayed
     viewModel.fetchCommunityList()
 }
