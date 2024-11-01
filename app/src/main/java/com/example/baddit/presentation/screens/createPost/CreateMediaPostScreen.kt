@@ -3,13 +3,11 @@ package com.example.baddit.presentation.screens.createPost
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.util.Log
-import android.widget.Space
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +52,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.baddit.R
-import com.example.baddit.presentation.components.Alert
 import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.presentation.utils.Home
@@ -62,7 +59,6 @@ import com.example.baddit.presentation.utils.Main
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
-import kotlinx.coroutines.delay
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -83,6 +79,11 @@ fun CreateMediaPostSCcreen(
         context.packageName + ".provider",
         file
     )
+
+    var loadingIcon by remember {
+        mutableStateOf(0)
+    }
+    loadingIcon = if (isSystemInDarkTheme()) R.raw.loadingiconwhite else R.raw.loadingicon
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -127,20 +128,28 @@ fun CreateMediaPostSCcreen(
         modifier = Modifier.padding(top = 10.dp, start = 10.dp, end = 10.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            IconButton(
-                onClick = { viewmodel.uploadMediaPost(context) },
-                modifier = Modifier.align(Alignment.CenterEnd),
-                colors = IconButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.textPrimary,
-                    disabledContentColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                )
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.round_send_24),
-                    contentDescription = null
-                )
+            if (!viewmodel.isPosting) {
+                IconButton(
+                    onClick = { viewmodel.uploadMediaPost(context) },
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    colors = IconButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.textPrimary,
+                        disabledContentColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.round_send_24),
+                        contentDescription = null
+                    )
+                }
+            }
+
+            if (viewmodel.isPosting) {
+                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
+                }
             }
             Row(
                 modifier = Modifier.align(Alignment.CenterStart),
