@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontVariation
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -56,6 +57,7 @@ import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.post.PostScreen
 import com.example.baddit.presentation.screens.profile.ProfileScreen
+import com.example.baddit.presentation.screens.setting.SettingScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
@@ -66,6 +68,7 @@ import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.Post
 import com.example.baddit.presentation.utils.PostResponseNavType
 import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
@@ -105,14 +108,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val switchTheme = suspend {
-                if (bool.value) {
-                    bool.value = false;
-                    localThemes.saveDarkTheme(b = bool.value)
-                } else {
-                    bool.value = true;
-                    localThemes.saveDarkTheme(b = bool.value)
-                }
+            val switchTheme: suspend (Boolean) -> Unit = {
+                darkTheme -> localThemes.saveDarkTheme(b = bool.value)
             }
 
             BadditTheme(darkTheme = bool.value) {
@@ -208,6 +205,15 @@ class MainActivity : ComponentActivity() {
                                         PostScreen(navigateLogin = { navController.navigate(Login) }, postDetails = details)
                                     }
                                 }
+                                composable<Setting> {
+                                    barState.value = false
+                                    userTopBarState.value = false
+
+                                    SlideHorizontally {
+                                        SettingScreen(navController = navController,switchTheme = switchTheme, darkTheme = bool.value);
+                                    }
+                                }
+
                             }
 
                             navigation<Auth>(startDestination = SignUp) {

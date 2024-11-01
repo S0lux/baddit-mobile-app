@@ -19,6 +19,9 @@ object CreatePost
 object Community
 
 @Serializable
+object Setting
+
+@Serializable
 object SignUp
 
 @Serializable

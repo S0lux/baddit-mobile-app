@@ -68,6 +68,7 @@ import com.example.baddit.domain.usecases.SaveDarkTheme
 import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.Job
@@ -79,7 +80,7 @@ fun AvatarMenu(
     viewModel: LoginViewModel = hiltViewModel(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
-    switchTheme: suspend () -> Unit,
+    switchTheme: suspend (Boolean) -> Unit,
     isDarkTheme: Boolean
 ) {
     var currentUser = viewModel.currentUser.value;
@@ -176,7 +177,7 @@ fun AvatarMenu(
                                             .clickable(
                                                 onClick = {
                                                     coroutineScope.launch {
-                                                        switchTheme();
+                                                        switchTheme(false);
                                                     }
                                                 }
                                             ),
@@ -190,7 +191,7 @@ fun AvatarMenu(
                                             .size(27.dp)
                                             .clickable(onClick = {
                                                 coroutineScope.launch {
-                                                    switchTheme();
+                                                    switchTheme(true);
                                                 }
                                             }),
                                         painter = painterResource(id = R.drawable.baseline_light_mode_24),
@@ -223,7 +224,12 @@ fun AvatarMenu(
                                         })
                                     ProfileItem(
                                         painterResource(id = R.drawable.baseline_settings_24),
-                                        "Setting", onClick = {}
+                                        "Setting", onClick = {
+                                            navController.navigate(
+                                                Setting
+                                            )
+                                            show.value = false;
+                                        }
                                     )
                                     ProfileItem(
                                         painterResource(id = R.drawable.baseline_logout_24),
