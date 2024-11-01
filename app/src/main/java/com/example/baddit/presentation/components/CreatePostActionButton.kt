@@ -10,12 +10,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.baddit.R
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.ui.theme.CustomTheme.PrimaryContainter
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @Composable
 fun CreatePostActionButton(onClick: () -> Unit) {
     FloatingActionButton(
-        containerColor = MaterialTheme.colorScheme.PrimaryContainter,
+        containerColor = MaterialTheme.colorScheme.mutedAppBlue,
         contentColor = MaterialTheme.colorScheme.textPrimary,
         onClick = onClick
 

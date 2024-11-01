@@ -8,9 +8,9 @@ data class CommentResponseDTOItem(
     val createdAt: String,
     val deleted: Boolean,
     val id: String,
-    val parentId: Any?,
+    val parentId: String?,
     val postId: String,
     val score: Int,
     val updatedAt: String,
-    val voteState: Any?
+    val voteState: String?
 )

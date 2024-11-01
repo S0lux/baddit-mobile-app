@@ -8,4 +8,6 @@ import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 interface  CommunityRepository {
     suspend fun getCommunities(): Result<GetCommunityListResponseDTO, DataError.NetworkError>;
     suspend fun getCommunity(communityName: String): Result<GetACommunityResponseDTO, DataError.NetworkError>;
+
+    suspend fun createCommunity(name: String, description: String): Result<Unit, DataError.NetworkError>
 }
