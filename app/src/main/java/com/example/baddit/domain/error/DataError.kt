@@ -19,4 +19,12 @@ sealed interface DataError: Error {
         UNKNOWN_ERROR,
     }
 
+    enum class CreateCommunityError: DataError{
+        NO_INTERNET,
+        COMMUNITY_NAME_TAKEN,
+        UNAUTHORIZED,
+        INTERNAL_SERVER_ERROR,
+        UNKNOWN_ERROR
+    }
+
 }
