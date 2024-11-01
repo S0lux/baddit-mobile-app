@@ -1,7 +1,6 @@
 package com.example.baddit
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -11,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,7 +19,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +26,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,6 +36,7 @@ import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
+import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
@@ -67,9 +64,8 @@ import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlin.reflect.typeOf
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -95,9 +91,11 @@ class MainActivity : ComponentActivity() {
 
             var bool = remember { mutableStateOf(false) }
 
+            var selectedBottomNavigation by rememberSaveable { mutableStateOf(0) }
+
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
-                    localThemes.readDarkTheme().collect{
+                    localThemes.readDarkTheme().collect {
                         bool.value = it
                     }
                 }
@@ -126,7 +124,10 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         bottomBar = {
                             BottomNavigationBar(
-                                navController = navController, barState = barState
+                                navController = navController,
+                                barState = barState,
+                                navItems = navItems,
+                                selectedItem = selectedBottomNavigation,
                             )
                         },
                         topBar = {
@@ -157,19 +158,25 @@ class MainActivity : ComponentActivity() {
                         ) {
                             navigation<Main>(startDestination = Home) {
                                 composable<Home> {
+                                    selectedBottomNavigation = 0
                                     barState.value = true
                                     userTopBarState.value = false
 
                                     SlideHorizontally {
                                         HomeScreen(
                                             navigateLogin = { navController.navigate(Login) },
-                                            navigatePost = { details: PostResponseDTOItem -> navController.navigate(Post(
-                                                postDetails = details
-                                            )) }
+                                            navigatePost = { details: PostResponseDTOItem ->
+                                                navController.navigate(
+                                                    Post(
+                                                        postDetails = details
+                                                    )
+                                                )
+                                            }
                                         )
                                     }
                                 }
                                 composable<Community> {
+                                    selectedBottomNavigation = 1
                                     barState.value = true
                                     userTopBarState.value = true
 
@@ -178,6 +185,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 composable<Profile> {
+                                    selectedBottomNavigation = -1
                                     barState.value = true
                                     userTopBarState.value = true
 
@@ -186,14 +194,19 @@ class MainActivity : ComponentActivity() {
                                         ProfileScreen(
                                             username = username!!,
                                             navController = navController,
-                                            navigatePost = { details: PostResponseDTOItem -> navController.navigate(Post(
-                                                postDetails = details
-                                            )) },
+                                            navigatePost = { details: PostResponseDTOItem ->
+                                                navController.navigate(
+                                                    Post(
+                                                        postDetails = details
+                                                    )
+                                                )
+                                            },
                                             navigateLogin = { navController.navigate(Login) }
                                         )
                                     }
                                 }
                                 composable<CreateTextPost> {
+                                    selectedBottomNavigation = -1
                                     barState.value = false
                                     userTopBarState.value = false
 
@@ -203,6 +216,8 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable<CreateMediaPost> {
+                                    selectedBottomNavigation = -1
+
                                     barState.value = false
                                     userTopBarState.value = false
 
@@ -215,6 +230,7 @@ class MainActivity : ComponentActivity() {
                                         typeOf<PostResponseDTOItem>() to PostResponseNavType
                                     )
                                 ) {
+                                    selectedBottomNavigation = -1
                                     barState.value = true
                                     userTopBarState.value = false
 
@@ -224,34 +240,38 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            navigation<Auth>(startDestination = SignUp) {
+                            navigation<Auth>(startDestination = Login) {
                                 composable<SignUp> {
+                                    selectedBottomNavigation = -1
                                     barState.value = false;
                                     userTopBarState.value = false;
 
                                     SignupScreen(isDarkMode = bool.value,
                                         navigateToLogin = { navController.navigate(Login) },
-                                        navigateHome = { navController.navigate(Home) })
+                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
                                 }
                                 composable<Login> {
+                                    selectedBottomNavigation = -1
                                     barState.value = false;
                                     userTopBarState.value = false;
 
                                     LoginScreen(isDarkMode = bool.value,
-                                        navigateToHome = { navController.navigate(Home) },
+                                        navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }
                                 composable<Verify>(
+
                                     deepLinks = listOf(navDeepLink {
                                         uriPattern = "https://baddit.life/auth?emailToken={token}"
                                     })
                                 ) {
+                                    selectedBottomNavigation = -1
                                     barState.value = false;
                                     userTopBarState.value = false;
                                     val token = it.arguments?.getString("token")
                                     VerifyScreen(
                                         navigateLogin = { navController.navigate(Login) },
-                                        navigateHome = { navController.navigate(Home) }, token
+                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } }, token
                                     )
                                 }
                             }
@@ -262,6 +282,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+val navItems = listOf(
+    BottomNavigationItem(
+        icon = R.drawable.round_home_24,
+        value = Home,
+        unselectedIcon = R.drawable.outline_home_24,
+        DisplayName = "Home"
+    ),
+    BottomNavigationItem(
+        icon = R.drawable.round_groups_24,
+        unselectedIcon = R.drawable.outline_groups_24,
+        value = Community,
+        DisplayName = "Explore"
+    )
+)
 
 @Composable
 fun SlideHorizontally(content: @Composable () -> Unit) {

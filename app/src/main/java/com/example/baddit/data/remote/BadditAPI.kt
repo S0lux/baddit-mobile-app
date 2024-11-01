@@ -3,10 +3,14 @@ package com.example.baddit.data.remote
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
+import com.example.baddit.domain.model.comment.CommentResponseDTO
+import com.example.baddit.domain.model.community.GetACommunityResponseDTO
+import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody

@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.domain.model.community.Community
 import com.example.baddit.domain.model.community.CommunityDTO
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -174,7 +175,7 @@ fun SelectCommunityBottomSheet(
 }
 
 @Composable
-private fun Community(community: CommunityDTO, onSelected: () -> Unit) {
+private fun Community(community: Community, onSelected: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),

@@ -6,12 +6,11 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.traceEventEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.community.CommunityDTO
+import com.example.baddit.domain.model.community.Community
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommunityRepository
 import com.example.baddit.domain.repository.PostRepository
@@ -39,7 +38,7 @@ class CreatePostViewodel @Inject constructor(
     var selectedImageUri by mutableStateOf<Uri>(Uri.EMPTY)
     val isLoggedIn = auth.isLoggedIn
 
-    var communities = mutableListOf<CommunityDTO>()
+    var communities = mutableListOf<Community>()
 
     var error by mutableStateOf("")
 
@@ -57,7 +56,7 @@ class CreatePostViewodel @Inject constructor(
 
     init {
         viewModelScope.launch(context = Dispatchers.IO) {
-            when (val res = community.getCommunity(name = "")) {
+            when (val res = community.getCommunities()) {
                 is Result.Error -> {
                     Log.d("error", error)
                 }
@@ -115,7 +114,7 @@ class CreatePostViewodel @Inject constructor(
         if (title.value.isEmpty()) title = title.copy(error = "Missing title")
         if (selectedCommunity.value.isEmpty()) selectedCommunity =
             selectedCommunity.copy(error = "Missing community")
-        if(selectedImageUri.equals(Uri.EMPTY)) {
+        if (selectedImageUri.equals(Uri.EMPTY)) {
             viewModelScope.launch(Dispatchers.IO) {
                 error = "Please choose an image"
                 delay(timeMillis = 1000)
