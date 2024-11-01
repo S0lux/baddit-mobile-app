@@ -3,13 +3,10 @@ package com.example.baddit.data.remote
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
-import com.example.baddit.data.dto.posts.UploadPostRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
-import com.example.baddit.domain.model.community.CommunityDTO
-import com.example.baddit.domain.model.community.CommunityResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -47,16 +44,16 @@ interface BadditAPI {
     @POST("/v1/auth/signup")
     suspend fun signup(@Body loginBody: RegisterRequestBody): Response<Unit>
 
+    @POST("/v1/auth/logout")
+    suspend fun logout(): Response<Unit>
+
     @POST("/v1/auth/verification")
     suspend fun verify(@Body tokenBody: EmailVerificationRequestBody): Response<Unit>
 
     @GET("/v1/users/me")
     suspend fun getMe(): Response<GetMeResponseDTO>
 
-    @GET("/v1/communities")
-    suspend fun getCommunities(@Query("name") name: String?):Response<CommunityResponseDTO>
-
-    @GET("/v1/users/{username}")
+    @GET("v1/users/{username}")
     suspend fun getOther(@Path("username") username: String): Response<GetOtherResponseDTO>
 
 
@@ -70,4 +67,22 @@ interface BadditAPI {
         @Part image: MultipartBody.Part?
     )
     :Response<Unit>
+
+    @GET("/v1/comments")
+    suspend fun getComments(
+        @Query("postId") postId: String?=null,
+        @Query("commentId") commentId: String? = null,
+        @Query("authorName") authorName: String? = null,
+        @Query("cursor") cursor: String? = null
+    ): Response<CommentResponseDTO>
+
+    // community
+    @GET("v1/communities")
+    suspend fun getCommunities(): Response<GetCommunityListResponseDTO>
+
+    @GET("v1/communities/{communityName}")
+    suspend fun getCommunity(@Path("communityName") communityName: String): Response<GetACommunityResponseDTO>
+
+    @POST("/v1/comments/votes")
+    suspend fun voteComment(@Body voteBody: VoteCommentRequestBody): Response<Unit>
 }

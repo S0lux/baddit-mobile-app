@@ -47,7 +47,7 @@ fun ProfileItem(icon: Painter, text: String, onClick: () -> Unit){
         ) {
             Icon(modifier = Modifier.size(24.dp),tint = MaterialTheme.colorScheme.textPrimary, painter = icon, contentDescription = "")
             Spacer(modifier = Modifier.fillMaxWidth(0.02f))
-            Text(text = text, fontSize = 17.sp, color = MaterialTheme.colorScheme.textPrimary)
+            Text(text = text, fontSize = 14.sp, color = MaterialTheme.colorScheme.textPrimary)
         }
 
         Icon(

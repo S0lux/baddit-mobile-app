@@ -4,7 +4,6 @@ import com.example.baddit.data.repository.AuthRepositoryImpl
 import com.example.baddit.data.repository.CommunityRepositoryImpl
 import com.example.baddit.data.repository.PostRepositoryImpl
 import com.example.baddit.domain.repository.AuthRepository
-import com.example.baddit.domain.repository.CommunityRepository
 import com.example.baddit.domain.repository.PostRepository
 import dagger.Binds
 import dagger.Module
@@ -27,4 +26,9 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCommunityRepository(impl: CommunityRepositoryImpl): CommunityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommentRepository(impl: CommentRepositoryImpl): CommentRepository
+
 }

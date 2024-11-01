@@ -1,5 +1,8 @@
 package com.example.baddit.domain.model.posts
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class PostResponseDTOItem(
     val author: Author,
     val commentCount: Int,
@@ -11,6 +14,6 @@ data class PostResponseDTOItem(
     val title: String,
     val type: String,
     val updatedAt: String,
-    val voteState: Any,
-    val mediaUrls: ArrayList<String>
+    val voteState: String?,
+    val mediaUrls: List<String>
 )

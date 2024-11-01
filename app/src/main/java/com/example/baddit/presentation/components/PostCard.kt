@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -81,8 +81,10 @@ import me.saket.swipe.SwipeableActionsBox
 fun PostCard(
     postDetails: PostResponseDTOItem,
     loggedIn: Boolean = false,
+    isExpanded: Boolean = false,
     navigateLogin: () -> Unit,
-    votePostFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>
+    votePostFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>,
+    navigatePost: (PostResponseDTOItem) -> Unit,
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -100,7 +102,7 @@ fun PostCard(
     }
 
     LaunchedEffect(voteState) {
-        if (hasUserInteracted && voteState != Unit) {
+        if (hasUserInteracted && voteState != null) {
             val pressPosition = Offset(
                 x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
                 y = voteElementSize.height / 2f
@@ -120,7 +122,7 @@ fun PostCard(
         }
         when (voteState) {
             "UPVOTE" -> {
-                voteState = Unit
+                voteState = null
                 postScore--
                 handleVote(
                     voteState = "UPVOTE",
@@ -146,7 +148,7 @@ fun PostCard(
                 postScore++
                 handleVote(
                     voteState = "UPVOTE",
-                    onError = { postScore--; voteState = Unit },
+                    onError = { postScore--; voteState = null },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
@@ -173,7 +175,7 @@ fun PostCard(
             }
 
             "DOWNVOTE" -> {
-                voteState = Unit
+                voteState = null
                 postScore++
                 handleVote(
                     voteState = "DOWNVOTE",
@@ -188,7 +190,7 @@ fun PostCard(
                 postScore--
                 handleVote(
                     voteState = "DOWNVOTE",
-                    onError = { postScore++; voteState = Unit },
+                    onError = { postScore++; voteState = null },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
@@ -202,7 +204,7 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_upvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp).offset(20.dp)
             )
         },
         background = colorUpvote,
@@ -216,7 +218,7 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp).offset(20.dp)
             )
         },
         background = colorDownvote,
@@ -227,19 +229,22 @@ fun PostCard(
     SwipeableActionsBox(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { navigatePost(postDetails) },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(15.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .padding(15.dp)
         ) {
             PostHeader(postDetails = postDetails)
 
             PostTitle(title = postDetails.title)
 
             if (postDetails.type == "TEXT") {
-                PostTextContent(content = postDetails.content)
+                PostTextContent(content = postDetails.content, isExpanded)
             }
 
             if (postDetails.type == "MEDIA") {
@@ -366,7 +371,7 @@ fun PostTitle(title: String) {
 }
 
 @Composable
-fun PostTextContent(content: String) {
+fun PostTextContent(content: String, isExpanded: Boolean) {
     Text(
         content,
         color = MaterialTheme.colorScheme.textSecondary,
@@ -377,7 +382,7 @@ fun PostTextContent(content: String) {
             .clip(RoundedCornerShape(10))
             .background(MaterialTheme.colorScheme.cardForeground)
             .padding(5.dp),
-        maxLines = 3,
+        maxLines = if (!isExpanded) 3 else 100,
         overflow = TextOverflow.Ellipsis
     )
 }
@@ -389,7 +394,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.cardForeground)
             .fillMaxWidth()
-            .heightIn(50.dp, 650.dp), contentAlignment = Alignment.Center
+            .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
     ) {
         val context = LocalContext.current
         val imageLoader = ImageLoader.Builder(context).components {
@@ -405,7 +410,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
             imageLoader = imageLoader,
             contentDescription = null,
             modifier = Modifier
-                .heightIn(50.dp, 650.dp),
+                .heightIn(50.dp, 450.dp),
             contentScale = ContentScale.Crop
         )
     }
@@ -506,7 +511,7 @@ fun PostCardPreview() {
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",
         content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
         score = 0,
-        voteState = Unit,
+        voteState = null,
         commentCount = 0,
         author = Author(
             id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
@@ -528,7 +533,11 @@ fun PostCardPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
+                PostCard(
+                    details,
+                    navigateLogin = { },
+                    votePostFn = { Result.Success(Unit) },
+                    navigatePost = { })
             }
         }
     }
@@ -543,7 +552,7 @@ fun PostCardDarkPreview() {
         title = "How the hell do I use this app? The mobile design absolutely sucks!!",
         content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
         score = 0,
-        voteState = Unit,
+        voteState = null,
         commentCount = 0,
         author = Author(
             id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
@@ -565,7 +574,11 @@ fun PostCardDarkPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             Box(contentAlignment = Alignment.Center) {
-                PostCard(details, navigateLogin = { }, votePostFn = { Result.Success(Unit) })
+                PostCard(
+                    details,
+                    navigateLogin = { },
+                    votePostFn = { Result.Success(Unit) },
+                    navigatePost = { })
             }
         }
     }
