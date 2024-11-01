@@ -88,18 +88,21 @@ class CommunityViewModel @Inject constructor(
         descriptionState = descriptionState.copy(value = input, error = "")
     }
 
-    fun handleCreateCommunityError(error: DataError.CreateCommunityError) {
+    fun handleCreateCommunityError(error: DataError.NetworkError) {
         when (error) {
-            DataError.CreateCommunityError.COMMUNITY_NAME_TAKEN -> {
+            DataError.NetworkError.CONFLICT -> {
                 nameState = nameState.copy(error = "This community name is already taken.")
 
             }
-            DataError.CreateCommunityError.NO_INTERNET,
-            DataError.CreateCommunityError.INTERNAL_SERVER_ERROR,
-            DataError.CreateCommunityError.UNKNOWN_ERROR -> {
+            DataError.NetworkError.NO_INTERNET,
+            DataError.NetworkError.INTERNAL_SERVER_ERROR,
+            DataError.NetworkError.FORBIDDEN,
+            DataError.NetworkError.TOKEN_INVALID,
+            DataError.NetworkError.UNKNOWN_ERROR -> {
             }
-            DataError.CreateCommunityError.UNAUTHORIZED -> {
+            DataError.NetworkError.UNAUTHORIZED -> {
             }
+
         }
     }
 
@@ -109,7 +112,7 @@ class CommunityViewModel @Inject constructor(
         isLoading = false
         isCreateDone = false
     }
-    suspend fun createCommunity(): Result<Unit, DataError.CreateCommunityError> {
+    suspend fun createCommunity(): Result<Unit, DataError.NetworkError> {
         isLoading = true
         val result = communityRepository.createCommunity(nameState.value, descriptionState.value)
         isLoading = false

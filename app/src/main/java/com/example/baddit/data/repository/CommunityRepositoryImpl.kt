@@ -27,21 +27,19 @@ class CommunityRepositoryImpl @Inject constructor(
     override suspend fun createCommunity(
         name: String,
         description: String
-    ): Result<Unit, DataError.CreateCommunityError> {
+    ): Result<Unit, DataError.NetworkError> {
         return safeApiCall (
             apiCall = { badditAPI.createCommunity(CreateRequestBody(name, description)) },
             errorHandler = {response ->
                 val errorCode = response.code()
                 val errorBody = response.errorBody()?.string()
                 val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-                if(errorCode == 409)
-                    when (errorResponse.error){
-                        "COMMUNITY_NAME_TAKEN" -> Result.Error(DataError.CreateCommunityError.COMMUNITY_NAME_TAKEN)
-                        else -> Result.Error(DataError.CreateCommunityError.UNKNOWN_ERROR)
-                    }
+                if(errorCode == 409) {
+                    Result.Error(DataError.NetworkError.CONFLICT)
+                }
                 else when (errorCode){
-                    500 -> Result.Error(DataError.CreateCommunityError.INTERNAL_SERVER_ERROR)
-                    else -> Result.Error(DataError.CreateCommunityError.UNKNOWN_ERROR)
+                    500 -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR)
+                    else -> Result.Error(DataError.NetworkError.UNKNOWN_ERROR)
                 }
             }
         )

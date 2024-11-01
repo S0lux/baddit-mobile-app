@@ -68,9 +68,12 @@ fun CreateCommunity(communityViewModel: CommunityViewModel, onBackButtonClick: (
 
               delay(2000) // Delay to show the success message for a while
               onBackButtonClick() // Close the bottom sheet and navigate back
-              communityViewModel.resetCreateState()
           }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        communityViewModel.resetCreateState()
     }
 
     Scaffold(topBar = {},
