@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,7 @@ class HomeViewModel @Inject constructor(
     var isRefreshing by mutableStateOf(false)
         private set;
 
-    var posts = mutableStateListOf<PostResponseDTOItem>();
+    var posts = postRepository.postCache
 
     var error by mutableStateOf("");
 
@@ -53,7 +54,7 @@ class HomeViewModel @Inject constructor(
                     error = ""
                     lastPostId = fetchPosts.data.last().id
 
-                    posts.addAll(fetchPosts.data)
+                    posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
             }
             isRefreshing = false;
@@ -78,7 +79,7 @@ class HomeViewModel @Inject constructor(
                     error = ""
                     if (fetchPosts.data.isNotEmpty()) {
                         lastPostId = fetchPosts.data.last().id
-                        posts.addAll(fetchPosts.data)
+                        posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                     }
                     else {
                         showNoPostAlert = true

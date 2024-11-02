@@ -13,6 +13,7 @@ import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.model.profile.UserProfile
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
@@ -33,7 +34,7 @@ class ProfileViewModel @Inject constructor(
     val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
     //posts
-    val posts : MutableList<PostResponseDTOItem> = mutableStateListOf();
+    val posts = postRepository.postCache;
     private var lastPostId: String? = null;
     var endReached = false;
     //comments
@@ -63,7 +64,7 @@ class ProfileViewModel @Inject constructor(
                     error = ""
                     if(!fetchPosts.data.isEmpty())
                         lastPostId = fetchPosts.data.last().id
-                    posts.addAll(fetchPosts.data)
+                    posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
             }
             isRefreshing = false
@@ -87,7 +88,7 @@ class ProfileViewModel @Inject constructor(
                     error = ""
                     if (fetchPosts.data.isNotEmpty()) {
                         lastPostId = fetchPosts.data.last().id
-                        posts.addAll(fetchPosts.data)
+                        posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                     }
                     else {
                         endReached = true

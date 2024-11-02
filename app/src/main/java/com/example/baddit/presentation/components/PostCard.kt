@@ -2,7 +2,6 @@ package com.example.baddit.presentation.components
 
 import android.content.res.Configuration
 import android.os.Build.VERSION.SDK_INT
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -62,6 +61,7 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.Author
 import com.example.baddit.domain.model.posts.Community
+import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
@@ -79,19 +79,19 @@ import me.saket.swipe.SwipeableActionsBox
 
 @Composable
 fun PostCard(
-    postDetails: PostResponseDTOItem,
+    postDetails: MutablePostResponseDTOItem,
     loggedIn: Boolean = false,
     isExpanded: Boolean = false,
     navigateLogin: () -> Unit,
     votePostFn: suspend (voteState: String) -> Result<Unit, DataError.NetworkError>,
-    navigatePost: (PostResponseDTOItem) -> Unit,
+    navigatePost: (String) -> Unit,
+    setVoteState: (String?) -> Unit,
+    setPostScore: (Int) -> Unit,
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
 
     val voteInteractionSource = remember { MutableInteractionSource() }
-    var voteState by rememberSaveable { mutableStateOf(postDetails.voteState) }
-    var postScore by rememberSaveable { mutableIntStateOf(postDetails.score) }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
     var hasUserInteracted by remember { mutableStateOf(false) }
@@ -101,10 +101,10 @@ fun PostCard(
         LoginDialog(navigateLogin = { navigateLogin() }, onDismiss = { showLoginDialog = false })
     }
 
-    LaunchedEffect(voteState) {
-        if (hasUserInteracted && voteState != null) {
+    LaunchedEffect(postDetails.voteState) {
+        if (hasUserInteracted && postDetails.voteState.value != null) {
             val pressPosition = Offset(
-                x = voteElementSize.width / if (voteState == "UPVOTE") 6f else 1f,
+                x = voteElementSize.width / if (postDetails.voteState.value == "UPVOTE") 6f else 1f,
                 y = voteElementSize.height / 2f
             )
             val press = PressInteraction.Press(pressPosition)
@@ -120,35 +120,35 @@ fun PostCard(
             showLoginDialog = true
             return
         }
-        when (voteState) {
+        when (postDetails.voteState.value) {
             "UPVOTE" -> {
-                voteState = null
-                postScore--
+                setVoteState(null)
+                setPostScore(postDetails.score.value - 1)
                 handleVote(
                     voteState = "UPVOTE",
-                    onError = { postScore++; voteState = "UPVOTE" },
+                    onError = { setPostScore(postDetails.score.value + 1); setVoteState("UPVOTE") },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
             }
 
             "DOWNVOTE" -> {
-                voteState = "UPVOTE"
-                postScore += 2
+                setVoteState("UPVOTE")
+                setPostScore(postDetails.score.value + 2)
                 handleVote(
                     voteState = "UPVOTE",
-                    onError = { postScore -= 2; voteState = "DOWNVOTE" },
+                    onError = { setPostScore(postDetails.score.value - 2); setVoteState("DOWNVOTE") },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
             }
 
             else -> {
-                voteState = "UPVOTE"
-                postScore++
+                setVoteState("UPVOTE")
+                setPostScore(postDetails.score.value + 1)
                 handleVote(
                     voteState = "UPVOTE",
-                    onError = { postScore--; voteState = null },
+                    onError = { setPostScore(postDetails.score.value - 1); setVoteState(null) },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
@@ -162,35 +162,35 @@ fun PostCard(
             showLoginDialog = true
             return
         }
-        when (voteState) {
+        when (postDetails.voteState.value) {
             "UPVOTE" -> {
-                voteState = "DOWNVOTE"
-                postScore -= 2
+                setVoteState("DOWNVOTE")
+                setPostScore(postDetails.score.value - 2)
                 handleVote(
                     voteState = "DOWNVOTE",
-                    onError = { postScore += 2; voteState = "UPVOTE" },
+                    onError = { setPostScore(postDetails.score.value + 2); setVoteState("UPVOTE") },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
             }
 
             "DOWNVOTE" -> {
-                voteState = null
-                postScore++
+                setVoteState(null)
+                setPostScore(postDetails.score.value + 1)
                 handleVote(
                     voteState = "DOWNVOTE",
-                    onError = { postScore--; voteState = "DOWNVOTE" },
+                    onError = { setPostScore(postDetails.score.value - 1); setVoteState("DOWNVOTE") },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
             }
 
             else -> {
-                voteState = "DOWNVOTE"
-                postScore--
+                setVoteState("DOWNVOTE")
+                setPostScore(postDetails.score.value - 1)
                 handleVote(
                     voteState = "DOWNVOTE",
-                    onError = { postScore++; voteState = null },
+                    onError = { setPostScore(postDetails.score.value + 1); setVoteState(null) },
                     coroutineScope = coroutineScope,
                     voteFn = votePostFn
                 )
@@ -230,7 +230,7 @@ fun PostCard(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
             .fillMaxWidth()
-            .clickable { navigatePost(postDetails) },
+            .clickable { navigatePost(postDetails.id) },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {
@@ -252,8 +252,8 @@ fun PostCard(
             }
 
             PostActions(
-                voteState = voteState?.toString(),
-                postScore = postScore,
+                voteState = postDetails.voteState.value,
+                postScore = postDetails.score.value,
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
@@ -281,7 +281,7 @@ fun handleVote(
 }
 
 @Composable
-fun PostHeader(postDetails: PostResponseDTOItem) {
+fun PostHeader(postDetails: MutablePostResponseDTOItem) {
     val communityName = postDetails.community?.name.orEmpty()
     val communityLogo = postDetails.community?.logoUrl.orEmpty()
     val authorName = postDetails.author.username
@@ -499,124 +499,4 @@ fun LoginDialog(navigateLogin: () -> Unit, onDismiss: () -> Unit) {
         dismissText = "Cancel",
         onConfirm = { navigateLogin() },
         onDismiss = { onDismiss() })
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PostCardPreview() {
-    val details = PostResponseDTOItem(
-        id = "992e0a44-6682-4d13-b75e-834494679b65",
-        type = "TEXT",
-        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
-        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-        score = 0,
-        voteState = null,
-        commentCount = 0,
-        author = Author(
-            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
-            username = "trungkhang1",
-            avatarUrl = "https://placehold.co/400.png"
-        ),
-        community = Community(
-            name = "pesocommunity", logoUrl = "https://placehold.co/400.png"
-        ),
-        createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z",
-        mediaUrls = ArrayList(),
-    )
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                PostCard(
-                    details,
-                    navigateLogin = { },
-                    votePostFn = { Result.Success(Unit) },
-                    navigatePost = { })
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun PostCardDarkPreview() {
-    val details = PostResponseDTOItem(
-        id = "992e0a44-6682-4d13-b75e-834494679b65",
-        type = "TEXT",
-        title = "How the hell do I use this app? The mobile design absolutely sucks!!",
-        content = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-        score = 0,
-        voteState = null,
-        commentCount = 0,
-        author = Author(
-            id = "b68eccfa-aa50-44fb-bffd-68fbd719d561",
-            username = "trungkhang1",
-            avatarUrl = "https://placehold.co/400.png"
-        ),
-        community = Community(
-            name = "pesocommunity", logoUrl = "https://placehold.co/400.png"
-        ),
-        createdAt = "2024-05-13T05:57:03.877Z",
-        updatedAt = "2024-05-13T05:57:03.877Z",
-        mediaUrls = ArrayList(),
-    )
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                PostCard(
-                    details,
-                    navigateLogin = { },
-                    votePostFn = { Result.Success(Unit) },
-                    navigatePost = { })
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun DialogPreview() {
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                LoginDialog(navigateLogin = { /*TODO*/ }) {
-
-                }
-            }
-        }
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun DialogDarkPreview() {
-    BadditTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                LoginDialog(navigateLogin = { /*TODO*/ }) {
-
-                }
-            }
-        }
-    }
 }

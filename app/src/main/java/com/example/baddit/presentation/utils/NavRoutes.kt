@@ -47,5 +47,5 @@ data class Profile(
 
 @Serializable
 data class Post(
-    val postDetails: PostResponseDTOItem
+    val postId: String
 )
