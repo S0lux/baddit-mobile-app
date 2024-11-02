@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
@@ -37,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.domain.model.community.Community
@@ -46,7 +49,8 @@ import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 @Composable
 fun BodyBottomSheet(
     communities: GetCommunityListResponseDTO,
-    onBackButtonClick: () -> Unit){
+    onBackButtonClick: () -> Unit
+) {
     var text by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -101,27 +105,40 @@ fun BodyBottomSheet(
 fun SearchListCommunity(
     communities: List<Community>,
 ) {
-    Box(modifier = Modifier.padding(16.dp)) {
-        LazyColumn {
-            items(communities) { community ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(community.logoUrl).build(),
-                        contentDescription = null,
+    if (communities.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentSize(Alignment.Center)
+                .padding(10.dp)
+        ) {
+            Text(
+                text = "Not found."
+            )
+        }
+    } else {
+        Box(modifier = Modifier.padding(16.dp)) {
+            LazyColumn {
+                items(communities) { community ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .height(36.dp)
-                            .aspectRatio(1f),
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(community.name, fontWeight = FontWeight.Bold)
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(community.logoUrl).build(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .height(36.dp)
+                                .aspectRatio(1f),
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(community.name, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

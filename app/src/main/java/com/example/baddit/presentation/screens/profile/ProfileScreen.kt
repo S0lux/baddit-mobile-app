@@ -5,9 +5,7 @@ import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,10 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,7 +36,6 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,20 +61,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
-import com.example.baddit.SlideHorizontally
-import com.example.baddit.SlideVertically
-import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
-import com.example.baddit.domain.model.profile.UserProfile
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
-import com.example.baddit.presentation.screens.post.CommentSection
 import com.example.baddit.presentation.styles.gradientBackGroundBrush
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
@@ -98,7 +86,8 @@ fun ProfileScreen(
     username: String,
     navController: NavController,
     navigatePost: (PostResponseDTOItem) -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    navigateLogin: () -> Unit
 ) {
 
     val error = viewModel.error
@@ -202,7 +191,8 @@ fun ProfileScreen(
         ProfileCommentsSection(
             username = username,
             viewModel = viewModel,
-            isPostSectionSelected = isPostSectionSelected
+            isPostSectionSelected = isPostSectionSelected,
+            navigateLogin = navigateLogin
         )
     }
 }
@@ -399,7 +389,8 @@ fun ProfilePostSection(
 fun ProfileCommentsSection(
     username: String,
     viewModel: ProfileViewModel,
-    isPostSectionSelected: Boolean
+    isPostSectionSelected: Boolean,
+    navigateLogin: () -> Unit
 ) {
 
     val listState = rememberLazyListState()
@@ -428,9 +419,20 @@ fun ProfileCommentsSection(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listState) {
-                items(items = comments) { it ->
-                    CommentCard(it)
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                items(items = viewModel.comments) { it ->
+                    CommentCard(
+                        details = it,
+                        navigateLogin = navigateLogin,
+                        navigateReply = { a: String?, b: String?, c: String? -> Unit },
+                        voteFn = { commentId: String, state: String ->
+                            viewModel.commentRepository.voteComment(
+                                commentId,
+                                state
+                            )
+                        },
+                        isLoggedIn = viewModel.loggedIn.value
+                    )
                 }
             }
         }

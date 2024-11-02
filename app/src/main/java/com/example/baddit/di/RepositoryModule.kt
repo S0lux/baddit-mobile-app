@@ -28,9 +28,10 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindCommentRepository(impl: CommentRepositoryImpl): CommentRepository
+    abstract fun bindCommunityRepository(impl: CommunityRepositoryImpl): CommunityRepository
 
     @Binds
     @Singleton
-    abstract fun bindCommunityRepository(impl: CommunityRepositoryImpl): CommunityRepository
+    abstract fun bindCommentRepository(impl: CommentRepositoryImpl): CommentRepository
+
 }

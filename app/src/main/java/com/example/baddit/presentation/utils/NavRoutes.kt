@@ -16,6 +16,11 @@ object Home
 object CreatePost
 
 @Serializable
+object CreateTextPost
+@Serializable
+object CreateMediaPost
+
+@Serializable
 object Community
 
 @Serializable

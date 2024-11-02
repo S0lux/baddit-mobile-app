@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -203,7 +204,7 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_upvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp).offset(20.dp)
             )
         },
         background = colorUpvote,
@@ -217,7 +218,7 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp).offset(20.dp)
             )
         },
         background = colorDownvote,
@@ -392,7 +393,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.cardForeground)
             .fillMaxWidth()
-            .heightIn(50.dp, 650.dp), contentAlignment = Alignment.Center
+            .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
     ) {
         val context = LocalContext.current
         val imageLoader = ImageLoader.Builder(context).components {
@@ -408,7 +409,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
             imageLoader = imageLoader,
             contentDescription = null,
             modifier = Modifier
-                .heightIn(50.dp, 650.dp),
+                .heightIn(50.dp, 450.dp),
             contentScale = ContentScale.Crop
         )
     }
