@@ -56,7 +56,11 @@ fun SettingScreen(navController: NavController,
                   switchTheme: suspend (Boolean) -> Unit,
                   darkTheme: Boolean) {
 
-    var selectedTheme by remember { mutableStateOf("") }
+    var selectedTheme by remember { mutableStateOf(when(darkTheme) {
+        true -> "Dark"
+        false -> "Light"
+
+    }) }
     val themes = listOf("Dark", "Light", "System")
 
     Column {

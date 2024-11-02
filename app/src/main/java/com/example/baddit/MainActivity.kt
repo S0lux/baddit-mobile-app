@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity() {
             }
 
             val switchTheme: suspend (Boolean) -> Unit = {
-                darkTheme -> localThemes.saveDarkTheme(b = bool.value)
+                darkTheme -> localThemes.saveDarkTheme(b = darkTheme)
             }
 
             BadditTheme(darkTheme = bool.value) {
