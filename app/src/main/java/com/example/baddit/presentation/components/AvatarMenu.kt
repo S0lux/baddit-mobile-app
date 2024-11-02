@@ -66,6 +66,7 @@ import androidx.navigation.NavHostController
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.usecases.SaveDarkTheme
 import com.example.baddit.presentation.screens.home.HomeViewModel
+import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -230,7 +231,7 @@ fun AvatarMenu(
                                         "Logout", onClick = {
                                             coroutineScope.launch {
                                                 viewModel.logout()
-                                                homeViewModel.refreshPosts();
+                                                navController.navigate(Home)
                                                 show.value = false;
                                             }
                                         }
