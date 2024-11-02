@@ -313,7 +313,7 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem) {
                 .clip(CircleShape)
                 .height(36.dp)
                 .aspectRatio(1f),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit
         )
 
         Column {
@@ -410,7 +410,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
             contentDescription = null,
             modifier = Modifier
                 .heightIn(50.dp, 450.dp),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit
         )
     }
 }
