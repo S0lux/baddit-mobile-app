@@ -317,7 +317,6 @@ fun PostHeader(postDetails: PostResponseDTOItem) {
 
         Column {
             Row {
-                Log.d("Heocon", titleText);
                 Text(
                     subReddit,
                     fontSize = 12.sp,

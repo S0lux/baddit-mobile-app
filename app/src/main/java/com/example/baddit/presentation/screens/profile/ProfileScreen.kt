@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.profile
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
@@ -8,6 +9,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,16 +21,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -44,16 +49,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
@@ -74,8 +86,11 @@ import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,22 +161,31 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center,
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(125.dp)
             ) {
-                TextButton(onClick = { isPostSectionSelected = true }) {
+                TextButton(
+                    modifier = Modifier
+                        .bottomBorder(3.dp, Color.Blue, isPostSectionSelected),
+                    onClick = { isPostSectionSelected = true }) {
                     Text(
                         text = "Posts",
-                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.textPrimary
                     )
                 }
-                TextButton(onClick = { isPostSectionSelected = false }) {
+                TextButton(
+                    modifier = Modifier
+                        .bottomBorder(3.dp, Color.Blue, !isPostSectionSelected),
+                    onClick = { isPostSectionSelected = false }
+                ) {
                     Text(
                         text = "Comments",
-                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.textPrimary
                     )
                 }
 
@@ -184,14 +208,16 @@ fun ProfileScreen(
 }
 
 
+@SuppressLint("WeekBasedYear")
 @Composable
 fun ProfileHeader(
     loggedIn: Boolean,
     currentUser: GetOtherResponseDTO?
 ) {
     val gradientList = listOf(
-        Color(0xFF2193b0),
-        Color(0xFF6dd5ed)
+        Color(0xFF0cebeb),
+        Color(0xFF20e3b2),
+        Color(0xFF29ffc6)
     )
     Box(
         modifier = Modifier
@@ -209,7 +235,8 @@ fun ProfileHeader(
                         colors = gradientList
                     )
                 ),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (loggedIn) {
                 currentUser?.let { currentUser ->
@@ -240,14 +267,66 @@ fun ProfileHeader(
                     contentScale = ContentScale.Fit
                 )
             }
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
+                    .height(80.dp)
                     .background(Color.Transparent)
-
             ) {
-
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        currentUser?.username?.let {
+                            Text(
+                                text = "u/$it",
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.textPrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 20.sp
+                                )
+                            )
+                        }
+                        Text(
+                            text = "Username",
+                            style = TextStyle(
+                                color = MaterialTheme.colorScheme.textPrimary,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 15.sp
+                            )
+                        )
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        currentUser?.registeredAt?.let {
+                            val localDateTime = LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
+                            val dateTimeFormatted = localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                            Text(
+                                text = dateTimeFormatted,
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.textPrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 20.sp
+                                )
+                            )
+                        }
+                        Text(
+                            text = "Cake day",
+                            style = TextStyle(
+                                color = MaterialTheme.colorScheme.textPrimary,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 15.sp
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -265,7 +344,7 @@ fun ProfilePostSection(
 ) {
 
     val listState = rememberLazyListState()
-    LaunchedEffect(username,listState) {
+    LaunchedEffect(username, listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
                 val lastVisibleItem = visibleItems.lastOrNull()
@@ -289,7 +368,9 @@ fun ProfilePostSection(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshPosts(username) }) {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxSize(), state = listState
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.fillMaxSize(),
+                state = listState
             ) {
                 if (viewModel.error.isEmpty()) {
                     items(items = viewModel.posts) { item ->
@@ -322,7 +403,7 @@ fun ProfileCommentsSection(
 ) {
 
     val listState = rememberLazyListState()
-    LaunchedEffect(username,listState) {
+    LaunchedEffect(username, listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
                 val lastVisibleItem = visibleItems.lastOrNull()
@@ -347,7 +428,7 @@ fun ProfileCommentsSection(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp) , state = listState) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listState) {
                 items(items = comments) { it ->
                     CommentCard(it)
                 }
@@ -355,4 +436,25 @@ fun ProfileCommentsSection(
         }
     }
 }
+
+fun Modifier.bottomBorder(strokeWidth: Dp, color: Color, isSelected: Boolean) = composed(
+    factory = {
+        val density = LocalDensity.current
+        val strokeWidthPx = density.run { strokeWidth.toPx() }
+
+        Modifier.drawBehind {
+            val width = size.width
+            val height = size.height - strokeWidthPx / 2
+            if (isSelected) {
+
+                drawLine(
+                    color = color,
+                    start = Offset(x = 0f, y = height),
+                    end = Offset(x = width, y = height),
+                    strokeWidth = strokeWidthPx
+                )
+            }
+        }
+    }
+)
 
