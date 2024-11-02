@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.map
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     navigateLogin: () -> Unit,
-    navigatePost: (PostResponseDTOItem) -> Unit
+    navigatePost: (String) -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -100,7 +100,15 @@ fun HomeScreen(
                                 voteState
                             )
                         },
-                        navigatePost = navigatePost
+                        navigatePost = navigatePost,
+                        setPostScore = { score: Int ->
+                            viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
+                                score
+                        },
+                        setVoteState = { state: String? ->
+                            viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
+                                state
+                        }
                     )
                 }
             }
