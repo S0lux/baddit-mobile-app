@@ -1,6 +1,5 @@
 package com.example.baddit.presentation.components
 
-import android.content.res.Configuration
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,13 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,7 +44,6 @@ import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,11 +55,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.posts.Author
-import com.example.baddit.domain.model.posts.Community
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
-import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -286,20 +278,16 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem) {
     val communityLogo = postDetails.community?.logoUrl.orEmpty()
     val authorName = postDetails.author.username
     val authorUrl = postDetails.author.avatarUrl
-    val titleText = if (communityName.isEmpty()) {
+    val titleText = communityName.ifEmpty {
         authorName
-    } else {
-        communityName
     }
     val subReddit = if (communityName.isEmpty()) {
         "u/"
     } else {
         "r/"
     }
-    val logo = if (communityLogo.isEmpty()) {
+    val logo = communityLogo.ifEmpty {
         authorUrl
-    } else {
-        communityLogo
     }
 
     Row(
