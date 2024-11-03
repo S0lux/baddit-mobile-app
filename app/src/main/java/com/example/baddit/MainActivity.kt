@@ -21,12 +21,12 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontVariation
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -67,7 +67,6 @@ import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -88,12 +87,10 @@ class MainActivity : ComponentActivity() {
 
             val sheetState = rememberModalBottomSheetState()
             var showBottomSheet by remember { mutableStateOf(false) }
-
-            var showAvatarMenu = remember { mutableStateOf(false) }
+            val showAvatarMenu = remember { mutableStateOf(false) }
+            var selectedBottomNavigation by rememberSaveable { mutableIntStateOf(0) }
 
             val bool = remember { mutableStateOf<Boolean?>(false) }
-
-            var selectedBottomNavigation by rememberSaveable { mutableStateOf(0) }
 
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
@@ -260,7 +257,6 @@ class MainActivity : ComponentActivity() {
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }
                                 composable<Verify>(
-
                                     deepLinks = listOf(navDeepLink {
                                         uriPattern = "https://baddit.life/auth?emailToken={token}"
                                     })
@@ -300,7 +296,6 @@ val navItems = listOf(
 
 @Composable
 fun SlideHorizontally(content: @Composable () -> Unit) {
-    // Store the visibility state using remember
     val visibleState = remember {
         MutableTransitionState(initialState = false).apply { targetState = true }
     }
@@ -317,7 +312,6 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
 
 @Composable
 fun SlideVertically(content: @Composable () -> Unit) {
-    // Store the visibility state using remember
     val visibleState = remember {
         MutableTransitionState(initialState = false).apply { targetState = true }
     }
