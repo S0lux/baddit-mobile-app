@@ -300,10 +300,13 @@ val navItems = listOf(
 
 @Composable
 fun SlideHorizontally(content: @Composable () -> Unit) {
+    // Store the visibility state using remember
+    val visibleState = remember {
+        MutableTransitionState(initialState = false).apply { targetState = true }
+    }
+
     AnimatedVisibility(
-        visibleState = MutableTransitionState(
-            initialState = false
-        ).apply { targetState = true },
+        visibleState = visibleState,
         modifier = Modifier,
         enter = slideInHorizontally(),
         exit = slideOutHorizontally() + fadeOut(),
@@ -314,10 +317,13 @@ fun SlideHorizontally(content: @Composable () -> Unit) {
 
 @Composable
 fun SlideVertically(content: @Composable () -> Unit) {
+    // Store the visibility state using remember
+    val visibleState = remember {
+        MutableTransitionState(initialState = false).apply { targetState = true }
+    }
+
     AnimatedVisibility(
-        visibleState = MutableTransitionState(
-            initialState = false
-        ).apply { targetState = true },
+        visibleState = visibleState,
         modifier = Modifier,
         enter = slideInVertically(),
         exit = slideOutVertically() + fadeOut(),
