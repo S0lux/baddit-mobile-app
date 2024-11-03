@@ -6,12 +6,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,10 +22,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -205,9 +210,8 @@ fun ProfileHeader(
     currentUser: GetOtherResponseDTO?
 ) {
     val gradientList = listOf(
-        Color(0xFF0cebeb),
-        Color(0xFF20e3b2),
-        Color(0xFF29ffc6)
+        Color(0xFF232526),
+        Color(0xFF414345),
     )
     Box(
         modifier = Modifier
@@ -219,6 +223,7 @@ fun ProfileHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(100.dp)
+                .padding(10.dp)
                 .background(
                     gradientBackGroundBrush(
                         isVerticalGradient = true,
@@ -260,62 +265,64 @@ fun ProfileHeader(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .height(100.dp)
                     .background(Color.Transparent)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp),
+                        .padding(0.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.Start
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.SpaceEvenly
                     ) {
                         currentUser?.username?.let {
                             Text(
                                 text = "u/$it",
                                 style = TextStyle(
-                                    color = MaterialTheme.colorScheme.textPrimary,
+                                    color = Color.White,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 20.sp
+                                    fontSize = 30.sp
                                 )
                             )
-                        }
-                        Text(
-                            text = "Username",
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.textPrimary,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 15.sp
-                            )
-                        )
-                    }
-                    Column(
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        currentUser?.registeredAt?.let {
-                            val localDateTime = LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
-                            val dateTimeFormatted = localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                            Text(
-                                text = dateTimeFormatted,
-                                style = TextStyle(
-                                    color = MaterialTheme.colorScheme.textPrimary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 20.sp
+                            currentUser.registeredAt.let {
+                                val localDateTime =
+                                    LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
+                                val dateTimeFormatted =
+                                    localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                Text(
+                                    text = "Cake day: $dateTimeFormatted",
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontStyle = FontStyle.Italic,
+                                        fontSize = 12.sp
+                                    )
                                 )
-                            )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                modifier = Modifier.border(
+                                    border = BorderStroke(1.dp, Color.White),
+                                    shape = RoundedCornerShape(50)
+                                )
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                onClick = { /*TODO*/ }
+                            ) {
+                                Text(
+                                    text = "Edit",
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                )
+                            }
                         }
-                        Text(
-                            text = "Cake day",
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.textPrimary,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 15.sp
-                            )
-                        )
                     }
+
                 }
             }
         }
