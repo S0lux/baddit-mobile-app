@@ -32,7 +32,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
@@ -57,7 +56,6 @@ import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.Post
-import com.example.baddit.presentation.utils.PostResponseNavType
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
@@ -165,13 +163,7 @@ class MainActivity : ComponentActivity() {
                                     SlideHorizontally {
                                         HomeScreen(
                                             navigateLogin = { navController.navigate(Login) },
-                                            navigatePost = { details: PostResponseDTOItem ->
-                                                navController.navigate(
-                                                    Post(
-                                                        postDetails = details
-                                                    )
-                                                )
-                                            }
+                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
                                         )
                                     }
                                 }
@@ -194,13 +186,7 @@ class MainActivity : ComponentActivity() {
                                         ProfileScreen(
                                             username = username!!,
                                             navController = navController,
-                                            navigatePost = { details: PostResponseDTOItem ->
-                                                navController.navigate(
-                                                    Post(
-                                                        postDetails = details
-                                                    )
-                                                )
-                                            },
+                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) },
                                             navigateLogin = { navController.navigate(Login) }
                                         )
                                     }
@@ -225,11 +211,7 @@ class MainActivity : ComponentActivity() {
                                         CreateMediaPostSCcreen(navController = navController)
                                     }
                                 }
-                                composable<Post>(
-                                    typeMap = mapOf(
-                                        typeOf<PostResponseDTOItem>() to PostResponseNavType
-                                    )
-                                ) {
+                                composable<Post> {
                                     selectedBottomNavigation = -1
                                     barState.value = true
                                     userTopBarState.value = false

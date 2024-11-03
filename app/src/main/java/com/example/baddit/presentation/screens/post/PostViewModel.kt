@@ -13,6 +13,7 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
@@ -31,13 +32,8 @@ class PostViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    var post by mutableStateOf(
-        savedStateHandle.toRoute<Post>(
-            typeMap = mapOf(
-                typeOf<PostResponseDTOItem>() to PostResponseNavType
-            )
-        ).postDetails
-    )
+    val postId = savedStateHandle.toRoute<Post>().postId
+    var post = postRepository.postCache.find { it.id == postId }!!
 
     var error by mutableStateOf("")
         private set;
@@ -82,7 +78,7 @@ class PostViewModel @Inject constructor(
             when (result) {
                 is Result.Success -> {
                     error = ""
-                    post = result.data[0]
+                    post = result.data[0].toMutablePostResponseDTOItem()
                 }
 
                 is Result.Error -> {

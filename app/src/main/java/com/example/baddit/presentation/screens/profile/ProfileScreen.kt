@@ -90,7 +90,7 @@ import java.time.format.DateTimeFormatter
 fun ProfileScreen(
     username: String,
     navController: NavController,
-    navigatePost: (PostResponseDTOItem) -> Unit,
+    navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateLogin: () -> Unit
 ) {
@@ -335,7 +335,7 @@ fun ProfilePostSection(
     username: String,
     loggedIn: Boolean,
     navigateLogin: () -> Unit,
-    navigatePost: (PostResponseDTOItem) -> Unit,
+    navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean
 ) {
@@ -381,7 +381,15 @@ fun ProfilePostSection(
                                     voteState
                                 )
                             },
-                            navigatePost = navigatePost
+                            navigatePost = navigatePost,
+                            setPostScore = { score: Int ->
+                                viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
+                                    score
+                            },
+                            setVoteState = { state: String? ->
+                                viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
+                                    state
+                            }
                         )
                     }
                 }

@@ -1,29 +1,28 @@
 package com.example.baddit.data.repository
 
-import com.example.baddit.data.dto.posts.UploadPostRequestBody
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.baddit.data.dto.posts.VotePostRequestBody
-import com.example.baddit.data.utils.httpToError
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
+import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.PostRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.HttpException
-import retrofit2.Response
 import java.io.File
-import java.io.IOException
 import javax.inject.Inject
 
 class PostRepositoryImpl @Inject constructor(
     private val badditAPI: BadditAPI
 ) : PostRepository {
+
+    override var postCache: SnapshotStateList<MutablePostResponseDTOItem> = mutableStateListOf()
 
     override suspend fun getPosts(
         communityName: String?,
@@ -31,7 +30,7 @@ class PostRepositoryImpl @Inject constructor(
         cursor: String?,
         postTitle: String?
     ): Result<PostResponseDTO, DataError.NetworkError> {
-        return safeApiCall {
+        val result = safeApiCall<PostResponseDTO, DataError.NetworkError> {
             badditAPI.getPosts(
                 communityName = communityName,
                 authorName = authorName,
@@ -39,6 +38,13 @@ class PostRepositoryImpl @Inject constructor(
                 postTitle = postTitle
             )
         }
+
+        if (result is Result.Success) {
+            postCache.clear()
+            result.data.map { postCache.add(it.toMutablePostResponseDTOItem()) }
+        }
+
+        return result
     }
 
     override suspend fun getPost(postId: String): Result<PostResponseDTO, DataError.NetworkError> {
