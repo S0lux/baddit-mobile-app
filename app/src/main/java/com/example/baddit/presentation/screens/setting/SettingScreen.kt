@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,18 +50,22 @@ import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(navController: NavController,
-                  switchTheme: suspend (Boolean) -> Unit,
-                  darkTheme: Boolean) {
+                  switchTheme: suspend (String) -> Unit,
+                  darkTheme: Boolean?) {
+
+    var coroutine = rememberCoroutineScope();
 
     var selectedTheme by remember { mutableStateOf(when(darkTheme) {
         true -> "Dark"
         false -> "Light"
-
+        else -> "System"
     }) }
+
     val themes = listOf("Dark", "Light", "System")
 
     Column {
@@ -97,9 +102,11 @@ fun SettingScreen(navController: NavController,
         if (openDialog.value) {
             Dialog(onDismissRequest = { openDialog.value = false }) {
                 Card(
-                    modifier = Modifier.wrapContentHeight()
+                    modifier = Modifier
+                        .wrapContentHeight()
                         .fillMaxWidth(0.85f)
-                        .padding(14.dp).align(Alignment.CenterHorizontally),
+                        .padding(14.dp)
+                        .align(Alignment.CenterHorizontally),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
 
                 ) {
@@ -109,7 +116,9 @@ fun SettingScreen(navController: NavController,
 
                         Text(
                             text = "Select Theme",
-                            modifier = Modifier.padding(10.dp).align(Alignment.CenterHorizontally),
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .align(Alignment.CenterHorizontally),
                             color = MaterialTheme.colorScheme.textPrimary,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
@@ -119,7 +128,12 @@ fun SettingScreen(navController: NavController,
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 RadioButton(
                                     selected = selectedTheme == theme,
-                                    onClick = { selectedTheme = theme },
+                                    onClick = {
+                                        selectedTheme = theme
+                                        coroutine.launch {
+                                            switchTheme(theme)
+                                        }
+                                              },
                                     modifier = Modifier.selectable(
                                         selected = selectedTheme == theme,
                                         onClick = { selectedTheme = theme }
@@ -162,7 +176,8 @@ fun SettingItem(icon: Painter, text: String, onClick: () -> Unit) {
             )
             .fillMaxWidth()
             .defaultMinSize(Dp.Unspecified, 40.dp)
-            .height(50.dp). padding(start = 20.dp, end = 20.dp),
+            .height(50.dp)
+            .padding(start = 20.dp, end = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

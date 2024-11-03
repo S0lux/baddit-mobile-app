@@ -56,9 +56,8 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 fun AvatarMenu(
     show: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel(),
-    homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
-    switchTheme: suspend (Boolean) -> Unit,
+    switchTheme: suspend (String) -> Unit,
     isDarkTheme: Boolean
 ) {
     var currentUser = viewModel.currentUser.value;
@@ -155,7 +154,7 @@ fun AvatarMenu(
                                             .clickable(
                                                 onClick = {
                                                     coroutineScope.launch {
-                                                        switchTheme(false);
+                                                        switchTheme("Light");
                                                     }
                                                 }
                                             ),
@@ -169,7 +168,7 @@ fun AvatarMenu(
                                             .size(27.dp)
                                             .clickable(onClick = {
                                                 coroutineScope.launch {
-                                                    switchTheme(true);
+                                                    switchTheme("Dark");
                                                 }
                                             }),
                                         painter = painterResource(id = R.drawable.baseline_light_mode_24),

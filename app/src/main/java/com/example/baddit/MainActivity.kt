@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,28 +91,39 @@ class MainActivity : ComponentActivity() {
 
             var showAvatarMenu = remember { mutableStateOf(false) }
 
-            var bool = remember { mutableStateOf(false) }
+            val bool = remember { mutableStateOf<Boolean?>(false) }
 
             var selectedBottomNavigation by rememberSaveable { mutableStateOf(0) }
 
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
                     localThemes.readDarkTheme().collect {
-                        bool.value = it
+                        when (it){
+                            "Dark" -> bool.value = true
+                            "Light" -> bool.value = false
+                            else -> bool.value = null
+                        }
                     }
                 }
             }
 
-            val switchTheme: suspend (Boolean) -> Unit = {
+            val switchTheme: suspend (String) -> Unit = {
                 darkTheme -> localThemes.saveDarkTheme(b = darkTheme)
+                localThemes.readDarkTheme().collect {
+                    when (it){
+                        "Dark" -> bool.value = true
+                        "Light" -> bool.value = false
+                        else -> bool.value = null
+                    }
+                }
             }
 
-            BadditTheme(darkTheme = bool.value) {
+            BadditTheme(darkTheme = bool.value ?: isSystemInDarkTheme() ) {
                 AvatarMenu(
                     show = showAvatarMenu,
                     navController = navController,
                     switchTheme = switchTheme,
-                    isDarkTheme = bool.value
+                    isDarkTheme = bool.value ?: isSystemInDarkTheme()
                 )
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
@@ -234,7 +246,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    SignupScreen(isDarkMode = bool.value,
+                                    SignupScreen(isDarkMode = bool.value ?: isSystemInDarkTheme(),
                                         navigateToLogin = { navController.navigate(Login) },
                                         navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
                                 }
@@ -243,7 +255,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false;
                                     userTopBarState.value = false;
 
-                                    LoginScreen(isDarkMode = bool.value,
+                                    LoginScreen(isDarkMode = bool.value ?: isSystemInDarkTheme(),
                                         navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
                                         navigateToSignup = { navController.navigate(SignUp) })
                                 }
