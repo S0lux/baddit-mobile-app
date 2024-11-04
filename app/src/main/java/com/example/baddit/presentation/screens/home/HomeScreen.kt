@@ -69,9 +69,9 @@ fun HomeScreen(
             text = "It seems like you have scrolled to the end of all posts. Impressive!",
             confirmText = "Okay",
             dismissText = "Cancel",
-            onConfirm = { viewModel.noMorePosts = false }) {
-
-        }
+            onConfirm = { viewModel.noMorePosts = false; viewModel.noMorePosts = false },
+            onDismiss = { viewModel.noMorePosts = false; viewModel.noMorePosts = false }
+        )
     }
 
     PullToRefreshBox(
