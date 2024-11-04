@@ -1,5 +1,6 @@
 package com.example.baddit.data.remote
 
+import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
@@ -93,4 +94,7 @@ interface BadditAPI {
 
     @POST("/v1/comments/votes")
     suspend fun voteComment(@Body voteBody: VoteCommentRequestBody): Response<Unit>
+
+    @POST
+    suspend fun changePassword(@Body changePasswordBody: ChangePasswordRequestBody): Response<Unit>
 }
