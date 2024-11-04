@@ -24,6 +24,7 @@ import com.example.baddit.presentation.utils.Login
 @Composable
 fun PostScreen(
     navController: NavHostController,
+    navReply: (String, String) -> Unit,
     viewModel: PostViewModel = hiltViewModel()
 ) {
     LaunchedEffect(true) {
@@ -82,7 +83,7 @@ fun PostScreen(
                     },
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
-                    navigateReply = { a: String?, b: String?, c: String? -> Unit }
+                    navigateReply = navReply
                 )
             }
         }

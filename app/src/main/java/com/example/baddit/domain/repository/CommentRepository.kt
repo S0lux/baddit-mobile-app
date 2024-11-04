@@ -16,4 +16,15 @@ interface CommentRepository {
         commentId: String,
         state: String
     ): Result<Unit, DataError.NetworkError>
+
+    suspend fun replyPost(
+        postId: String,
+        content: String
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun replyComment(
+        parentId: String,
+        postId: String,
+        content: String
+    ): Result<Unit, DataError.NetworkError>
 }

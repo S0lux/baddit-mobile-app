@@ -32,12 +32,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BadditActionButton
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.TopNavigationBar
+import com.example.baddit.presentation.screens.comment.CommentScreen
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
@@ -90,13 +92,16 @@ class MainActivity : ComponentActivity() {
             val showAvatarMenu = remember { mutableStateOf(false) }
             var selectedBottomNavigation by rememberSaveable { mutableIntStateOf(0) }
             var activeFAB: FAButtons? by remember { mutableStateOf(FAButtons.POST_CREATE) }
+            var activePostId: String? by remember { mutableStateOf(null) }
+            var activeCommentId: String? by remember { mutableStateOf(null) }
+            var activeCommentComment: String? by remember { mutableStateOf(null) }
 
             val bool = remember { mutableStateOf<Boolean?>(false) }
 
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
                     localThemes.readDarkTheme().collect {
-                        when (it){
+                        when (it) {
                             "Dark" -> bool.value = true
                             "Light" -> bool.value = false
                             else -> bool.value = null
@@ -105,10 +110,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val switchTheme: suspend (String) -> Unit = {
-                darkTheme -> localThemes.saveDarkTheme(b = darkTheme)
+            val switchTheme: suspend (String) -> Unit = { darkTheme ->
+                localThemes.saveDarkTheme(b = darkTheme)
                 localThemes.readDarkTheme().collect {
-                    when (it){
+                    when (it) {
                         "Dark" -> bool.value = true
                         "Light" -> bool.value = false
                         else -> bool.value = null
@@ -116,7 +121,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            BadditTheme(darkTheme = bool.value ?: isSystemInDarkTheme() ) {
+            BadditTheme(darkTheme = bool.value ?: isSystemInDarkTheme()) {
                 AvatarMenu(
                     show = showAvatarMenu,
                     navController = navController,
@@ -146,8 +151,21 @@ class MainActivity : ComponentActivity() {
                         floatingActionButton = {
                             if (barState.value) {
                                 when (activeFAB) {
-                                    FAButtons.POST_CREATE -> BadditActionButton(onClick = { showBottomSheet = true })
-                                    FAButtons.POST_REPLY -> BadditActionButton(onClick = { /*TODO*/ }, icon = R.drawable.reply)
+                                    FAButtons.POST_CREATE -> BadditActionButton(onClick = {
+                                        showBottomSheet = true
+                                    })
+
+                                    FAButtons.POST_REPLY -> BadditActionButton(onClick = {
+                                        navController.navigate(
+                                            Comment(
+                                                postId = activePostId,
+                                                commentId = null,
+                                                commentContent = activeCommentComment,
+                                                darkMode = bool.value ?: false,
+                                            )
+                                        )
+                                    }, icon = R.drawable.reply)
+
                                     else -> Unit
                                 }
                             }
@@ -163,7 +181,8 @@ class MainActivity : ComponentActivity() {
                         NavHost(
                             navController = navController,
                             startDestination = Main,
-                            modifier = Modifier.padding(it)) {
+                            modifier = Modifier.padding(it)
+                        ) {
                             navigation<Main>(startDestination = Home) {
                                 composable<Home> {
                                     selectedBottomNavigation = 0
@@ -173,7 +192,11 @@ class MainActivity : ComponentActivity() {
                                     activeFAB = FAButtons.POST_CREATE
                                     HomeScreen(
                                         navigateLogin = { navController.navigate(Login) },
-                                        navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
+                                        navigatePost = { postId: String ->
+                                            navController.navigate(
+                                                Post(postId = postId)
+                                            )
+                                        }
                                     )
                                 }
                                 composable<Community> {
@@ -195,8 +218,24 @@ class MainActivity : ComponentActivity() {
                                     ProfileScreen(
                                         username = username!!,
                                         navController = navController,
-                                        navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) },
-                                        navigateLogin = { navController.navigate(Login) }
+                                        navigatePost = { postId: String ->
+                                            navController.navigate(
+                                                Post(postId = postId)
+                                            )
+                                        },
+                                        navigateLogin = { navController.navigate(Login) },
+                                        navigateReply = { id: String, content: String ->
+                                            activeCommentId = id
+                                            activeCommentComment = content
+                                            navController.navigate(
+                                                Comment(
+                                                    postId = null,
+                                                    commentId = activeCommentId,
+                                                    commentContent = activeCommentComment,
+                                                    darkMode = bool.value ?: false,
+                                                )
+                                            )
+                                        }
                                     )
                                 }
                                 composable<CreateTextPost> {
@@ -225,7 +264,22 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = false
 
-                                    PostScreen(navController = navController)
+                                    activePostId = it.toRoute<Post>().postId
+                                    PostScreen(
+                                        navController = navController,
+                                        navReply = { id: String, content: String ->
+                                            activeCommentId = id
+                                            activeCommentComment = content
+                                            navController.navigate(
+                                                Comment(
+                                                    postId = activePostId,
+                                                    commentId = activeCommentId,
+                                                    commentContent = activeCommentComment,
+                                                    darkMode = bool.value ?: false,
+                                                )
+                                            )
+                                        }
+                                    )
                                 }
                                 composable<Setting> {
                                     selectedBottomNavigation = -1
@@ -234,7 +288,11 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false
                                     userTopBarState.value = false
 
-                                    SettingScreen(navController = navController,switchTheme = switchTheme, darkTheme = bool.value);
+                                    SettingScreen(
+                                        navController = navController,
+                                        switchTheme = switchTheme,
+                                        darkTheme = bool.value
+                                    );
                                 }
                                 composable<Comment> {
                                     selectedBottomNavigation = -1
@@ -242,6 +300,8 @@ class MainActivity : ComponentActivity() {
                                     activeFAB = null
                                     barState.value = false
                                     userTopBarState.value = false
+
+                                    CommentScreen(navController = navController)
                                 }
                             }
 
@@ -277,7 +337,8 @@ class MainActivity : ComponentActivity() {
                                     val token = it.arguments?.getString("token")
                                     VerifyScreen(
                                         navigateLogin = { navController.navigate(Login) },
-                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } }, token
+                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
+                                        token
                                     )
                                 }
                             }

@@ -55,6 +55,8 @@ data class Post(
 
 @Serializable
 data class Comment(
+    val darkMode: Boolean,
     val postId: String?,
-    val commentId: String?
+    val commentId: String?,
+    val commentContent: String?
 )

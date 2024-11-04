@@ -252,7 +252,7 @@ fun PostCard(
                 colorDownvote = colorDownvote,
                 onUpvote = { onUpvote() },
                 onDownvote = { onDownvote() },
-                commentCount = postDetails.commentCount,
+                commentCount = postDetails.commentCount.value,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size },
             )
         }
