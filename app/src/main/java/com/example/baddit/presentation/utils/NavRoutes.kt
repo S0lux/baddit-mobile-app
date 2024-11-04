@@ -52,3 +52,9 @@ data class Profile(
 data class Post(
     val postId: String
 )
+
+@Serializable
+data class Comment(
+    val postId: String?,
+    val commentId: String?
+)

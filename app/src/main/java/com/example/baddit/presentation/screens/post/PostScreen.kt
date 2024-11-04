@@ -13,15 +13,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.baddit.R
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.utils.Login
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostScreen(
-    navigateLogin: () -> Unit,
+    navController: NavHostController,
     viewModel: PostViewModel = hiltViewModel()
 ) {
     LaunchedEffect(true) {
@@ -35,7 +37,8 @@ fun PostScreen(
     PullToRefreshBox(
         isRefreshing = viewModel.isLoading,
         onRefresh = { viewModel.refresh() },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -47,7 +50,7 @@ fun PostScreen(
                 PostCard(
                     postDetails = viewModel.post,
                     loggedIn = viewModel.isLoggedIn,
-                    navigateLogin = { navigateLogin() },
+                    navigateLogin = { navController.navigate(Login) },
                     votePostFn = { voteState: String ->
                         viewModel.postRepository.votePost(
                             viewModel.post.id, voteState
@@ -78,7 +81,7 @@ fun PostScreen(
                         )
                     },
                     isLoggedIn = viewModel.isLoggedIn,
-                    navigateLogin = navigateLogin,
+                    navigateLogin = { navController.navigate(Login) },
                     navigateReply = { a: String?, b: String?, c: String? -> Unit }
                 )
             }

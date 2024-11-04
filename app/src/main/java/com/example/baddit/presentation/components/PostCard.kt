@@ -56,6 +56,7 @@ import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -366,7 +367,7 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
         lineHeight = 14.sp,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10))
+            .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .padding(5.dp),
         maxLines = if (!isExpanded) 3 else 100,
@@ -378,7 +379,7 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
 fun PostMediaContent(mediaUrls: List<String>) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(10.dp)).then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .fillMaxWidth()
             .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
@@ -419,7 +420,7 @@ fun PostActions(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(10))
+                .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
                 .onGloballyPositioned(onGloballyPositioned)
                 .clickable(
                     onClick = {}, interactionSource = voteInteractionSource, indication = ripple(
@@ -459,7 +460,7 @@ fun PostActions(
         Row(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(10))
+                .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
                 .background(MaterialTheme.colorScheme.cardForeground)
                 .padding(bottom = 4.dp, top = 4.dp, start = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically

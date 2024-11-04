@@ -4,11 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -38,9 +34,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
+import com.example.baddit.presentation.components.BadditActionButton
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
-import com.example.baddit.presentation.components.CreatePostActionButton
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
@@ -54,9 +50,11 @@ import com.example.baddit.presentation.screens.setting.SettingScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
+import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CreateMediaPost
 import com.example.baddit.presentation.utils.CreateTextPost
+import com.example.baddit.presentation.utils.FAButtons
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
@@ -91,6 +89,7 @@ class MainActivity : ComponentActivity() {
             var showBottomSheet by remember { mutableStateOf(false) }
             val showAvatarMenu = remember { mutableStateOf(false) }
             var selectedBottomNavigation by rememberSaveable { mutableIntStateOf(0) }
+            var activeFAB: FAButtons? by remember { mutableStateOf(FAButtons.POST_CREATE) }
 
             val bool = remember { mutableStateOf<Boolean?>(false) }
 
@@ -146,7 +145,11 @@ class MainActivity : ComponentActivity() {
                         },
                         floatingActionButton = {
                             if (barState.value) {
-                                CreatePostActionButton(onClick = { showBottomSheet = true })
+                                when (activeFAB) {
+                                    FAButtons.POST_CREATE -> BadditActionButton(onClick = { showBottomSheet = true })
+                                    FAButtons.POST_REPLY -> BadditActionButton(onClick = { /*TODO*/ }, icon = R.drawable.reply)
+                                    else -> Unit
+                                }
                             }
                         }
                     ) { it ->
@@ -167,6 +170,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = false
 
+                                    activeFAB = FAButtons.POST_CREATE
                                     HomeScreen(
                                         navigateLogin = { navController.navigate(Login) },
                                         navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
@@ -177,6 +181,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = true
                                     userTopBarState.value = true
 
+                                    activeFAB = FAButtons.POST_CREATE
                                     CommunityScreen(navController)
                                 }
                                 composable<Profile> {
@@ -186,6 +191,7 @@ class MainActivity : ComponentActivity() {
 
                                     val username = it.arguments?.getString("username");
 
+                                    activeFAB = null
                                     ProfileScreen(
                                         username = username!!,
                                         navController = navController,
@@ -195,6 +201,8 @@ class MainActivity : ComponentActivity() {
                                 }
                                 composable<CreateTextPost> {
                                     selectedBottomNavigation = -1
+
+                                    activeFAB = null
                                     barState.value = false
                                     userTopBarState.value = false
 
@@ -204,6 +212,7 @@ class MainActivity : ComponentActivity() {
                                 composable<CreateMediaPost> {
                                     selectedBottomNavigation = -1
 
+                                    activeFAB = null
                                     barState.value = false
                                     userTopBarState.value = false
 
@@ -211,25 +220,35 @@ class MainActivity : ComponentActivity() {
                                 }
                                 composable<Post> {
                                     selectedBottomNavigation = -1
+
+                                    activeFAB = FAButtons.POST_REPLY
                                     barState.value = true
                                     userTopBarState.value = false
 
-                                    SlideVertically {
-                                        PostScreen(navigateLogin = { navController.navigate(Login) })
-                                    }
+                                    PostScreen(navController = navController)
                                 }
                                 composable<Setting> {
+                                    selectedBottomNavigation = -1
+
+                                    activeFAB = null
                                     barState.value = false
                                     userTopBarState.value = false
 
                                     SettingScreen(navController = navController,switchTheme = switchTheme, darkTheme = bool.value);
                                 }
+                                composable<Comment> {
+                                    selectedBottomNavigation = -1
 
+                                    activeFAB = null
+                                    barState.value = false
+                                    userTopBarState.value = false
+                                }
                             }
 
                             navigation<Auth>(startDestination = Login) {
                                 composable<SignUp> {
                                     selectedBottomNavigation = -1
+
                                     barState.value = false;
                                     userTopBarState.value = false;
 
@@ -239,6 +258,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 composable<Login> {
                                     selectedBottomNavigation = -1
+
                                     barState.value = false;
                                     userTopBarState.value = false;
 
