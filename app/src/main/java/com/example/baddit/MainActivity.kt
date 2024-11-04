@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -158,29 +160,24 @@ class MainActivity : ComponentActivity() {
                         NavHost(
                             navController = navController,
                             startDestination = Main,
-                            modifier = Modifier.padding(it)
-                        ) {
+                            modifier = Modifier.padding(it)) {
                             navigation<Main>(startDestination = Home) {
                                 composable<Home> {
                                     selectedBottomNavigation = 0
                                     barState.value = true
                                     userTopBarState.value = false
 
-                                    SlideHorizontally {
-                                        HomeScreen(
-                                            navigateLogin = { navController.navigate(Login) },
-                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
-                                        )
-                                    }
+                                    HomeScreen(
+                                        navigateLogin = { navController.navigate(Login) },
+                                        navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
+                                    )
                                 }
                                 composable<Community> {
                                     selectedBottomNavigation = 1
                                     barState.value = true
                                     userTopBarState.value = true
 
-                                    SlideHorizontally {
-                                        CommunityScreen(navController)
-                                    }
+                                    CommunityScreen(navController)
                                 }
                                 composable<Profile> {
                                     selectedBottomNavigation = -1
@@ -188,23 +185,20 @@ class MainActivity : ComponentActivity() {
                                     userTopBarState.value = true
 
                                     val username = it.arguments?.getString("username");
-                                    SlideHorizontally {
-                                        ProfileScreen(
-                                            username = username!!,
-                                            navController = navController,
-                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) },
-                                            navigateLogin = { navController.navigate(Login) }
-                                        )
-                                    }
+
+                                    ProfileScreen(
+                                        username = username!!,
+                                        navController = navController,
+                                        navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) },
+                                        navigateLogin = { navController.navigate(Login) }
+                                    )
                                 }
                                 composable<CreateTextPost> {
                                     selectedBottomNavigation = -1
                                     barState.value = false
                                     userTopBarState.value = false
 
-                                    SlideHorizontally {
-                                        CreateTextPostScreen(navController = navController)
-                                    }
+                                    CreateTextPostScreen(navController = navController)
                                 }
 
                                 composable<CreateMediaPost> {
@@ -213,9 +207,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false
                                     userTopBarState.value = false
 
-                                    SlideHorizontally {
-                                        CreateMediaPostSCcreen(navController = navController)
-                                    }
+                                    CreateMediaPostSCcreen(navController = navController)
                                 }
                                 composable<Post> {
                                     selectedBottomNavigation = -1
@@ -230,9 +222,7 @@ class MainActivity : ComponentActivity() {
                                     barState.value = false
                                     userTopBarState.value = false
 
-                                    SlideHorizontally {
-                                        SettingScreen(navController = navController,switchTheme = switchTheme, darkTheme = bool.value);
-                                    }
+                                    SettingScreen(navController = navController,switchTheme = switchTheme, darkTheme = bool.value);
                                 }
 
                             }
@@ -293,22 +283,6 @@ val navItems = listOf(
         DisplayName = "Explore"
     )
 )
-
-@Composable
-fun SlideHorizontally(content: @Composable () -> Unit) {
-    val visibleState = remember {
-        MutableTransitionState(initialState = false).apply { targetState = true }
-    }
-
-    AnimatedVisibility(
-        visibleState = visibleState,
-        modifier = Modifier,
-        enter = slideInHorizontally(),
-        exit = slideOutHorizontally() + fadeOut(),
-    ) {
-        content()
-    }
-}
 
 @Composable
 fun SlideVertically(content: @Composable () -> Unit) {
