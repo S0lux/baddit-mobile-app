@@ -26,6 +26,7 @@ class HomeViewModel @Inject constructor(
 
     var error by mutableStateOf("");
     var noMorePosts by mutableStateOf(false)
+    var showNoPostWarning by mutableStateOf(false)
     val loggedIn = _authRepository.isLoggedIn;
     var endReached = false;
 
@@ -80,6 +81,7 @@ class HomeViewModel @Inject constructor(
                     }
                     else {
                         noMorePosts = true
+                        showNoPostWarning = true
                     }
                 }
             }

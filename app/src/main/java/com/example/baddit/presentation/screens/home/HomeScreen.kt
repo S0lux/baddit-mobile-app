@@ -63,14 +63,14 @@ fun HomeScreen(
             onDismiss = { showLoginDialog = false })
     }
 
-    if (viewModel.noMorePosts) {
+    if (viewModel.showNoPostWarning) {
         BadditDialog(
             title = "Woah",
             text = "It seems like you have scrolled to the end of all posts. Impressive!",
             confirmText = "Okay",
             dismissText = "Cancel",
-            onConfirm = { viewModel.noMorePosts = false; viewModel.noMorePosts = false },
-            onDismiss = { viewModel.noMorePosts = false; viewModel.noMorePosts = false }
+            onConfirm = { viewModel.showNoPostWarning = false; },
+            onDismiss = { viewModel.showNoPostWarning = false; }
         )
     }
 
