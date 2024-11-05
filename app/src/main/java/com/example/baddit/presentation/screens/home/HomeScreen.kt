@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,23 +38,16 @@ fun HomeScreen(
     navigatePost: (String) -> Unit
 ) {
     val listState = rememberLazyListState()
+    viewModel.endReached = !listState.canScrollForward
 
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
-            .map { visibleItems ->
-                val lastVisibleItem = visibleItems.lastOrNull()
-                val lastItem = listState.layoutInfo.totalItemsCount - 1
-                lastVisibleItem?.index == lastItem
-            }
-            .distinctUntilChanged()
-            .collect { isAtEnd ->
-                if (isAtEnd) {
-                    viewModel.loadMorePosts()
-                }
-            }
+    LaunchedEffect(viewModel.endReached) {
+        if (viewModel.endReached) {
+            Log.d("INFINITE_SCROLL", "LOADING MORE POSTS!")
+            Log.d("INFINITE_SCROLL", "END REACHED STATE: ${viewModel.endReached}")
+            viewModel.loadMorePosts()
+        }
     }
 
-    val posts = viewModel.posts
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
 
@@ -69,15 +63,15 @@ fun HomeScreen(
             onDismiss = { showLoginDialog = false })
     }
 
-    if (viewModel.showNoPostAlert) {
+    if (viewModel.showNoPostWarning) {
         BadditDialog(
             title = "Woah",
-            text = "It seems like you have scrolled to the end of of all posts. Impressive!",
+            text = "It seems like you have scrolled to the end of all posts. Impressive!",
             confirmText = "Okay",
             dismissText = "Cancel",
-            onConfirm = { viewModel.showNoPostAlert = false }) {
-
-        }
+            onConfirm = { viewModel.showNoPostWarning = false; },
+            onDismiss = { viewModel.showNoPostWarning = false; }
+        )
     }
 
     PullToRefreshBox(
@@ -89,7 +83,7 @@ fun HomeScreen(
             state = listState
         ) {
             if (error.isEmpty()) {
-                items(items = posts) { item ->
+                items(items = viewModel.postRepository.postCache) { item ->
                     PostCard(
                         postDetails = item,
                         loggedIn = loggedIn,
@@ -113,7 +107,6 @@ fun HomeScreen(
                 }
             }
         }
-
     }
 }
 

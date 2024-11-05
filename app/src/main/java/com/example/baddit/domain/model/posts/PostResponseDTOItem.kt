@@ -1,6 +1,7 @@
 package com.example.baddit.domain.model.posts
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.serialization.Serializable
 
@@ -22,7 +23,7 @@ data class PostResponseDTOItem(
 
 data class MutablePostResponseDTOItem(
     val author: Author,
-    val commentCount: Int,
+    val commentCount: MutableState<Int>,
     val community: Community?,
     val content: String,
     val createdAt: String,
@@ -38,12 +39,12 @@ data class MutablePostResponseDTOItem(
 fun PostResponseDTOItem.toMutablePostResponseDTOItem(): MutablePostResponseDTOItem {
     return MutablePostResponseDTOItem(
         author = this.author,
-        commentCount = this.commentCount,
+        commentCount = mutableIntStateOf(this.commentCount),
         community = this.community,
         content = this.content,
         createdAt = this.createdAt,
         id = this.id,
-        score = mutableStateOf(this.score),
+        score = mutableIntStateOf(this.score),
         title = this.title,
         type = this.type,
         updatedAt = this.updatedAt,
