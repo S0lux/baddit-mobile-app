@@ -39,11 +39,6 @@ class PostRepositoryImpl @Inject constructor(
             )
         }
 
-        if (result is Result.Success) {
-            postCache.clear()
-            result.data.map { postCache.add(it.toMutablePostResponseDTOItem()) }
-        }
-
         return result
     }
 

@@ -24,20 +24,17 @@ class HomeViewModel @Inject constructor(
     var isRefreshing by mutableStateOf(false)
         private set;
 
-    var posts = postRepository.postCache
-
     var error by mutableStateOf("");
-
-    var showNoPostAlert by mutableStateOf(false)
-
+    var noMorePosts by mutableStateOf(false)
+    var showNoPostWarning by mutableStateOf(false)
     val loggedIn = _authRepository.isLoggedIn;
-
     var endReached = false;
 
     private var lastPostId: String? = null;
 
     fun refreshPosts() {
-        endReached = false
+        noMorePosts = false
+
         viewModelScope.launch {
             isRefreshing = true;
             when (val fetchPosts = postRepository.getPosts()) {
@@ -50,11 +47,11 @@ class HomeViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
-                    posts.clear()
-                    error = ""
                     lastPostId = fetchPosts.data.last().id
+                    error = ""
 
-                    posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
+                    postRepository.postCache.clear()
+                    postRepository.postCache.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
             }
             isRefreshing = false;
@@ -62,7 +59,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadMorePosts() {
-        if (endReached) return
+        if (noMorePosts) return
 
         viewModelScope.launch {
             isRefreshing = true;
@@ -79,11 +76,12 @@ class HomeViewModel @Inject constructor(
                     error = ""
                     if (fetchPosts.data.isNotEmpty()) {
                         lastPostId = fetchPosts.data.last().id
-                        posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
+
+                        postRepository.postCache.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                     }
                     else {
-                        showNoPostAlert = true
-                        endReached = true
+                        noMorePosts = true
+                        showNoPostWarning = true
                     }
                 }
             }

@@ -87,7 +87,8 @@ fun ProfileScreen(
     navController: NavController,
     navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
-    navigateLogin: () -> Unit
+    navigateLogin: () -> Unit,
+    navigateReply: (String, String) -> Unit
 ) {
 
     val error = viewModel.error
@@ -192,7 +193,8 @@ fun ProfileScreen(
             username = username,
             viewModel = viewModel,
             isPostSectionSelected = isPostSectionSelected,
-            navigateLogin = navigateLogin
+            navigateLogin = navigateLogin,
+            navigateReply = navigateReply
         )
     }
 }
@@ -399,7 +401,8 @@ fun ProfileCommentsSection(
     username: String,
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean,
-    navigateLogin: () -> Unit
+    navigateLogin: () -> Unit,
+    navigateReply: (String, String) -> Unit
 ) {
 
     val listState = rememberLazyListState()
@@ -433,7 +436,7 @@ fun ProfileCommentsSection(
                     CommentCard(
                         details = it,
                         navigateLogin = navigateLogin,
-                        navigateReply = { a: String?, b: String?, c: String? -> Unit },
+                        navigateReply = navigateReply,
                         voteFn = { commentId: String, state: String ->
                             viewModel.commentRepository.voteComment(
                                 commentId,

@@ -4,7 +4,7 @@ import com.example.baddit.domain.repository.LocalThemeManager
 import kotlinx.coroutines.flow.Flow
 
 class ReadDarkTheme(private val localThemeManager: LocalThemeManager) {
-    suspend operator fun invoke(): Flow<Boolean> {
+    suspend operator fun invoke(): Flow<String> {
         return localThemeManager.readDarkTheme();
     }
 }

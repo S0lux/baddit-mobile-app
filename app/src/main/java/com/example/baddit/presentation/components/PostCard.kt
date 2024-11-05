@@ -56,6 +56,7 @@ import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -87,14 +88,14 @@ fun PostCard(
     val voteInteractionSource = remember { MutableInteractionSource() }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
-    var hasUserInteracted by remember { mutableStateOf(false) }
+    var hasUserInteracted by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     if (showLoginDialog) {
         LoginDialog(navigateLogin = { navigateLogin() }, onDismiss = { showLoginDialog = false })
     }
 
-    LaunchedEffect(postDetails.voteState) {
+    LaunchedEffect(postDetails.voteState.value) {
         if (hasUserInteracted && postDetails.voteState.value != null) {
             val pressPosition = Offset(
                 x = voteElementSize.width / if (postDetails.voteState.value == "UPVOTE") 6f else 1f,
@@ -197,7 +198,9 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_upvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp).offset(20.dp)
+                modifier = Modifier
+                    .size(32.dp)
+                    .offset(20.dp)
             )
         },
         background = colorUpvote,
@@ -211,7 +214,9 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp).offset(20.dp)
+                modifier = Modifier
+                    .size(32.dp)
+                    .offset(20.dp)
             )
         },
         background = colorDownvote,
@@ -252,7 +257,7 @@ fun PostCard(
                 colorDownvote = colorDownvote,
                 onUpvote = { onUpvote() },
                 onDownvote = { onDownvote() },
-                commentCount = postDetails.commentCount,
+                commentCount = postDetails.commentCount.value,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size },
             )
         }
@@ -368,6 +373,7 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10))
+            .then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .padding(5.dp),
         maxLines = if (!isExpanded) 3 else 100,
@@ -380,6 +386,7 @@ fun PostMediaContent(mediaUrls: List<String>) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
+            .then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .fillMaxWidth()
             .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
@@ -421,6 +428,7 @@ fun PostActions(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .clip(RoundedCornerShape(10))
+                .then(InvalidatingPlacementModifierElement())
                 .onGloballyPositioned(onGloballyPositioned)
                 .clickable(
                     onClick = {}, interactionSource = voteInteractionSource, indication = ripple(
@@ -461,6 +469,7 @@ fun PostActions(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier
                 .clip(RoundedCornerShape(10))
+                .then(InvalidatingPlacementModifierElement())
                 .background(MaterialTheme.colorScheme.cardForeground)
                 .padding(bottom = 4.dp, top = 4.dp, start = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically

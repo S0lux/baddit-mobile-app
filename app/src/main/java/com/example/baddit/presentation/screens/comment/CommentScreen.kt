@@ -1,4 +1,4 @@
-package com.example.baddit.presentation.screens.createPost
+package com.example.baddit.presentation.screens.comment
 
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,18 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,64 +35,39 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.baddit.R
 import com.example.baddit.presentation.components.AnimatedLogo
-import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.styles.textFieldColors
-import com.example.baddit.presentation.utils.Auth
-import com.example.baddit.presentation.utils.Home
-import com.example.baddit.presentation.utils.Main
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
-import kotlinx.coroutines.delay
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTextPostScreen(
+fun CommentScreen(
     navController: NavHostController,
-    isDarkTheme:Boolean,
-    viewmodel: CreatePostViewodel = hiltViewModel()
+    viewModel: CommentViewModel = hiltViewModel()
 ) {
-    val sheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var loadingIcon by remember {
-        mutableStateOf(0)
+
+    var loadingIcon by remember { mutableIntStateOf(0) }
+    loadingIcon =
+        if (viewModel.arguments.darkMode) R.raw.loadingiconwhite else R.raw.loadingicon
+
+    if (viewModel.error.isNotEmpty() && viewModel.error != "Success") {
+        Toast.makeText(context, viewModel.error, Toast.LENGTH_LONG).show()
     }
 
-    loadingIcon = if (isDarkTheme) R.raw.loadingiconwhite else R.raw.loadingicon
-
-    if(!viewmodel.isLoggedIn.value){
-        LoginDialog(navigateLogin = {
-            navController.navigate(Auth)
-        }, onDismiss = { navController.navigateUp() })
-    }
-
-
-    if (showBottomSheet) {
-        SelectCommunityBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
-        )
-    }
-    if (viewmodel.error == "Success") {
-        LaunchedEffect(key1 = "key") {
-            navController.navigateUp()
+    LaunchedEffect(viewModel.success) {
+        if (viewModel.success) {
+            navController.popBackStack()
         }
+    }
 
-    }
-    if (viewmodel.error.isNotEmpty() && viewmodel.error != "Success") {
-        Toast.makeText(context, viewmodel.error, Toast.LENGTH_LONG).show()
-    }
     Column(
         modifier = Modifier.padding(10.dp)
     ) {
-
         Box(modifier = Modifier.fillMaxWidth()) {
-            if (!viewmodel.isPosting) {
+            if (!viewModel.isLoading) {
                 IconButton(
-                    onClick = {
-                        viewmodel.uploadTextPost(context);
-                    },
-                    enabled = !viewmodel.isPosting,
+                    onClick = { viewModel.onSend() },
+                    enabled = !viewModel.isLoading,
                     modifier = Modifier.align(Alignment.CenterEnd),
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
@@ -108,7 +82,8 @@ fun CreateTextPostScreen(
                     )
                 }
             }
-            if (viewmodel.isPosting) {
+
+            if (viewModel.isLoading) {
                 Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                     AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
                 }
@@ -120,9 +95,7 @@ fun CreateTextPostScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 IconButton(
-                    onClick = {
-                        navController.navigateUp()
-                    },
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier,
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
@@ -138,7 +111,7 @@ fun CreateTextPostScreen(
                 }
 
                 Text(
-                    text = "Text post",
+                    text = "Comment",
                     style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
@@ -150,45 +123,43 @@ fun CreateTextPostScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-
-        CommunitySelector(onClick = { showBottomSheet = true }, viewmodel = viewmodel)
-
-
-        TextField(
-            value = viewmodel.title.value,
-            onValueChange = { viewmodel.onTitleChange(it) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = viewmodel.title.error.isNotEmpty(),
-            textStyle = MaterialTheme.typography.titleMedium,
-            placeholder = {
-                Text(
-                    text = "Title",
-                    style = MaterialTheme.typography.titleMedium
+        if (viewModel.arguments.commentContent != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                TextField(
+                    value = viewModel.arguments.commentContent,
+                    onValueChange = { },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxSize(),
+                    singleLine = false,
+                    minLines = 10,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    colors = textFieldColors()
                 )
-            },
-            supportingText = {
-                Text(text = viewmodel.title.error)
-            },
-            colors = textFieldColors()
-        )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.textSecondary)
+        }
 
         TextField(
-            value = viewmodel.content.value,
-            onValueChange = { viewmodel.onContentChange(it) },
+            value = viewModel.userInput,
+            onValueChange = { viewModel.onUserInput(it) },
             modifier = Modifier.fillMaxSize(),
             singleLine = false,
-            isError = viewmodel.content.error.isNotEmpty(),
+            isError = viewModel.error.isNotEmpty(),
             minLines = 10,
             textStyle = MaterialTheme.typography.bodyMedium,
             placeholder = {
                 Text(
-                    text = "Content",
+                    text = "Type a comment",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             supportingText = {
-                Text(text = viewmodel.content.error)
+                Text(text = viewModel.error)
             },
             colors = textFieldColors()
         )
