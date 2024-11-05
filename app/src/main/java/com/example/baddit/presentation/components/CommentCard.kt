@@ -68,7 +68,7 @@ fun CommentCard(
     details: CommentResponseDTOItem,
     level: Int = 1,
     navigateLogin: () -> Unit,
-    navigateReply: (String?, String?, String?) -> Unit,
+    navigateReply: (String, String) -> Unit,
     voteFn: suspend (String, String) -> Result<Unit, DataError.NetworkError>,
     isLoggedIn: Boolean = false,
 ) {
@@ -153,7 +153,7 @@ fun CommentCard(
             )
         },
         background = Color(0xFF60B626),
-        onSwipe = { },
+        onSwipe = { if (!isLoggedIn) showLoginDialog = true else navigateReply(details.id, details.content) },
         weight = 3.0,
     )
 
@@ -214,7 +214,12 @@ fun CommentCard(
                     CommentActions(
                         voteState = voteState,
                         upVote = { upVote() },
-                        downVote = { downVote() })
+                        downVote = { downVote() },
+                        commentId = details.id,
+                        commentContent = details.content,
+                        replyFn = navigateReply,
+                        showLoginPrompt = { showLoginDialog = true },
+                        isLoggedIn = isLoggedIn)
                 }
             }
         }
@@ -264,7 +269,13 @@ fun CommentHierarchyIndicator(level: Int) {
 }
 
 @Composable
-fun CommentMeta(authorName: String, score: Int, creationDate: String, voteState: String? = null, collapsed: Boolean) {
+fun CommentMeta(
+    authorName: String,
+    score: Int,
+    creationDate: String,
+    voteState: String? = null,
+    collapsed: Boolean
+) {
     val scoreColor = when (voteState) {
         "UPVOTE" -> MaterialTheme.colorScheme.appOrange
         "DOWNVOTE" -> MaterialTheme.colorScheme.appBlue
@@ -313,11 +324,11 @@ fun CommentMeta(authorName: String, score: Int, creationDate: String, voteState:
                 text = " C ",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.textPrimary,
+                color = MaterialTheme.colorScheme.textSecondary,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
                 modifier = Modifier
                     .clip(RoundedCornerShape(5.dp))
-                    .background(MaterialTheme.colorScheme.mutedAppBlue.copy(alpha = 0.8F))
+                    .background(MaterialTheme.colorScheme.neutralGray)
             )
         }
     }
@@ -451,7 +462,16 @@ fun handleVote(
 }
 
 @Composable
-fun CommentActions(voteState: String?, upVote: () -> Unit, downVote: () -> Unit) {
+fun CommentActions(
+    voteState: String?,
+    upVote: () -> Unit,
+    downVote: () -> Unit,
+    commentId: String,
+    commentContent: String,
+    replyFn: (String, String) -> Unit,
+    isLoggedIn: Boolean,
+    showLoginPrompt: () -> Unit
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(15.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -483,6 +503,9 @@ fun CommentActions(voteState: String?, upVote: () -> Unit, downVote: () -> Unit)
             modifier = Modifier
                 .size(20.dp)
                 .offset(20.dp)
+                .clickable {
+                    if (!isLoggedIn) showLoginPrompt() else replyFn(commentId, commentContent)
+                }
         )
     }
 }
@@ -578,7 +601,7 @@ fun CommentCardPreview() {
             CommentCard(details,
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
-                navigateReply = { a: String?, b: String?, c: String? -> Unit })
+                navigateReply = { a: String, b: String -> Unit })
         }
     }
 }

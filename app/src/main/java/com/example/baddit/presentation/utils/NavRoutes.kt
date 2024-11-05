@@ -24,6 +24,9 @@ object CreateMediaPost
 object Community
 
 @Serializable
+object Setting
+
+@Serializable
 object SignUp
 
 @Serializable
@@ -48,4 +51,12 @@ data class Profile(
 @Serializable
 data class Post(
     val postId: String
+)
+
+@Serializable
+data class Comment(
+    val darkMode: Boolean,
+    val postId: String?,
+    val commentId: String?,
+    val commentContent: String?
 )

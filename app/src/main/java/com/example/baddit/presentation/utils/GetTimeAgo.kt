@@ -1,11 +1,15 @@
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 fun getTimeAgoFromUtcString(utcString: String): String {
-    val date: LocalDateTime = OffsetDateTime.parse(utcString).toLocalDateTime();
+    val utcDateTime: ZonedDateTime = ZonedDateTime.parse(utcString, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    val localDateTime: LocalDateTime = utcDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime()
     val now = LocalDateTime.now()
-    val duration = Duration.between(date, now)
+    val duration = Duration.between(localDateTime, now)
 
     return when {
         duration.toMinutes() < 1 -> "Just now"
