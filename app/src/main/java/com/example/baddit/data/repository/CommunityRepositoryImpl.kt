@@ -28,20 +28,6 @@ class CommunityRepositoryImpl @Inject constructor(
         name: String,
         description: String
     ): Result<Unit, DataError.NetworkError> {
-        return safeApiCall (
-            apiCall = { badditAPI.createCommunity(CreateRequestBody(name, description)) },
-            errorHandler = {response ->
-                val errorCode = response.code()
-                val errorBody = response.errorBody()?.string()
-                val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-                if(errorCode == 409) {
-                    Result.Error(DataError.NetworkError.CONFLICT)
-                }
-                else when (errorCode){
-                    500 -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR)
-                    else -> Result.Error(DataError.NetworkError.UNKNOWN_ERROR)
-                }
-            }
-        )
+        return safeApiCall { badditAPI.createCommunity(CreateRequestBody(name, description)) }
     }
 }
