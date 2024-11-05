@@ -1,5 +1,7 @@
 package com.example.baddit.presentation.screens.post
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,8 +25,10 @@ import com.example.baddit.presentation.components.PostCard
 @Composable
 fun PostScreen(
     navigateLogin: () -> Unit,
+    onComponentCLick:()->Unit,
     viewModel: PostViewModel = hiltViewModel()
 ) {
+
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
     }
@@ -62,7 +67,8 @@ fun PostScreen(
                     setVoteState = { state: String? ->
                         viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.voteState.value =
                             state
-                    }
+                    },
+                    onComponentClick = onComponentCLick
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -79,7 +85,8 @@ fun PostScreen(
                     },
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = navigateLogin,
-                    navigateReply = { a: String?, b: String?, c: String? -> Unit }
+                    navigateReply = { a: String?, b: String?, c: String? -> Unit },
+                    onComponenClick = onComponentCLick
                 )
             }
         }

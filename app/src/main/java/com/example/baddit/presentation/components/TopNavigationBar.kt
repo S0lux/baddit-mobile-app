@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -44,6 +45,7 @@ import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.Search
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
@@ -54,7 +56,8 @@ fun TopNavigationBar(
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel(),
-    showAvatarMenu: MutableState<Boolean>
+    showAvatarMenu: MutableState<Boolean>,
+    onDrawerClicked: ()->Unit
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
@@ -78,15 +81,16 @@ fun TopNavigationBar(
         SlideVertically {
             TopAppBar(
                 title = { },
+                modifier = Modifier.shadow(elevation = 1.dp),
                 colors = TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                    containerColor = MaterialTheme.colorScheme.cardBackground,
                     navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
                     actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
                     scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
                     titleContentColor = MaterialTheme.colorScheme.textPrimary
                 ),
                 navigationIcon = {
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = onDrawerClicked) {
                         Icon(
                             painter = painterResource(id = navItems[0].icon),
                             contentDescription = null

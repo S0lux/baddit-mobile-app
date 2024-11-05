@@ -36,7 +36,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.baddit.R
 import com.example.baddit.presentation.components.AnimatedLogo
+import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.styles.textFieldColors
+import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -47,6 +49,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun CreateTextPostScreen(
     navController: NavHostController,
+    isDarkTheme:Boolean,
     viewmodel: CreatePostViewodel = hiltViewModel()
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -56,7 +59,15 @@ fun CreateTextPostScreen(
         mutableStateOf(0)
     }
 
-    loadingIcon = if (isSystemInDarkTheme()) R.raw.loadingiconwhite else R.raw.loadingicon
+    loadingIcon = if (isDarkTheme) R.raw.loadingiconwhite else R.raw.loadingicon
+
+    if(!viewmodel.isLoggedIn.value){
+        LoginDialog(navigateLogin = {
+            navController.navigate(Auth)
+        }, onDismiss = { navController.navigateUp() })
+    }
+
+
     if (showBottomSheet) {
         SelectCommunityBottomSheet(
             onDismissRequest = { showBottomSheet = false },
@@ -65,9 +76,7 @@ fun CreateTextPostScreen(
     }
     if (viewmodel.error == "Success") {
         LaunchedEffect(key1 = "key") {
-            navController.navigate(Home){
-                popUpTo<Main>()
-            }
+            navController.navigateUp()
         }
 
     }
@@ -112,9 +121,7 @@ fun CreateTextPostScreen(
             ) {
                 IconButton(
                     onClick = {
-                        navController.navigate(Home) {
-                            popUpTo<Main>()
-                        }
+                        navController.navigateUp()
                     },
                     modifier = Modifier,
                     colors = IconButtonColors(

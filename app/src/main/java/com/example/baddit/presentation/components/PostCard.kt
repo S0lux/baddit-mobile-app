@@ -79,6 +79,7 @@ fun PostCard(
     navigatePost: (String) -> Unit,
     setVoteState: (String?) -> Unit,
     setPostScore: (Int) -> Unit,
+    onComponentClick:()->Unit
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -222,7 +223,7 @@ fun PostCard(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
             .fillMaxWidth()
-            .clickable { navigatePost(postDetails.id) },
+            .clickable { onComponentClick(); navigatePost(postDetails.id) },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {

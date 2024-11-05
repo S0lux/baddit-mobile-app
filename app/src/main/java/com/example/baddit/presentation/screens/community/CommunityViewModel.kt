@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.util.copy
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
@@ -94,12 +93,14 @@ class CommunityViewModel @Inject constructor(
                 nameState = nameState.copy(error = "This community name is already taken.")
 
             }
+
             DataError.NetworkError.NO_INTERNET,
             DataError.NetworkError.INTERNAL_SERVER_ERROR,
             DataError.NetworkError.FORBIDDEN,
             DataError.NetworkError.TOKEN_INVALID,
             DataError.NetworkError.UNKNOWN_ERROR -> {
             }
+
             DataError.NetworkError.UNAUTHORIZED -> {
             }
 
@@ -112,6 +113,7 @@ class CommunityViewModel @Inject constructor(
         isLoading = false
         isCreateDone = false
     }
+
     suspend fun createCommunity(): Result<Unit, DataError.NetworkError> {
         isLoading = true
         val result = communityRepository.createCommunity(nameState.value, descriptionState.value)

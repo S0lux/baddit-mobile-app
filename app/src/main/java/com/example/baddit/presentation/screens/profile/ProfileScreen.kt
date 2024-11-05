@@ -382,7 +382,8 @@ fun ProfilePostSection(
                             setVoteState = { state: String? ->
                                 viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
                                     state
-                            }
+                            },
+                            onComponentClick = {}
                         )
                     }
                 }
@@ -439,7 +440,8 @@ fun ProfileCommentsSection(
                                 state
                             )
                         },
-                        isLoggedIn = viewModel.loggedIn.value
+                        isLoggedIn = viewModel.loggedIn.value,
+                        onComponenClick = {}
                     )
                 }
             }

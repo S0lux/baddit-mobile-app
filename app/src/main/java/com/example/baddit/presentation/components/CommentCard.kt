@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -71,6 +72,7 @@ fun CommentCard(
     navigateReply: (String?, String?, String?) -> Unit,
     voteFn: suspend (String, String) -> Result<Unit, DataError.NetworkError>,
     isLoggedIn: Boolean = false,
+    onComponenClick:()->Unit
 ) {
     val commentHoldDuration = 400L
     val colorUpvote = MaterialTheme.colorScheme.appOrange
@@ -82,6 +84,7 @@ fun CommentCard(
     var actionMenuState by remember { mutableStateOf(false) }
     var showLoginDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
 
     fun upVote() = handleVote(
         isLoggedIn = isLoggedIn,
@@ -166,6 +169,7 @@ fun CommentCard(
             swipeThreshold = 40.dp,
             modifier = Modifier.pointerInput(Unit) {
                 detectTapGestures(onPress = {
+                    onComponenClick()
                     val holdStartTime = System.currentTimeMillis()
                     val job = coroutineScope.launch {
                         delay(commentHoldDuration)
@@ -227,7 +231,8 @@ fun CommentCard(
                     voteFn = voteFn,
                     navigateLogin = navigateLogin,
                     isLoggedIn = isLoggedIn,
-                    navigateReply = navigateReply
+                    navigateReply = navigateReply,
+                    onComponenClick = onComponenClick
                 )
             }
         }
@@ -578,7 +583,8 @@ fun CommentCardPreview() {
             CommentCard(details,
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
-                navigateReply = { a: String?, b: String?, c: String? -> Unit })
+                navigateReply = { a: String?, b: String?, c: String? -> Unit },
+                onComponenClick = {})
         }
     }
 }

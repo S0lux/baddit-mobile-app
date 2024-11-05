@@ -10,18 +10,25 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DismissibleNavigationDrawer
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -37,6 +44,7 @@ import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.CreatePostActionButton
+import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
@@ -63,7 +71,6 @@ import com.example.baddit.ui.theme.BadditTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -90,6 +97,10 @@ class MainActivity : ComponentActivity() {
             var bool = remember { mutableStateOf(false) }
 
             var selectedBottomNavigation by rememberSaveable { mutableStateOf(0) }
+
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            val scope = rememberCoroutineScope()
+            val interactionSource = remember { MutableInteractionSource() }
 
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
@@ -119,147 +130,219 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Scaffold(
-                        bottomBar = {
-                            BottomNavigationBar(
-                                navController = navController,
-                                barState = barState,
-                                navItems = navItems,
-                                selectedItem = selectedBottomNavigation,
-                            )
+                    DismissibleNavigationDrawer(
+                        drawerContent = {
+                            SideDrawerContent(onExploreClick = {
+                                scope.launch {
+                                    navController.navigate(Community)
+                                    drawerState.close()
+                                }
+                            })
                         },
-                        topBar = {
-                            TopNavigationBar(
-                                navController = navController,
-                                barState = barState,
-                                userTopBarState = userTopBarState,
-                                showAvatarMenu = showAvatarMenu
-                            )
-                        },
-                        floatingActionButton = {
-                            if (barState.value) {
-                                CreatePostActionButton(onClick = { showBottomSheet = true })
-                            }
-                        }
-                    ) { it ->
-                        if (showBottomSheet) {
-                            CreatePostBottomSheet(
-                                onDismissRequest = { showBottomSheet = false },
-                                sheetState = sheetState,
-                                navController = navController
-                            )
-                        }
-                        NavHost(
-                            navController = navController,
-                            startDestination = Main,
-                            modifier = Modifier.padding(it)
-                        ) {
-                            navigation<Main>(startDestination = Home) {
-                                composable<Home> {
-                                    selectedBottomNavigation = 0
-                                    barState.value = true
-                                    userTopBarState.value = false
+                        drawerState = drawerState
+                    )
+                    {
+                        Scaffold(
+                            modifier = Modifier.clickable(
+                                indication = null,
+                                interactionSource = interactionSource
+                            ) {
+                                scope.launch {
+                                    if (drawerState.isOpen) {
+                                        drawerState.close()
+                                    }
+                                }
+                            },
+                            bottomBar = {
+                                BottomNavigationBar(
+                                    navController = navController,
+                                    barState = barState,
+                                    navItems = navItems,
+                                    selectedItem = selectedBottomNavigation,
+                                )
+                            },
+                            topBar = {
+                                TopNavigationBar(
+                                    navController = navController,
+                                    barState = barState,
+                                    userTopBarState = userTopBarState,
+                                    showAvatarMenu = showAvatarMenu,
+                                    onDrawerClicked = {
+                                        scope.launch {
+                                            if (drawerState.isOpen) {
+                                                drawerState.close()
+                                            } else {
+                                                drawerState.open()
 
-                                    SlideHorizontally {
-                                        HomeScreen(
+                                            }
+
+                                        }
+                                    }
+                                )
+                            },
+                            floatingActionButton = {
+                                if (barState.value) {
+                                    CreatePostActionButton(onClick = { showBottomSheet = true })
+                                }
+                            }
+                        ) { it ->
+                            if (showBottomSheet) {
+                                CreatePostBottomSheet(
+                                    onDismissRequest = { showBottomSheet = false },
+                                    sheetState = sheetState,
+                                    navController = navController
+                                )
+                            }
+                            NavHost(
+                                navController = navController,
+                                startDestination = Main,
+                                modifier = Modifier.padding(it)
+                            ) {
+                                navigation<Main>(startDestination = Home) {
+                                    composable<Home> {
+                                        selectedBottomNavigation = 0
+                                        barState.value = true
+                                        userTopBarState.value = false
+
+                                        SlideHorizontally {
+                                            HomeScreen(
+                                                navigateLogin = { navController.navigate(Login) },
+                                                navigatePost = { postId: String ->
+                                                    if (drawerState.isOpen) {
+                                                        scope.launch {
+                                                            drawerState.close()
+                                                        }
+                                                    } else {
+                                                        navController.navigate(
+                                                            Post(postId = postId)
+                                                        )
+                                                    }
+
+                                                },
+                                                onComponentClick = {
+                                                    if (drawerState.isOpen) {
+                                                        scope.launch {
+                                                            drawerState.close()
+                                                        }
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                    composable<Community> {
+                                        selectedBottomNavigation = 1
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        SlideHorizontally {
+                                            CommunityScreen(navController)
+                                        }
+                                    }
+                                    composable<Profile> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        val username = it.arguments?.getString("username");
+                                        SlideHorizontally {
+                                            ProfileScreen(
+                                                username = username!!,
+                                                navController = navController,
+                                                navigatePost = { postId: String ->
+                                                    navController.navigate(
+                                                        Post(postId = postId)
+                                                    )
+                                                },
+                                                navigateLogin = { navController.navigate(Login) }
+                                            )
+                                        }
+                                    }
+                                    composable<CreateTextPost> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = false
+                                        userTopBarState.value = false
+
+                                        SlideHorizontally {
+                                            CreateTextPostScreen(navController = navController, isDarkTheme = bool.value ?: isSystemInDarkTheme())
+                                        }
+                                    }
+
+                                    composable<CreateMediaPost> {
+                                        selectedBottomNavigation = -1
+
+                                        barState.value = false
+                                        userTopBarState.value = false
+
+                                        SlideHorizontally {
+                                            CreateMediaPostSCcreen(navController = navController, isDarkTheme = bool.value ?: isSystemInDarkTheme())
+                                        }
+                                    }
+                                    composable<Post> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = false
+
+                                        SlideVertically {
+                                            PostScreen(
+                                                navigateLogin = {
+                                                    navController.navigate(
+                                                        Login
+                                                    )
+                                                },
+                                                onComponentCLick = {
+                                                    if (drawerState.isOpen) {
+                                                        scope.launch {
+                                                            drawerState.close()
+                                                        }
+                                                    }
+                                                })
+                                        }
+                                    }
+                                }
+
+                                navigation<Auth>(startDestination = Login) {
+                                    composable<SignUp> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+
+                                        SignupScreen(isDarkMode = bool.value,
+                                            navigateToLogin = { navController.navigate(Login) },
+                                            navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
+                                    }
+                                    composable<Login> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+
+                                        LoginScreen(isDarkMode = bool.value,
+                                            navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
+                                            navigateToSignup = { navController.navigate(SignUp) })
+                                    }
+                                    composable<Verify>(
+
+                                        deepLinks = listOf(navDeepLink {
+                                            uriPattern =
+                                                "https://baddit.life/auth?emailToken={token}"
+                                        })
+                                    ) {
+                                        selectedBottomNavigation = -1
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+                                        val token = it.arguments?.getString("token")
+                                        VerifyScreen(
                                             navigateLogin = { navController.navigate(Login) },
-                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) }
+                                            navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
+                                            token
                                         )
                                     }
-                                }
-                                composable<Community> {
-                                    selectedBottomNavigation = 1
-                                    barState.value = true
-                                    userTopBarState.value = true
-
-                                    SlideHorizontally {
-                                        CommunityScreen(navController)
-                                    }
-                                }
-                                composable<Profile> {
-                                    selectedBottomNavigation = -1
-                                    barState.value = true
-                                    userTopBarState.value = true
-
-                                    val username = it.arguments?.getString("username");
-                                    SlideHorizontally {
-                                        ProfileScreen(
-                                            username = username!!,
-                                            navController = navController,
-                                            navigatePost = { postId: String -> navController.navigate(Post(postId = postId)) },
-                                            navigateLogin = { navController.navigate(Login) }
-                                        )
-                                    }
-                                }
-                                composable<CreateTextPost> {
-                                    selectedBottomNavigation = -1
-                                    barState.value = false
-                                    userTopBarState.value = false
-
-                                    SlideHorizontally {
-                                        CreateTextPostScreen(navController = navController)
-                                    }
-                                }
-
-                                composable<CreateMediaPost> {
-                                    selectedBottomNavigation = -1
-
-                                    barState.value = false
-                                    userTopBarState.value = false
-
-                                    SlideHorizontally {
-                                        CreateMediaPostSCcreen(navController = navController)
-                                    }
-                                }
-                                composable<Post> {
-                                    selectedBottomNavigation = -1
-                                    barState.value = true
-                                    userTopBarState.value = false
-
-                                    SlideVertically {
-                                        PostScreen(navigateLogin = { navController.navigate(Login) })
-                                    }
-                                }
-                            }
-
-                            navigation<Auth>(startDestination = Login) {
-                                composable<SignUp> {
-                                    selectedBottomNavigation = -1
-                                    barState.value = false;
-                                    userTopBarState.value = false;
-
-                                    SignupScreen(isDarkMode = bool.value,
-                                        navigateToLogin = { navController.navigate(Login) },
-                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
-                                }
-                                composable<Login> {
-                                    selectedBottomNavigation = -1
-                                    barState.value = false;
-                                    userTopBarState.value = false;
-
-                                    LoginScreen(isDarkMode = bool.value,
-                                        navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
-                                        navigateToSignup = { navController.navigate(SignUp) })
-                                }
-                                composable<Verify>(
-
-                                    deepLinks = listOf(navDeepLink {
-                                        uriPattern = "https://baddit.life/auth?emailToken={token}"
-                                    })
-                                ) {
-                                    selectedBottomNavigation = -1
-                                    barState.value = false;
-                                    userTopBarState.value = false;
-                                    val token = it.arguments?.getString("token")
-                                    VerifyScreen(
-                                        navigateLogin = { navController.navigate(Login) },
-                                        navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } }, token
-                                    )
                                 }
                             }
                         }
                     }
+
                 }
+
             }
         }
     }
