@@ -225,10 +225,7 @@ fun ProfileHeader(
                 .defaultMinSize(100.dp)
                 .padding(10.dp)
                 .background(
-                    gradientBackGroundBrush(
-                        isVerticalGradient = true,
-                        colors = gradientList
-                    )
+                    Color.Transparent
                 ),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
@@ -283,9 +280,9 @@ fun ProfileHeader(
                             Text(
                                 text = "u/$it",
                                 style = TextStyle(
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.textPrimary,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 30.sp
+                                    fontSize = 25.sp
                                 )
                             )
                             currentUser.registeredAt.let {
@@ -296,27 +293,27 @@ fun ProfileHeader(
                                 Text(
                                     text = "Cake day: $dateTimeFormatted",
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.textPrimary,
                                         fontStyle = FontStyle.Italic,
                                         fontSize = 12.sp
                                     )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             TextButton(
                                 modifier = Modifier.border(
-                                    border = BorderStroke(1.dp, Color.White),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.textPrimary),
                                     shape = RoundedCornerShape(50)
                                 )
-                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                    .height(25.dp),
                                 onClick = { /*TODO*/ }
                             ) {
                                 Text(
                                     text = "Edit",
                                     style = TextStyle(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.textPrimary,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp
+                                        fontSize = 10.sp
                                     )
                                 )
                             }
