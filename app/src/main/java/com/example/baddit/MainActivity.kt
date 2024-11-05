@@ -33,17 +33,20 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BadditActionButton
 import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
+import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.comment.CommentScreen
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.createPost.CreateTextPostScreen
+import com.example.baddit.presentation.screens.editing.EditingScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
 import com.example.baddit.presentation.screens.post.PostScreen
@@ -56,6 +59,7 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CreateMediaPost
 import com.example.baddit.presentation.utils.CreateTextPost
+import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.FAButtons
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
@@ -76,9 +80,11 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var localThemes: LocalThemeUseCases
 
+    @Inject
+    lateinit var authRepository: AuthRepository
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
@@ -86,6 +92,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
+            var showLoginDialog by remember { mutableStateOf(false) }
 
             val sheetState = rememberModalBottomSheetState()
             var showBottomSheet by remember { mutableStateOf(false) }
@@ -122,12 +129,19 @@ class MainActivity : ComponentActivity() {
             }
 
             BadditTheme(darkTheme = bool.value ?: isSystemInDarkTheme()) {
+                if (showLoginDialog) {
+                    LoginDialog(
+                        navigateLogin = { navController.navigate(Login); showLoginDialog = false },
+                        onDismiss = { showLoginDialog = false })
+                }
+
                 AvatarMenu(
                     show = showAvatarMenu,
                     navController = navController,
                     switchTheme = switchTheme,
                     isDarkTheme = bool.value ?: isSystemInDarkTheme()
                 )
+
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
@@ -156,7 +170,10 @@ class MainActivity : ComponentActivity() {
                                     })
 
                                     FAButtons.POST_REPLY -> BadditActionButton(onClick = {
-                                        navController.navigate(
+                                        if (authRepository.isLoggedIn.value.not()) {
+                                            showLoginDialog = true
+                                        }
+                                        else navController.navigate(
                                             Comment(
                                                 postId = activePostId,
                                                 commentId = null,
@@ -302,6 +319,15 @@ class MainActivity : ComponentActivity() {
                                     userTopBarState.value = false
 
                                     CommentScreen(navController = navController)
+                                }
+                                composable<Editing> {
+                                    selectedBottomNavigation = -1
+
+                                    activeFAB = null
+                                    barState.value = false
+                                    userTopBarState.value = false
+                                    
+                                    EditingScreen(navController = navController)
                                 }
                             }
 
