@@ -168,11 +168,16 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(Community)
                                         drawerState.close()
                                     }
-                                })
+                                },
+                                navController = navController,
+                                drawerState =  drawerState)
                         }, drawerState = drawerState)
                         {
                             Scaffold(
-                                modifier = Modifier.clickable(interactionSource = interactionSource, indication = null) {
+                                modifier = Modifier.clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) {
                                     if (drawerState.isOpen) scope.launch { drawerState.close() }
                                 },
                                 bottomBar = {
@@ -181,6 +186,7 @@ class MainActivity : ComponentActivity() {
                                         barState = barState,
                                         navItems = navItems,
                                         selectedItem = selectedBottomNavigation,
+                                        drawerState = drawerState
                                     )
                                 },
                                 topBar = {
@@ -248,7 +254,8 @@ class MainActivity : ComponentActivity() {
                                                     scope.launch {
                                                         if (drawerState.isOpen) drawerState.close()
                                                     }
-                                                }
+                                                },
+                                                drawerState = drawerState
                                             )
                                         }
                                         composable<Community> {
@@ -266,33 +273,33 @@ class MainActivity : ComponentActivity() {
 
                                             val username = it.arguments?.getString("username");
 
-                                    activeFAB = null
-                                    ProfileScreen(
-                                        username = username!!,
-                                        navController = navController,
-                                        navigatePost = { postId: String ->
-                                            navController.navigate(
-                                                Post(postId = postId)
+                                            activeFAB = null
+                                            ProfileScreen(
+                                                username = username!!,
+                                                navController = navController,
+                                                navigatePost = { postId: String ->
+                                                    navController.navigate(
+                                                        Post(postId = postId)
+                                                    )
+                                                },
+                                                navigateLogin = { navController.navigate(Login) },
+                                                navigateReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = null,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false
                                             )
-                                        },
-                                        navigateLogin = { navController.navigate(Login) },
-                                        navigateReply = { id: String, content: String ->
-                                            activeCommentId = id
-                                            activeCommentComment = content
-                                            navController.navigate(
-                                                Comment(
-                                                    postId = null,
-                                                    commentId = activeCommentId,
-                                                    commentContent = activeCommentComment,
-                                                    darkMode = bool.value ?: false,
-                                                )
-                                            )
-                                        },
-                                        darkMode = bool.value ?: false
-                                    )
-                                }
-                                composable<CreateTextPost> {
-                                    selectedBottomNavigation = -1
+                                        }
+                                        composable<CreateTextPost> {
+                                            selectedBottomNavigation = -1
 
                                             activeFAB = null
                                             barState.value = false
@@ -323,31 +330,31 @@ class MainActivity : ComponentActivity() {
                                             barState.value = true
                                             userTopBarState.value = false
 
-                                    activePostId = it.toRoute<Post>().postId
-                                    PostScreen(
-                                        navController = navController,
-                                        navReply = { id: String, content: String ->
-                                            activeCommentId = id
-                                            activeCommentComment = content
-                                            navController.navigate(
-                                                Comment(
-                                                    postId = activePostId,
-                                                    commentId = activeCommentId,
-                                                    commentContent = activeCommentComment,
-                                                    darkMode = bool.value ?: false,
-                                                )
+                                            activePostId = it.toRoute<Post>().postId
+                                            PostScreen(
+                                                navController = navController,
+                                                navReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = activePostId,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false,
+                                                onComponentClick = {
+                                                    if (drawerState.isOpen) scope.launch {
+                                                        drawerState.close()
+                                                    }
+                                                }
                                             )
-                                        },
-                                        darkMode = bool.value ?: false,
-                                        onComponentClick = {
-                                            if (drawerState.isOpen) scope.launch {
-                                                drawerState.close()
-                                            }
                                         }
-                                    )
-                                }
-                                composable<Setting> {
-                                    selectedBottomNavigation = -1
+                                        composable<Setting> {
+                                            selectedBottomNavigation = -1
 
                                             activeFAB = null
                                             barState.value = false
