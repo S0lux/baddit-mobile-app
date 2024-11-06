@@ -44,6 +44,9 @@ object UserSideBar
 object Search
 
 @Serializable
+object Editing
+
+@Serializable
 data class Profile(
     val username: String
 )

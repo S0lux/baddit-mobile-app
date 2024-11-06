@@ -606,8 +606,7 @@ fun CommentCardPreview() {
             CommentCard(details,
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
-                navigateReply = { a: String, b: String -> Unit })
-                navigateReply = { a: String?, b: String?, c: String? -> Unit },
+                navigateReply = { a: String, b: String -> Unit },
                 onComponenClick = {})
         }
     }
