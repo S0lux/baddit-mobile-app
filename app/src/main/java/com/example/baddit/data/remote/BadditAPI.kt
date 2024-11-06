@@ -7,6 +7,7 @@ import com.example.baddit.data.dto.comment.CommentCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
+import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -19,9 +20,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -101,4 +104,10 @@ interface BadditAPI {
 
     @POST("/v1/comments")
     suspend fun replyComment(@Body replyBody: CommentCommentRequestBody): Response<Unit>
+
+    @PUT("/v1/posts/{postId}")
+    suspend fun editPost(@Path("postId") postId: String, @Body content: PostEditRequestBody): Response<Unit>
+
+    @DELETE("/v1/posts/{postId}")
+    suspend fun deletePost(@Path("postId") postId: String): Response<Unit>
 }

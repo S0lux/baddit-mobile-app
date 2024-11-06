@@ -1,6 +1,5 @@
 package com.example.baddit.presentation.screens.post
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,21 +11,18 @@ import androidx.navigation.toRoute
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.presentation.utils.Post
-import com.example.baddit.presentation.utils.PostResponseNavType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 @HiltViewModel
 class PostViewModel @Inject constructor(
-    authRepository: AuthRepository,
+    val authRepository: AuthRepository,
     val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
     savedStateHandle: SavedStateHandle
@@ -34,6 +30,9 @@ class PostViewModel @Inject constructor(
 
     val postId = savedStateHandle.toRoute<Post>().postId
     var post = postRepository.postCache.find { it.id == postId }!!
+
+    var postNotFound by mutableStateOf(false)
+        private set;
 
     var error by mutableStateOf("")
         private set;
@@ -59,10 +58,12 @@ class PostViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
-                    error = ""
-                    val dto = result.data
-                    comments.clear()
-                    comments.addAll(dto)
+                    if (!postNotFound) {
+                        error = ""
+                        val dto = result.data
+                        comments.clear()
+                        comments.addAll(dto)
+                    }
                 }
             }
             isLoading = false
@@ -77,8 +78,14 @@ class PostViewModel @Inject constructor(
             val result = postRepository.getPost(post.id)
             when (result) {
                 is Result.Success -> {
-                    error = ""
-                    post = result.data[0].toMutablePostResponseDTOItem()
+                    if (result.data.isEmpty()) {
+                        error = "This post cannot be found"
+                        postNotFound = true
+                    }
+                    else {
+                        error = ""
+                        post = result.data[0].toMutablePostResponseDTOItem()
+                    }
                 }
 
                 is Result.Error -> {

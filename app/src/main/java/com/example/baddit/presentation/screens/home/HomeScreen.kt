@@ -2,7 +2,6 @@ package com.example.baddit.presentation.screens.home
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,34 +13,33 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.baddit.R
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
-import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import com.example.baddit.presentation.utils.Comment
+import com.example.baddit.presentation.utils.Editing
+import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Post
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateLogin: () -> Unit,
-    navigatePost: (String) -> Unit
+    navController: NavController,
+    darkMode: Boolean,
+    onComponentClick: ()->Unit,
 ) {
     val listState = rememberLazyListState()
     viewModel.endReached = !listState.canScrollForward
 
     LaunchedEffect(viewModel.endReached) {
-        if (viewModel.endReached) {
+        if (viewModel.endReached && listState.firstVisibleItemIndex > 1) {
             Log.d("INFINITE_SCROLL", "LOADING MORE POSTS!")
             Log.d("INFINITE_SCROLL", "END REACHED STATE: ${viewModel.endReached}")
             viewModel.loadMorePosts()
@@ -59,7 +57,7 @@ fun HomeScreen(
 
     if (showLoginDialog) {
         LoginDialog(
-            navigateLogin = { navigateLogin() },
+            navigateLogin = { navController.navigate(Login) },
             onDismiss = { showLoginDialog = false })
     }
 
@@ -87,14 +85,18 @@ fun HomeScreen(
                     PostCard(
                         postDetails = item,
                         loggedIn = loggedIn,
-                        navigateLogin = { navigateLogin() },
+                        navigateLogin = { navController.navigate(Login) },
                         votePostFn = { voteState: String ->
                             viewModel.postRepository.votePost(
                                 item.id,
                                 voteState
                             )
                         },
-                        navigatePost = navigatePost,
+                        navigatePost = { postId: String ->
+                            navController.navigate(
+                                Post(postId = postId)
+                            )
+                        },
                         setPostScore = { score: Int ->
                             viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
                                 score
@@ -102,7 +104,23 @@ fun HomeScreen(
                         setVoteState = { state: String? ->
                             viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
                                 state
-                        }
+                        },
+                        loggedInUser = viewModel.authRepository.currentUser.value,
+                        deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
+                        navigateEdit = { postId: String -> navController.navigate(Editing(
+                                postId = postId,
+                                commentId = null,
+                                commentContent = null,
+                                darkMode = darkMode
+                            )
+                        ) },
+                        navigateReply = { postId: String -> navController.navigate(Comment(
+                            postId = postId,
+                            darkMode = darkMode,
+                            commentContent = null,
+                            commentId = null
+                        )) },
+                        onComponentClick = onComponentClick
                     )
                 }
             }

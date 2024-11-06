@@ -35,4 +35,13 @@ interface PostRepository {
         communityName: String,
         image: File?
     ): Result<Unit, DataError.NetworkError>
+
+    suspend fun editPost(
+        postId: String,
+        content: String,
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun deletePost(
+        postId: String
+    ): Result<Unit, DataError.NetworkError>
 }
