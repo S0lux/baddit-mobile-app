@@ -47,6 +47,7 @@ import com.example.baddit.R
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CommunityList
 import com.example.baddit.presentation.components.CreateCommunity
+import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
@@ -101,14 +102,6 @@ fun CommunityScreen(
                     }
                 }
             },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home) }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
         )
 
@@ -126,7 +119,7 @@ fun CommunityScreen(
                 contentColor = MaterialTheme.colorScheme.textPrimary
             ) {
                 // Sheet content
-                BodyBottomSheet(communityList.value) {
+                BodyBottomSheet(communityList.value, navController) {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
                             showBottomSheet = false
@@ -189,7 +182,8 @@ fun CommunityScreen(
                     communityList.value.isNotEmpty() -> {
                         CommunityList(
                             paddingValues = PaddingValues(10.dp),
-                            communities = communityList.value
+                            communities = communityList.value,
+                            navController
                         )
                     }
 

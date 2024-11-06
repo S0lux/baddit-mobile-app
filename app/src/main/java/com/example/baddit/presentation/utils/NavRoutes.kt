@@ -68,3 +68,13 @@ data class Editing(
     val commentId: String?,
     val commentContent: String?
 )
+
+@Serializable
+data class CommunityDetail(
+    val name: String
+)
+
+@Serializable
+data class EditCommunity(
+    val name: String
+)

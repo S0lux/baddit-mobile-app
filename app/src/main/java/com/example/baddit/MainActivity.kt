@@ -49,7 +49,9 @@ import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.comment.CommentScreen
+import com.example.baddit.presentation.screens.community.CommunityDetailScreen
 import com.example.baddit.presentation.screens.community.CommunityScreen
+import com.example.baddit.presentation.screens.community.EditCommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.createPost.CreateTextPostScreen
@@ -64,8 +66,10 @@ import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
+import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.CreateMediaPost
 import com.example.baddit.presentation.utils.CreateTextPost
+import com.example.baddit.presentation.utils.EditCommunity
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.FAButtons
 import com.example.baddit.presentation.utils.Home
@@ -413,6 +417,43 @@ class MainActivity : ComponentActivity() {
                                                 navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
                                                 token
                                             )
+                                        }
+                                        composable<CommunityDetail> {
+                                            selectedBottomNavigation = -1
+                                            barState.value = true
+                                            userTopBarState.value = true
+
+                                            val name = it.arguments?.getString("name");
+                                            CommunityDetailScreen(
+                                                name = name!!,
+                                                navController = navController,
+                                                navigatePost = { postId: String ->
+                                                    navController.navigate(
+                                                        Post(postId = postId)
+                                                    )
+                                                },
+                                                navigateLogin = { navController.navigate(Login) },
+                                                navigateReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = null,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false,
+                                            )
+                                        }
+                                        composable<EditCommunity> {
+                                            selectedBottomNavigation = -1
+                                            barState.value = false
+                                            userTopBarState.value = true
+                                            val name = it.arguments?.getString("name");
+                                            EditCommunityScreen(name = name!!, navController)
                                         }
                                     }
                                 }
