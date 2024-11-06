@@ -1,6 +1,7 @@
 package com.example.baddit.data.repository
 
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
+import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.remote.BadditAPI
@@ -74,5 +75,23 @@ class CommentRepositoryImpl @Inject constructor(
         }
 
         return result
+    }
+
+    override suspend fun editComment(
+        commentId: String,
+        content: String
+    ): Result<Unit, DataError.NetworkError> {
+        return safeApiCall {
+            badditAPI.editComment(
+                EditCommentRequestBody(
+                    commentId = commentId,
+                    content = content
+                )
+            )
+        }
+    }
+
+    override suspend fun deleteComment(commentId: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.deleteComment(commentId) }
     }
 }

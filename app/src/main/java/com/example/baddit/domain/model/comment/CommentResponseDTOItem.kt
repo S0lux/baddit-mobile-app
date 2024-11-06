@@ -12,5 +12,12 @@ data class CommentResponseDTOItem(
     val postId: String,
     val score: Int,
     val updatedAt: String,
-    val voteState: String?
+    val voteState: String?,
+    val community: CommentCommunity?
+)
+
+data class CommentCommunity (
+    val id: String,
+    val name: String,
+    val logoURL: String,
 )

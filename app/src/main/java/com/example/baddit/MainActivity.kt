@@ -335,7 +335,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         },
                                         darkMode = bool.value ?: false,
-                                        onComponentCLick = {
+                                        onComponentClick = {
                                             if (drawerState.isOpen) scope.launch {
                                                 drawerState.close()
                                             }

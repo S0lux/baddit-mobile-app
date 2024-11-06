@@ -29,7 +29,7 @@ fun PostScreen(
     navReply: (String, String) -> Unit,
     viewModel: PostViewModel = hiltViewModel(),
     darkMode: Boolean,
-    onComponentCLick:() -> Unit,
+    onComponentClick:() -> Unit,
 ) {
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
@@ -96,7 +96,7 @@ fun PostScreen(
                             )
                         )
                     },
-                    onComponentClick = onComponentCLick
+                    onComponentClick = onComponentClick
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -114,7 +114,15 @@ fun PostScreen(
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
                     navigateReply = navReply,
-                    onComponenClick = onComponentCLick
+                    onComponentClick = onComponentClick,
+                    navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
+                        postId = null,
+                        commentContent = content,
+                        commentId = commentId,
+                        darkMode = darkMode
+                    )) },
+                    deleteFn = { commentId: String -> viewModel.commentRepository.deleteComment(commentId) },
+                    loggedInUser = viewModel.authRepository.currentUser.value
                 )
             }
         }
