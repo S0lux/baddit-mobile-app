@@ -419,7 +419,8 @@ fun ProfilePostSection(
                                         commentId = null
                                     )
                                 )
-                            }
+                            },
+                            onComponentClick = {}
                         )
                     }
                 }
@@ -477,7 +478,8 @@ fun ProfileCommentsSection(
                                 state
                             )
                         },
-                        isLoggedIn = viewModel.loggedIn.value
+                        isLoggedIn = viewModel.loggedIn.value,
+                        onComponenClick = {}
                     )
                 }
             }

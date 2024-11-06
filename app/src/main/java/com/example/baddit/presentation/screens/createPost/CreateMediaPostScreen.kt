@@ -53,7 +53,9 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.baddit.R
 import com.example.baddit.presentation.components.AnimatedLogo
+import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.styles.textFieldColors
+import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Main
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
@@ -68,6 +70,7 @@ import java.util.Objects
 @Composable
 fun CreateMediaPostSCcreen(
     navController: NavHostController,
+    isDarkTheme:Boolean,
     viewmodel: CreatePostViewodel = hiltViewModel()
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -83,15 +86,17 @@ fun CreateMediaPostSCcreen(
     var loadingIcon by remember {
         mutableStateOf(0)
     }
-    loadingIcon = if (isSystemInDarkTheme()) R.raw.loadingiconwhite else R.raw.loadingicon
+    loadingIcon = if (isDarkTheme) R.raw.loadingiconwhite else R.raw.loadingicon
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> viewmodel.selectedImageUri = uri!! }
+        onResult = { uri -> viewmodel.selectedImageUri = uri }
     )
 
     val cameraCapture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-        viewmodel.selectedImageUri = uri
+        if(it){
+            viewmodel.selectedImageUri = uri
+        }
     }
 
     val permissionLauncher =
@@ -104,6 +109,13 @@ fun CreateMediaPostSCcreen(
             }
         }
 
+    if(!viewmodel.isLoggedIn.value){
+        LoginDialog(navigateLogin = {
+            navController.navigate(Auth){
+                popUpTo<Main>()
+            }
+        }, onDismiss = { navController.navigateUp() })
+    }
 
     if (showBottomSheet) {
         SelectCommunityBottomSheet(
@@ -113,10 +125,8 @@ fun CreateMediaPostSCcreen(
     }
 
     if (viewmodel.error == "Success") {
-        LaunchedEffect(key1 = "key") {
-            navController.navigate(Home) {
-                popUpTo<Main>()
-            }
+        LaunchedEffect(true) {
+            navController.navigateUp()
         }
 
     }
@@ -132,6 +142,7 @@ fun CreateMediaPostSCcreen(
                 IconButton(
                     onClick = { viewmodel.uploadMediaPost(context) },
                     modifier = Modifier.align(Alignment.CenterEnd),
+                    enabled = !viewmodel.isPosting,
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.textPrimary,
@@ -158,9 +169,7 @@ fun CreateMediaPostSCcreen(
             ) {
                 IconButton(
                     onClick = {
-                        navController.navigate(Home) {
-                            popUpTo<Main>()
-                        }
+                        navController.navigateUp()
                     },
                     modifier = Modifier,
                     colors = IconButtonColors(
@@ -263,7 +272,7 @@ fun CreateMediaPostSCcreen(
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        if (viewmodel.selectedImageUri != Uri.EMPTY) {
+        if (viewmodel.selectedImageUri != Uri.EMPTY && viewmodel.selectedImageUri!=null) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier

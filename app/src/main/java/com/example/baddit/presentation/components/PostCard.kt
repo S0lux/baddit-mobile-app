@@ -63,8 +63,6 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
-import com.example.baddit.presentation.utils.CreateMediaPost
-import com.example.baddit.presentation.utils.CreateTextPost
 import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
@@ -93,6 +91,7 @@ fun PostCard(
     deletePostFn: suspend (String) -> Unit,
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
+    onComponentClick:()->Unit
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -240,7 +239,7 @@ fun PostCard(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
             .fillMaxWidth()
-            .clickable { navigatePost(postDetails.id) },
+            .clickable { onComponentClick(); navigatePost(postDetails.id) },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {

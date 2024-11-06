@@ -18,10 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
+import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -41,8 +44,8 @@ fun BottomNavigationBar(
         enter = slideInVertically()
     ) {
         NavigationBar(
-            modifier = Modifier.height(60.dp),
-            containerColor = MaterialTheme.colorScheme.scaffoldBackground
+            modifier = Modifier.height(60.dp).shadow(elevation = 1.dp),
+            containerColor = MaterialTheme.colorScheme.cardBackground
         ) {
             navItems.forEachIndexed { index, item ->
                 NavigationBarItem(

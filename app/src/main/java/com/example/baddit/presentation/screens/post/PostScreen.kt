@@ -28,7 +28,8 @@ fun PostScreen(
     navController: NavHostController,
     navReply: (String, String) -> Unit,
     viewModel: PostViewModel = hiltViewModel(),
-    darkMode: Boolean
+    darkMode: Boolean,
+    onComponentCLick:() -> Unit,
 ) {
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
@@ -94,7 +95,8 @@ fun PostScreen(
                                 commentId = null
                             )
                         )
-                    }
+                    },
+                    onComponentClick = onComponentCLick
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -111,7 +113,8 @@ fun PostScreen(
                     },
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
-                    navigateReply = navReply
+                    navigateReply = navReply,
+                    onComponenClick = onComponentCLick
                 )
             }
         }

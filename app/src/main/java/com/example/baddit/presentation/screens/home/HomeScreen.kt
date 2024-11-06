@@ -32,7 +32,8 @@ import com.example.baddit.presentation.utils.Post
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
-    darkMode: Boolean
+    darkMode: Boolean,
+    onComponentClick: ()->Unit,
 ) {
     val listState = rememberLazyListState()
     viewModel.endReached = !listState.canScrollForward
@@ -107,17 +108,19 @@ fun HomeScreen(
                         loggedInUser = viewModel.authRepository.currentUser.value,
                         deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
                         navigateEdit = { postId: String -> navController.navigate(Editing(
-                            postId = postId,
-                            commentId = null,
-                            commentContent = null,
-                            darkMode = darkMode
-                        )) },
+                                postId = postId,
+                                commentId = null,
+                                commentContent = null,
+                                darkMode = darkMode
+                            )
+                        ) },
                         navigateReply = { postId: String -> navController.navigate(Comment(
                             postId = postId,
                             darkMode = darkMode,
                             commentContent = null,
                             commentId = null
-                        )) }
+                        )) },
+                        onComponentClick = onComponentClick
                     )
                 }
             }
