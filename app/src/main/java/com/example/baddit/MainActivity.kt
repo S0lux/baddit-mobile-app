@@ -208,12 +208,8 @@ class MainActivity : ComponentActivity() {
 
                                     activeFAB = FAButtons.POST_CREATE
                                     HomeScreen(
-                                        navigateLogin = { navController.navigate(Login) },
-                                        navigatePost = { postId: String ->
-                                            navController.navigate(
-                                                Post(postId = postId)
-                                            )
-                                        }
+                                        navController = navController,
+                                        darkMode = bool.value ?: isSystemInDarkTheme()
                                     )
                                 }
                                 composable<Community> {
@@ -252,7 +248,8 @@ class MainActivity : ComponentActivity() {
                                                     darkMode = bool.value ?: false,
                                                 )
                                             )
-                                        }
+                                        },
+                                        darkMode = bool.value ?: false
                                     )
                                 }
                                 composable<CreateTextPost> {
@@ -295,7 +292,8 @@ class MainActivity : ComponentActivity() {
                                                     darkMode = bool.value ?: false,
                                                 )
                                             )
-                                        }
+                                        },
+                                        darkMode = bool.value ?: false
                                     )
                                 }
                                 composable<Setting> {

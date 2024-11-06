@@ -60,3 +60,11 @@ data class Comment(
     val commentId: String?,
     val commentContent: String?
 )
+
+@Serializable
+data class Editing(
+    val darkMode: Boolean,
+    val postId: String?,
+    val commentId: String?,
+    val commentContent: String?
+)

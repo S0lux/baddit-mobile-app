@@ -17,17 +17,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.baddit.R
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.utils.Comment
+import com.example.baddit.presentation.utils.Editing
+import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Post
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateLogin: () -> Unit,
-    navigatePost: (String) -> Unit
+    navController: NavController,
+    darkMode: Boolean
 ) {
     val listState = rememberLazyListState()
     viewModel.endReached = !listState.canScrollForward
@@ -51,7 +56,7 @@ fun HomeScreen(
 
     if (showLoginDialog) {
         LoginDialog(
-            navigateLogin = { navigateLogin() },
+            navigateLogin = { navController.navigate(Login) },
             onDismiss = { showLoginDialog = false })
     }
 
@@ -79,14 +84,18 @@ fun HomeScreen(
                     PostCard(
                         postDetails = item,
                         loggedIn = loggedIn,
-                        navigateLogin = { navigateLogin() },
+                        navigateLogin = { navController.navigate(Login) },
                         votePostFn = { voteState: String ->
                             viewModel.postRepository.votePost(
                                 item.id,
                                 voteState
                             )
                         },
-                        navigatePost = navigatePost,
+                        navigatePost = { postId: String ->
+                            navController.navigate(
+                                Post(postId = postId)
+                            )
+                        },
                         setPostScore = { score: Int ->
                             viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
                                 score
@@ -94,7 +103,21 @@ fun HomeScreen(
                         setVoteState = { state: String? ->
                             viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
                                 state
-                        }
+                        },
+                        loggedInUser = viewModel.authRepository.currentUser.value,
+                        deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
+                        navigateEdit = { postId: String -> navController.navigate(Editing(
+                            postId = postId,
+                            commentId = null,
+                            commentContent = null,
+                            darkMode = darkMode
+                        )) },
+                        navigateReply = { postId: String -> navController.navigate(Comment(
+                            postId = postId,
+                            darkMode = darkMode,
+                            commentContent = null,
+                            commentId = null
+                        )) }
                     )
                 }
             }

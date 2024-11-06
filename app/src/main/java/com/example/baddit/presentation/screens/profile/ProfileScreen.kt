@@ -70,6 +70,8 @@ import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.styles.gradientBackGroundBrush
+import com.example.baddit.presentation.utils.Comment
+import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
@@ -88,7 +90,8 @@ fun ProfileScreen(
     navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateLogin: () -> Unit,
-    navigateReply: (String, String) -> Unit
+    navigateReply: (String, String) -> Unit,
+    darkMode: Boolean
 ) {
 
     val error = viewModel.error
@@ -187,7 +190,9 @@ fun ProfileScreen(
             navigateLogin = { navController.navigate(Login) },
             navigatePost = navigatePost,
             viewModel = viewModel,
-            isPostSectionSelected = isPostSectionSelected
+            isPostSectionSelected = isPostSectionSelected,
+            navController = navController,
+            darkMode = darkMode
         )
         ProfileCommentsSection(
             username = username,
@@ -298,8 +303,10 @@ fun ProfileHeader(
                         horizontalAlignment = Alignment.Start
                     ) {
                         currentUser?.registeredAt?.let {
-                            val localDateTime = LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
-                            val dateTimeFormatted = localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                            val localDateTime =
+                                LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
+                            val dateTimeFormatted =
+                                localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                             Text(
                                 text = dateTimeFormatted,
                                 style = TextStyle(
@@ -332,7 +339,9 @@ fun ProfilePostSection(
     navigateLogin: () -> Unit,
     navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel,
-    isPostSectionSelected: Boolean
+    isPostSectionSelected: Boolean,
+    navController: NavController,
+    darkMode: Boolean
 ) {
 
     val listState = rememberLazyListState()
@@ -384,6 +393,32 @@ fun ProfilePostSection(
                             setVoteState = { state: String? ->
                                 viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
                                     state
+                            },
+                            loggedInUser = viewModel.authRepository.currentUser.value,
+                            deletePostFn = { postId: String ->
+                                viewModel.postRepository.deletePost(
+                                    postId
+                                )
+                            },
+                            navigateEdit = { postId: String ->
+                                navController.navigate(
+                                    Editing(
+                                        postId = postId,
+                                        commentId = null,
+                                        commentContent = null,
+                                        darkMode = darkMode
+                                    )
+                                )
+                            },
+                            navigateReply = { postId: String ->
+                                navController.navigate(
+                                    Comment(
+                                        postId = postId,
+                                        darkMode = darkMode,
+                                        commentContent = null,
+                                        commentId = null
+                                    )
+                                )
                             }
                         )
                     }

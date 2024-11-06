@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,10 +17,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -55,7 +61,10 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.presentation.utils.CreateMediaPost
+import com.example.baddit.presentation.utils.CreateTextPost
 import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
@@ -80,6 +89,10 @@ fun PostCard(
     navigatePost: (String) -> Unit,
     setVoteState: (String?) -> Unit,
     setPostScore: (Int) -> Unit,
+    loggedInUser: GetMeResponseDTO?,
+    deletePostFn: suspend (String) -> Unit,
+    navigateEdit: (String) -> Unit,
+    navigateReply: (String) -> Unit,
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -241,7 +254,7 @@ fun PostCard(
             PostTitle(title = postDetails.title)
 
             if (postDetails.type == "TEXT") {
-                PostTextContent(content = postDetails.content, isExpanded)
+                PostTextContent(content = postDetails.content.value, isExpanded)
             }
 
             if (postDetails.type == "MEDIA") {
@@ -251,6 +264,7 @@ fun PostCard(
             PostActions(
                 voteState = postDetails.voteState.value,
                 postScore = postDetails.score.value,
+                postId = postDetails.id,
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
@@ -258,6 +272,15 @@ fun PostCard(
                 onDownvote = { onDownvote() },
                 commentCount = postDetails.commentCount.value,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size },
+                loggedInUser = loggedInUser,
+                showLoginDialog = { showLoginDialog = true },
+                postAuthor = postDetails.author.username,
+                postCommunity = postDetails.community?.name,
+                navigateEdit = navigateEdit,
+                navigateReply = navigateReply,
+                deletePostFn = deletePostFn,
+                coroutineScope = coroutineScope,
+                postType = postDetails.type
             )
         }
     }
@@ -410,10 +433,15 @@ fun PostMediaContent(mediaUrls: List<String>) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostActions(
     voteState: String?,
     postScore: Int,
+    postAuthor: String,
+    postCommunity: String?,
+    postType: String,
+    postId: String,
     voteInteractionSource: MutableInteractionSource,
     colorUpvote: Color,
     colorDownvote: Color,
@@ -421,7 +449,129 @@ fun PostActions(
     onDownvote: () -> Unit,
     commentCount: Int,
     onGloballyPositioned: (LayoutCoordinates) -> Unit,
+    loggedInUser: GetMeResponseDTO?,
+    showLoginDialog: () -> Unit,
+    deletePostFn: suspend (String) -> Unit,
+    navigateEdit: (String) -> Unit,
+    navigateReply: (String) -> Unit,
+    coroutineScope: CoroutineScope
 ) {
+    var showModal by remember { mutableStateOf(false) }
+
+    if (showModal) {
+        ModalBottomSheet(onDismissRequest = { showModal = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Post options",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Button(
+                    onClick = {
+                        if (loggedInUser == null) {
+                            showLoginDialog()
+                            return@Button
+                        }
+
+                        navigateReply(postId)
+                        showModal = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.textPrimary,
+                        disabledContentColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.reply),
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text = "Reply")
+                    }
+
+                }
+                if (loggedInUser?.username == postAuthor && postType != "MEDIA") {
+                    Button(
+                        onClick = {
+                            navigateEdit(postId)
+                            showModal = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.edit),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Edit")
+                        }
+
+                    }
+                }
+
+                if (loggedInUser?.username == postAuthor ||
+                    loggedInUser?.communities?.find { it.name == postCommunity }?.role == "MODERATOR" ||
+                    loggedInUser?.communities?.find { it.name == postCommunity }?.role == "ADMIN" ||
+                    loggedInUser?.role == "ADMIN") {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch { deletePostFn(postId) }
+                            showModal = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.trash),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Delete")
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -483,6 +633,14 @@ fun PostActions(
                 commentCount.toString(),
                 color = MaterialTheme.colorScheme.textPrimary,
                 fontSize = 12.sp,
+            )
+        }
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            Icon(
+                painter = painterResource(id = R.drawable.vertical_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier.clickable { showModal = true }
             )
         }
     }
