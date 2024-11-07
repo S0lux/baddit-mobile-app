@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,8 +56,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextAlign
 import androidx.wear.compose.material3.OutlinedButton
 import com.example.baddit.R
+import com.example.baddit.domain.error.Result
+import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -63,6 +69,7 @@ import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,6 +128,8 @@ fun SettingScreen(
 
         val openPasswordDialog = remember { mutableStateOf(false) }
 
+        val openConfirmDialog = remember { mutableStateOf(false) }
+
         // Dialog to select theme
         if (openThemeDialog.value) {
             Dialog(onDismissRequest = { openThemeDialog.value = false }) {
@@ -128,7 +137,7 @@ fun SettingScreen(
                     modifier = Modifier
                         .wrapContentHeight()
                         .fillMaxWidth(0.85f)
-                        .padding(14.dp)
+                        .padding(start = 14.dp, top = 14.dp, end = 14.dp, bottom =18.dp)
                         .align(Alignment.CenterHorizontally),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
 
@@ -140,11 +149,12 @@ fun SettingScreen(
                         Text(
                             text = "Select Theme",
                             modifier = Modifier
-                                .padding(10.dp)
-                                .align(Alignment.CenterHorizontally),
+                                .padding(start = 10.dp, end = 10.dp,top = 15.dp ,bottom = 10.dp)
+                                .align(Alignment.CenterHorizontally).fillMaxWidth(),
                             color = MaterialTheme.colorScheme.textPrimary,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
 
                         themes.forEach { theme ->
@@ -201,7 +211,7 @@ fun SettingScreen(
                         Text(
                             text = "Change Password",
                             modifier = Modifier
-                                .padding(start =  10.dp, end = 10.dp, top = 20.dp, bottom = 10.dp)
+                                .padding(start = 10.dp, end = 10.dp, top = 20.dp, bottom = 10.dp)
                                 .align(Alignment.CenterHorizontally),
                             color = MaterialTheme.colorScheme.textPrimary,
                             style = MaterialTheme.typography.titleLarge,
@@ -209,28 +219,38 @@ fun SettingScreen(
                         )
 
                         CustomPasswordField(
-                            value = viewModel.oldPassword.value,
+                            value = viewModel.oldPasswordState.value,
                             onValueChange = { oldPassword: String ->
                                 viewModel.setOldPassword(oldPassword)
                             },
-                            label = "Current password"
+                            label = "Current password",
+                            isError = viewModel.oldPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.oldPasswordState.error
                         )
 
                         CustomPasswordField(
-                            value = viewModel.newPassword.value,
+                            value = viewModel.newPasswordState.value,
                             onValueChange = { newPassword: String ->
                                 viewModel.setNewPassword(newPassword)
                             },
-                            label = "New password"
+                            label = "New password",
+                            isError = viewModel.newPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.newPasswordState.error
                         )
 
                         CustomPasswordField(
-                            value = viewModel.checkPassword.value,
+                            value = viewModel.confirmPasswordState.value,
                             onValueChange = { checkPassword: String ->
-                                viewModel.setCheckPassword(checkPassword)
+                                viewModel.setConfirmPassword(checkPassword)
                             },
-                            label = "Comfirm password"
+                            label = "Comfirm password",
+                            isError = viewModel.confirmPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.confirmPasswordState.error
                         )
+
+                        if(viewModel.error.value.isNotEmpty()){
+                            Text(text = viewModel.error.value, color = Color.Red, modifier = Modifier.fillMaxWidth().padding(start = 20.dp), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        }
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -260,18 +280,28 @@ fun SettingScreen(
 
                             Button(
                                 shape = RoundedCornerShape(10.dp),
-                                onClick = { /*TODO*/ },
+                                onClick = {
+                                    coroutine.launch {
+                                        val result = viewModel.ChangePassword()
+
+                                        if (result is Result.Success) {
+                                            openPasswordDialog.value = false;
+                                            openConfirmDialog.value = true;
+                                        }
+                                    }
+                                },
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
                                     .height(45.dp),
-                                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue)
+                                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
+                                enabled = viewModel.newPasswordState.error.isEmpty() && viewModel.confirmPasswordState.error.isEmpty() && viewModel.oldPasswordState.error.isEmpty() && !viewModel.isLoading
                             ) {
                                 Text(
                                     "Save",
                                     modifier = Modifier
                                         .padding(5.dp)
                                         .align(Alignment.CenterVertically),
-                                    color = MaterialTheme.colorScheme.textPrimary,
+                                    color = Color.White,
                                     fontSize = 14.sp
                                 )
                             }
@@ -283,6 +313,53 @@ fun SettingScreen(
                 }
 
             }
+        }
+
+        //Confirm dialog
+        if (openConfirmDialog.value) {
+            AlertDialog(modifier = Modifier.wrapContentHeight(),
+                title = {
+                    Text(
+                        text = "Password Changed",
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+                },
+                text = {
+                    Text(
+                        modifier = Modifier.padding(
+                            start = 20.dp,
+                            top = 10.dp,
+                            end = 20.dp,
+                        ), text = "Your password has been changed successfully", fontSize = 18.sp, textAlign = TextAlign.Center
+                    )
+                },
+                onDismissRequest = { openConfirmDialog.value = false },
+                confirmButton = {
+                    Button(
+                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            openConfirmDialog.value = false
+                        },
+                        modifier = Modifier
+                            .height(45.dp),
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
+                    ) {
+                        Text(
+                            "OK",
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .align(Alignment.CenterVertically),
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(10.dp),
+                containerColor = MaterialTheme.colorScheme.background
+            )
         }
 
 
@@ -333,8 +410,8 @@ fun SettingScreen(
             onClick = { openPasswordDialog.value = true })
 
         SettingItem(
-            icon = painterResource(id = R.drawable.email),
-            text = "Re-send Verification Email",
+            icon = painterResource(id = R.drawable.baseline_account_box_24),
+            text = "Update User Avatar (WIP)",
             onClick = { })
     }
 }
@@ -346,6 +423,8 @@ fun CustomPasswordField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    isError: Boolean,
+    supportingText: String = "",
 ) {
     OutlinedTextField(
         modifier = Modifier.padding(start = 20.dp, end = 20.dp),
@@ -362,7 +441,11 @@ fun CustomPasswordField(
             focusedContainerColor = Color.Transparent,
             focusedTextColor = MaterialTheme.colorScheme.textPrimary,
             unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
-        )
+            errorContainerColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.textPrimary,
+        ),
+        isError = isError,
+        supportingText = { Text(supportingText) },
     )
 }
 

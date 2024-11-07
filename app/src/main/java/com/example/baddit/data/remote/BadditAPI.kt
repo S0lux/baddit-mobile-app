@@ -22,6 +22,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
@@ -97,14 +98,13 @@ interface BadditAPI {
     @POST("/v1/comments/votes")
     suspend fun voteComment(@Body voteBody: VoteCommentRequestBody): Response<Unit>
 
-<<<<<<< HEAD
-    @POST
+    @PATCH("/v1/auth/update-password")
     suspend fun changePassword(@Body changePasswordBody: ChangePasswordRequestBody): Response<Unit>
-=======
+
     @POST("/v1/comments")
     suspend fun replyPost(@Body replyBody: PostCommentRequestBody): Response<Unit>
 
     @POST("/v1/comments")
     suspend fun replyComment(@Body replyBody: CommentCommentRequestBody): Response<Unit>
->>>>>>> 4325f13bc11482b4c4ad7a93830afa48f8f92c18
+
 }
