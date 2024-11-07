@@ -5,8 +5,6 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
 import com.example.baddit.domain.model.posts.PostResponseDTO
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
-import retrofit2.Response
 import java.io.File
 
 interface PostRepository {
@@ -34,5 +32,14 @@ interface PostRepository {
         type: String,
         communityName: String,
         image: File?
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun editPost(
+        postId: String,
+        content: String,
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun deletePost(
+        postId: String
     ): Result<Unit, DataError.NetworkError>
 }

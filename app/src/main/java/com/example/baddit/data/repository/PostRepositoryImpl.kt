@@ -2,6 +2,7 @@ package com.example.baddit.data.repository
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import com.example.baddit.data.remote.BadditAPI
@@ -61,13 +62,43 @@ class PostRepositoryImpl @Inject constructor(
         image: File?
     ): Result<Unit, DataError.NetworkError> {
 
-        return safeApiCall { badditAPI.upLoadPost(
-            title = title.toRequestBody("text/plain".toMediaTypeOrNull()),
-            content = content.toRequestBody("text/plain".toMediaTypeOrNull()),
-            communityName = communityName.toRequestBody("text/plain".toMediaTypeOrNull()),
-            type = type.toRequestBody("text/plain".toMediaTypeOrNull()),
-            image = prepareFilePart("files", image)
-        ) }
+        return safeApiCall {
+            badditAPI.upLoadPost(
+                title = title.toRequestBody("text/plain".toMediaTypeOrNull()),
+                content = content.toRequestBody("text/plain".toMediaTypeOrNull()),
+                communityName = communityName.toRequestBody("text/plain".toMediaTypeOrNull()),
+                type = type.toRequestBody("text/plain".toMediaTypeOrNull()),
+                image = prepareFilePart("files", image)
+            )
+        }
+    }
+
+    override suspend fun editPost(
+        postId: String,
+        content: String
+    ): Result<Unit, DataError.NetworkError> {
+        val result = safeApiCall<Unit, DataError.NetworkError> {
+            badditAPI.editPost(
+                postId = postId,
+                content = PostEditRequestBody(content = content)
+            )
+        }
+
+        if (result is Result.Success) {
+            postCache.find { it.id == postId }?.content?.value = content
+        }
+
+        return result
+    }
+
+    override suspend fun deletePost(postId: String): Result<Unit, DataError.NetworkError> {
+        val result = safeApiCall<Unit, DataError.NetworkError> { badditAPI.deletePost(postId = postId) }
+
+        if (result is Result.Success) {
+            postCache.removeIf { it.id == postId }
+        }
+
+        return result
     }
 
     private fun prepareFilePart(partName: String, file: File?): MultipartBody.Part? {

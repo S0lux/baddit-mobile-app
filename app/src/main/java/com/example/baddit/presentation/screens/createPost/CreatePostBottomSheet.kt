@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,8 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -29,9 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.baddit.R
-import com.example.baddit.presentation.components.ErrorNotification
-import com.example.baddit.presentation.components.LoginDialog
-import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.CreateMediaPost
 import com.example.baddit.presentation.utils.CreateTextPost
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -50,75 +44,68 @@ fun CreatePostBottomSheet(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        if (viewmodel.isLoggedIn.value) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Submit new post",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Button(
-                    onClick = {
-                        navController.navigate(CreateTextPost);
-                        onDismissRequest()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start){
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_post_add_24),
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "Text")
-                    }
-
-                }
-                Button(
-                    onClick = {
-                        navController.navigate(CreateMediaPost)
-                        onDismissRequest()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    colors = ButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.outline_image_24),
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "Media")
-                    }
-
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Submit new post",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
+                    fontWeight = FontWeight.SemiBold
+                )
             }
-        } else {
-            LoginDialog(navigateLogin = {
-                navController.navigate(Auth)
-                onDismissRequest()
-            }, onDismiss = onDismissRequest)
+            Button(
+                onClick = {
+                    navController.navigate(CreateTextPost);
+                    onDismissRequest()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.textPrimary,
+                    disabledContentColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                )
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.round_post_add_24),
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = "Text")
+                }
+
+            }
+            Button(
+                onClick = {
+                    navController.navigate(CreateMediaPost)
+                    onDismissRequest()
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                colors = ButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.textPrimary,
+                    disabledContentColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                )
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_image_24),
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = "Media")
+                }
+
+            }
         }
     }
 }

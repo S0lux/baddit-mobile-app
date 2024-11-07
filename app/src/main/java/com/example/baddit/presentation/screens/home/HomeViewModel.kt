@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     val postRepository: PostRepository,
-    private val _authRepository: AuthRepository
+    val authRepository: AuthRepository
 ) : ViewModel() {
     var isRefreshing by mutableStateOf(false)
         private set;
@@ -27,7 +27,7 @@ class HomeViewModel @Inject constructor(
     var error by mutableStateOf("");
     var noMorePosts by mutableStateOf(false)
     var showNoPostWarning by mutableStateOf(false)
-    val loggedIn = _authRepository.isLoggedIn;
+    val loggedIn = authRepository.isLoggedIn;
     var endReached = false;
 
     private var lastPostId: String? = null;

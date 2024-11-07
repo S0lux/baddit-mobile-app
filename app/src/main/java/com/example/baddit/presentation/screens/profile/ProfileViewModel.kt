@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    val authRepository: AuthRepository,
     val postRepository: PostRepository,
     val commentRepository: CommentRepository
     ) : ViewModel() {

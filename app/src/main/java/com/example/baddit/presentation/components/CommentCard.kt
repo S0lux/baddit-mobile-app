@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,16 +43,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.protobuf.Internal.BooleanList
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.comment.Author
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
+import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
-import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -61,6 +64,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
+import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
@@ -71,16 +75,21 @@ fun CommentCard(
     navigateReply: (String, String) -> Unit,
     voteFn: suspend (String, String) -> Result<Unit, DataError.NetworkError>,
     isLoggedIn: Boolean = false,
+    onComponentClick: () -> Unit,
+    navigateEdit: (commentId: String, content: String) -> Unit,
+    deleteFn: suspend (String) -> Result<Unit, DataError.NetworkError>,
+    loggedInUser: GetMeResponseDTO?
 ) {
     val commentHoldDuration = 400L
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
 
     var voteState by remember { mutableStateOf(details.voteState) }
-    var scoreState by remember { mutableStateOf(details.score) }
+    var scoreState by remember { mutableIntStateOf(details.score) }
     var collapsedState by remember { mutableStateOf(false) }
     var actionMenuState by remember { mutableStateOf(false) }
     var showLoginDialog by remember { mutableStateOf(false) }
+    var isDeleted by remember { mutableStateOf(details.deleted) }
     val coroutineScope = rememberCoroutineScope()
 
     fun upVote() = handleVote(
@@ -166,6 +175,7 @@ fun CommentCard(
             swipeThreshold = 40.dp,
             modifier = Modifier.pointerInput(Unit) {
                 detectTapGestures(onPress = {
+                    onComponentClick()
                     val holdStartTime = System.currentTimeMillis()
                     val job = coroutineScope.launch {
                         delay(commentHoldDuration)
@@ -203,10 +213,13 @@ fun CommentCard(
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
-                            collapsed = collapsedState
+                            collapsed = collapsedState,
+                            isDeleted = isDeleted
                         )
 
-                        CommentTextContent(content = details.content, collapsedState)
+                        Spacer(modifier = Modifier.height(1.dp))
+                        
+                        CommentTextContent(content = details.content, collapsedState, isDeleted)
                     }
                 }
 
@@ -219,7 +232,13 @@ fun CommentCard(
                         commentContent = details.content,
                         replyFn = navigateReply,
                         showLoginPrompt = { showLoginDialog = true },
-                        isLoggedIn = isLoggedIn)
+                        isLoggedIn = isLoggedIn,
+                        navigateEdit = navigateEdit,
+                        deleteFn = deleteFn,
+                        loggedInUser = loggedInUser,
+                        coroutineScope = coroutineScope,
+                        details = details,
+                        setDeleted = { isDeleted = true })
                 }
             }
         }
@@ -232,7 +251,11 @@ fun CommentCard(
                     voteFn = voteFn,
                     navigateLogin = navigateLogin,
                     isLoggedIn = isLoggedIn,
-                    navigateReply = navigateReply
+                    navigateReply = navigateReply,
+                    onComponentClick = onComponentClick,
+                    navigateEdit = navigateEdit,
+                    deleteFn = deleteFn,
+                    loggedInUser = loggedInUser
                 )
             }
         }
@@ -242,20 +265,14 @@ fun CommentCard(
 @Composable
 fun CommentHierarchyIndicator(level: Int) {
     Row(modifier = Modifier.fillMaxHeight()) {
-        if (level == 1) {
-            Spacer(
-                modifier = Modifier
-                    .width(10.dp)
-                    .fillMaxHeight()
-            )
-        }
+
+        Spacer(
+            modifier = Modifier
+                .width(10.dp)
+                .fillMaxHeight()
+        )
 
         repeat(level - 1) { it ->
-            if (it % 2 == 0) Spacer(
-                modifier = Modifier
-                    .width(10.dp)
-                    .fillMaxHeight()
-            )
 
             VerticalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.neutralGray)
 
@@ -274,7 +291,8 @@ fun CommentMeta(
     score: Int,
     creationDate: String,
     voteState: String? = null,
-    collapsed: Boolean
+    collapsed: Boolean,
+    isDeleted: Boolean = false
 ) {
     val scoreColor = when (voteState) {
         "UPVOTE" -> MaterialTheme.colorScheme.appOrange
@@ -284,7 +302,7 @@ fun CommentMeta(
 
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
-            text = authorName,
+            text = if (isDeleted) "[deleted]" else authorName,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.textSecondary,
@@ -335,9 +353,9 @@ fun CommentMeta(
 }
 
 @Composable
-fun CommentTextContent(content: String, collapsed: Boolean) {
+fun CommentTextContent(content: String, collapsed: Boolean, isDeleted: Boolean = false) {
     Text(
-        text = content,
+        text = if (isDeleted) "[deleted]" else content,
         color = MaterialTheme.colorScheme.textPrimary,
         fontSize = 12.sp,
         maxLines = if (collapsed) 3 else 100,
@@ -470,7 +488,13 @@ fun CommentActions(
     commentContent: String,
     replyFn: (String, String) -> Unit,
     isLoggedIn: Boolean,
-    showLoginPrompt: () -> Unit
+    showLoginPrompt: () -> Unit,
+    navigateEdit: (commentId: String, content: String) -> Unit,
+    deleteFn: suspend (String) -> Result<Unit, DataError.NetworkError>,
+    loggedInUser: GetMeResponseDTO?,
+    coroutineScope: CoroutineScope,
+    details: CommentResponseDTOItem,
+    setDeleted: () -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(15.dp),
@@ -507,6 +531,40 @@ fun CommentActions(
                     if (!isLoggedIn) showLoginPrompt() else replyFn(commentId, commentContent)
                 }
         )
+
+        if (loggedInUser?.username == details.author.username) {
+            Icon(
+                painter = painterResource(id = R.drawable.edit),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .offset(20.dp)
+                    .clickable {
+                        navigateEdit(details.id, details.content)
+                    }
+            )
+        }
+
+        if (loggedInUser?.username == details.author.username ||
+            loggedInUser?.communities?.find { it.name == details.community?.name }?.role == "MODERATOR" ||
+            loggedInUser?.communities?.find { it.name == details.community?.name }?.role == "ADMIN" ||
+            loggedInUser?.role == "ADMIN") {
+            Icon(
+                painter = painterResource(id = R.drawable.trash),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .offset(20.dp)
+                    .clickable {
+                        coroutineScope.launch {
+                            val result = deleteFn(details.id)
+                            if (result is Result.Success) setDeleted()
+                        }
+                    }
+            )
+        }
     }
 }
 
@@ -549,13 +607,15 @@ fun CommentCardPreview() {
                         author = Author(
                             avatarUrl = "https://placehold.co/400.png", username = "tranloc"
                         ),
-                        voteState = null
+                        voteState = null,
+                        community = null
                     )
                 ),
                 author = Author(
                     avatarUrl = "https://placehold.co/400.png", username = "tranloc"
                 ),
-                voteState = null
+                voteState = null,
+                community = null
             ), CommentResponseDTOItem(
                 id = "4767f815-4c05-4b3b-8bb9-690805de8472",
                 content = "Looks good!",
@@ -570,7 +630,9 @@ fun CommentCardPreview() {
                 author = Author(
                     avatarUrl = "https://placehold.co/400.png", username = "tranloc"
                 ),
-                voteState = null
+                voteState = null,
+                community = null
+
             ), CommentResponseDTOItem(
                 id = "4767f815-4c05-4b3b-8bb9-690805de8472",
                 content = "Looks good!",
@@ -585,13 +647,15 @@ fun CommentCardPreview() {
                 author = Author(
                     avatarUrl = "https://placehold.co/400.png", username = "tranloc"
                 ),
-                voteState = null
+                voteState = null,
+                community = null
             )
         ),
         author = Author(
             avatarUrl = "https://placehold.co/400.png", username = "tranloc"
         ),
-        voteState = null
+        voteState = null,
+        community = null
     )
 
     BadditTheme {
@@ -601,7 +665,11 @@ fun CommentCardPreview() {
             CommentCard(details,
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
-                navigateReply = { a: String, b: String -> Unit })
+                navigateReply = { a: String, b: String -> Unit },
+                onComponentClick = {},
+                navigateEdit = { a: String, b: String -> /* TODO() */ },
+                deleteFn = { Result.Success(Unit) },
+                loggedInUser = null)
         }
     }
 }

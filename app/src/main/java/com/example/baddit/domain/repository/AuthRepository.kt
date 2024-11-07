@@ -6,8 +6,6 @@
     import com.example.baddit.domain.model.auth.GetMeResponseDTO
     import com.example.baddit.domain.model.auth.GetOtherResponseDTO
     import com.example.baddit.domain.model.auth.LoginResponseDTO
-    import kotlinx.coroutines.flow.StateFlow
-    import retrofit2.Response
 
     interface AuthRepository {
         val currentUser: MutableState<GetMeResponseDTO?>

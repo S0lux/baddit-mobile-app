@@ -35,7 +35,7 @@ class CreatePostViewodel @Inject constructor(
     var selectedCommunity by mutableStateOf(FieldState())
     var selectedCommunityLogo by mutableStateOf("")
 
-    var selectedImageUri by mutableStateOf<Uri>(Uri.EMPTY)
+    var selectedImageUri by mutableStateOf<Uri?>(Uri.EMPTY)
     val isLoggedIn = auth.isLoggedIn
 
     var communities = mutableListOf<Community>()
@@ -114,17 +114,14 @@ class CreatePostViewodel @Inject constructor(
         if (title.value.isEmpty()) title = title.copy(error = "Missing title")
         if (selectedCommunity.value.isEmpty()) selectedCommunity =
             selectedCommunity.copy(error = "Missing community")
-        if (selectedImageUri.equals(Uri.EMPTY)) {
+        if (selectedImageUri!!.equals(Uri.EMPTY)||selectedImageUri==null) {
             viewModelScope.launch(Dispatchers.IO) {
                 error = "Please choose an image"
                 delay(timeMillis = 1000)
                 error = ""
             }
         }
-        if (title.error.isEmpty() && selectedCommunity.error.isEmpty() && !selectedImageUri.equals(
-                Uri.EMPTY
-            )
-        ) {
+        if (title.error.isEmpty() && selectedCommunity.error.isEmpty() && !selectedImageUri!!.equals(Uri.EMPTY) && selectedImageUri!=null) {
             viewModelScope.launch(Dispatchers.IO) {
                 isPosting = true
                 when (val res = post.upLoadPost(
@@ -160,8 +157,8 @@ class CreatePostViewodel @Inject constructor(
 
     }
 
-    fun uriToFile(context: Context, uri: Uri): File? {
-        if (uri == Uri.EMPTY) {
+    fun uriToFile(context: Context, uri: Uri?): File? {
+        if (uri == Uri.EMPTY|| uri == null) {
             return null // Return null if URI is empty
         }
         val file = File(context.cacheDir, "image.jpg")

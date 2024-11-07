@@ -5,9 +5,11 @@ import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
+import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
+import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -20,10 +22,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -107,4 +111,36 @@ interface BadditAPI {
     @POST("/v1/comments")
     suspend fun replyComment(@Body replyBody: CommentCommentRequestBody): Response<Unit>
 
+    @PUT("/v1/posts/{postId}")
+    suspend fun editPost(@Path("postId") postId: String, @Body content: PostEditRequestBody): Response<Unit>
+
+    @DELETE("/v1/posts/{postId}")
+    suspend fun deletePost(@Path("postId") postId: String): Response<Unit>
+
+    @DELETE("/v1/comments/{commentId}")
+    suspend fun deleteComment(@Path("commentId") commentId: String): Response<Unit>
+
+    @PUT("/v1/comments")
+    suspend fun editComment(@Body editBody: EditCommentRequestBody): Response<Unit>
+
+    @POST("v1/communities/{communityName}/members")
+    suspend fun joinCommunity(@Path("communityName") communityName: String): Response<Unit>
+
+    @DELETE("v1/communities/{communityName}/members")
+    suspend fun leaveCommunity(@Path("communityName") communityName: String): Response<Unit>
+    @Multipart
+    @POST("v1/communities/{communityName}/banner")
+    suspend fun uploadBanner(
+        @Path("communityName") communityName: String,
+        @Part banner: MultipartBody.Part
+    ): Response<Unit>
+    @Multipart
+    @POST("v1/communities/{communityName}/logo")
+    suspend fun uploadLogo(
+        @Path("communityName") communityName: String,
+        @Part logo: MultipartBody.Part
+    ): Response<Unit>
+
+    @DELETE("v1/communities/{communityName}")
+    suspend fun deleteCommunity(@Path("communityName") communityName: String): Response<Unit>
 }

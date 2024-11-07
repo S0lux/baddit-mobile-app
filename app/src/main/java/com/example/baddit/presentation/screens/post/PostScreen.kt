@@ -18,6 +18,8 @@ import com.example.baddit.R
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.utils.Comment
+import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,14 +27,19 @@ import com.example.baddit.presentation.utils.Login
 fun PostScreen(
     navController: NavHostController,
     navReply: (String, String) -> Unit,
-    viewModel: PostViewModel = hiltViewModel()
+    viewModel: PostViewModel = hiltViewModel(),
+    darkMode: Boolean,
+    onComponentClick:() -> Unit,
 ) {
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
     }
 
     if (viewModel.error.isNotEmpty()) {
-        ErrorNotification(icon = R.drawable.wifi_off, text = viewModel.error)
+        ErrorNotification(
+            icon = if (viewModel.postNotFound) R.drawable.not_found else R.drawable.wifi_off,
+            text = viewModel.error
+        )
     }
 
     PullToRefreshBox(
@@ -66,7 +73,30 @@ fun PostScreen(
                     setVoteState = { state: String? ->
                         viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.voteState.value =
                             state
-                    }
+                    },
+                    loggedInUser = viewModel.authRepository.currentUser.value,
+                    deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
+                    navigateEdit = { postId: String ->
+                        navController.navigate(
+                            Editing(
+                                postId = postId,
+                                commentId = null,
+                                commentContent = null,
+                                darkMode = darkMode
+                            )
+                        )
+                    },
+                    navigateReply = { postId: String ->
+                        navController.navigate(
+                            Comment(
+                                postId = postId,
+                                darkMode = darkMode,
+                                commentContent = null,
+                                commentId = null
+                            )
+                        )
+                    },
+                    onComponentClick = onComponentClick
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -83,7 +113,16 @@ fun PostScreen(
                     },
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
-                    navigateReply = navReply
+                    navigateReply = navReply,
+                    onComponentClick = onComponentClick,
+                    navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
+                        postId = null,
+                        commentContent = content,
+                        commentId = commentId,
+                        darkMode = darkMode
+                    )) },
+                    deleteFn = { commentId: String -> viewModel.commentRepository.deleteComment(commentId) },
+                    loggedInUser = viewModel.authRepository.currentUser.value
                 )
             }
         }

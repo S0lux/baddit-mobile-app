@@ -22,10 +22,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,18 +33,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.baddit.R
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CommunityList
 import com.example.baddit.presentation.components.CreateCommunity
-import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -101,14 +95,6 @@ fun CommunityScreen(
                     }
                 }
             },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home) }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
         )
 
@@ -126,7 +112,7 @@ fun CommunityScreen(
                 contentColor = MaterialTheme.colorScheme.textPrimary
             ) {
                 // Sheet content
-                BodyBottomSheet(communityList.value) {
+                BodyBottomSheet(communityList.value, navController) {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
                             showBottomSheet = false
@@ -170,7 +156,11 @@ fun CommunityScreen(
                     onClick = { showBottomSheetCreateCommunity = true },
                     colors = ButtonDefaults.outlinedButtonColors()
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.textPrimary)
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.textPrimary
+                    )
                     Text(text = "Create Community", color = MaterialTheme.colorScheme.textPrimary)
                 }
                 Spacer(modifier = Modifier.padding(10.dp))
@@ -189,7 +179,8 @@ fun CommunityScreen(
                     communityList.value.isNotEmpty() -> {
                         CommunityList(
                             paddingValues = PaddingValues(10.dp),
-                            communities = communityList.value
+                            communities = communityList.value,
+                            navController
                         )
                     }
 

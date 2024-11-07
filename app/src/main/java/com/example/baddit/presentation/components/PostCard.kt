@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,10 +17,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -55,6 +61,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
+import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
 import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.ui.theme.CustomTheme.appBlue
@@ -80,6 +87,11 @@ fun PostCard(
     navigatePost: (String) -> Unit,
     setVoteState: (String?) -> Unit,
     setPostScore: (Int) -> Unit,
+    loggedInUser: GetMeResponseDTO?,
+    deletePostFn: suspend (String) -> Unit,
+    navigateEdit: (String) -> Unit,
+    navigateReply: (String) -> Unit,
+    onComponentClick:()->Unit
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -87,14 +99,14 @@ fun PostCard(
     val voteInteractionSource = remember { MutableInteractionSource() }
     var voteElementSize by remember { mutableStateOf(IntSize.Zero) }
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
-    var hasUserInteracted by remember { mutableStateOf(false) }
+    var hasUserInteracted by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     if (showLoginDialog) {
         LoginDialog(navigateLogin = { navigateLogin() }, onDismiss = { showLoginDialog = false })
     }
 
-    LaunchedEffect(postDetails.voteState) {
+    LaunchedEffect(postDetails.voteState.value) {
         if (hasUserInteracted && postDetails.voteState.value != null) {
             val pressPosition = Offset(
                 x = voteElementSize.width / if (postDetails.voteState.value == "UPVOTE") 6f else 1f,
@@ -197,7 +209,9 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_upvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp).offset(20.dp)
+                modifier = Modifier
+                    .size(32.dp)
+                    .offset(20.dp)
             )
         },
         background = colorUpvote,
@@ -211,7 +225,9 @@ fun PostCard(
                 painter = painterResource(id = R.drawable.arrow_downvote),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(32.dp).offset(20.dp)
+                modifier = Modifier
+                    .size(32.dp)
+                    .offset(20.dp)
             )
         },
         background = colorDownvote,
@@ -223,7 +239,7 @@ fun PostCard(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
             .fillMaxWidth()
-            .clickable { navigatePost(postDetails.id) },
+            .clickable { onComponentClick(); navigatePost(postDetails.id) },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {
@@ -237,7 +253,7 @@ fun PostCard(
             PostTitle(title = postDetails.title)
 
             if (postDetails.type == "TEXT") {
-                PostTextContent(content = postDetails.content, isExpanded)
+                PostTextContent(content = postDetails.content.value, isExpanded)
             }
 
             if (postDetails.type == "MEDIA") {
@@ -247,6 +263,7 @@ fun PostCard(
             PostActions(
                 voteState = postDetails.voteState.value,
                 postScore = postDetails.score.value,
+                postId = postDetails.id,
                 voteInteractionSource = voteInteractionSource,
                 colorUpvote = colorUpvote,
                 colorDownvote = colorDownvote,
@@ -254,6 +271,15 @@ fun PostCard(
                 onDownvote = { onDownvote() },
                 commentCount = postDetails.commentCount.value,
                 onGloballyPositioned = { cords -> voteElementSize = cords.size },
+                loggedInUser = loggedInUser,
+                showLoginDialog = { showLoginDialog = true },
+                postAuthor = postDetails.author.username,
+                postCommunity = postDetails.community?.name,
+                navigateEdit = navigateEdit,
+                navigateReply = navigateReply,
+                deletePostFn = deletePostFn,
+                coroutineScope = coroutineScope,
+                postType = postDetails.type
             )
         }
     }
@@ -367,7 +393,8 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
         lineHeight = 14.sp,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
+            .clip(RoundedCornerShape(10))
+            .then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .padding(5.dp),
         maxLines = if (!isExpanded) 3 else 100,
@@ -379,7 +406,8 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
 fun PostMediaContent(mediaUrls: List<String>) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp)).then(InvalidatingPlacementModifierElement())
+            .clip(RoundedCornerShape(10.dp))
+            .then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
             .fillMaxWidth()
             .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
@@ -404,10 +432,15 @@ fun PostMediaContent(mediaUrls: List<String>) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostActions(
     voteState: String?,
     postScore: Int,
+    postAuthor: String,
+    postCommunity: String?,
+    postType: String,
+    postId: String,
     voteInteractionSource: MutableInteractionSource,
     colorUpvote: Color,
     colorDownvote: Color,
@@ -415,12 +448,135 @@ fun PostActions(
     onDownvote: () -> Unit,
     commentCount: Int,
     onGloballyPositioned: (LayoutCoordinates) -> Unit,
+    loggedInUser: GetMeResponseDTO?,
+    showLoginDialog: () -> Unit,
+    deletePostFn: suspend (String) -> Unit,
+    navigateEdit: (String) -> Unit,
+    navigateReply: (String) -> Unit,
+    coroutineScope: CoroutineScope
 ) {
+    var showModal by remember { mutableStateOf(false) }
+
+    if (showModal) {
+        ModalBottomSheet(onDismissRequest = { showModal = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Post options",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Button(
+                    onClick = {
+                        if (loggedInUser == null) {
+                            showLoginDialog()
+                            return@Button
+                        }
+
+                        navigateReply(postId)
+                        showModal = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.textPrimary,
+                        disabledContentColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.reply),
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text = "Reply")
+                    }
+
+                }
+                if (loggedInUser?.username == postAuthor && postType != "MEDIA") {
+                    Button(
+                        onClick = {
+                            navigateEdit(postId)
+                            showModal = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.edit),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Edit")
+                        }
+
+                    }
+                }
+
+                if (loggedInUser?.username == postAuthor ||
+                    loggedInUser?.communities?.find { it.name == postCommunity }?.role == "MODERATOR" ||
+                    loggedInUser?.communities?.find { it.name == postCommunity }?.role == "ADMIN" ||
+                    loggedInUser?.role == "ADMIN") {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch { deletePostFn(postId) }
+                            showModal = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.trash),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Delete")
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
+                .clip(RoundedCornerShape(10))
+                .then(InvalidatingPlacementModifierElement())
                 .onGloballyPositioned(onGloballyPositioned)
                 .clickable(
                     onClick = {}, interactionSource = voteInteractionSource, indication = ripple(
@@ -460,7 +616,8 @@ fun PostActions(
         Row(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(10)).then(InvalidatingPlacementModifierElement())
+                .clip(RoundedCornerShape(10))
+                .then(InvalidatingPlacementModifierElement())
                 .background(MaterialTheme.colorScheme.cardForeground)
                 .padding(bottom = 4.dp, top = 4.dp, start = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -475,6 +632,14 @@ fun PostActions(
                 commentCount.toString(),
                 color = MaterialTheme.colorScheme.textPrimary,
                 fontSize = 12.sp,
+            )
+        }
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            Icon(
+                painter = painterResource(id = R.drawable.vertical_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.textSecondary,
+                modifier = Modifier.clickable { showModal = true }
             )
         }
     }
