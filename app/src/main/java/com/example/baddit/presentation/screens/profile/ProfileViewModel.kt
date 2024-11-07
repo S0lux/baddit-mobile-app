@@ -33,13 +33,15 @@ class ProfileViewModel @Inject constructor(
     val user = mutableStateOf<GetOtherResponseDTO?>(null)
     val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
+    var isMe by mutableStateOf(false)
+        private set;
     //posts
     val posts = postRepository.postCache;
     private var lastPostId: String? = null;
     var endReached = false;
     //comments
     val comments: MutableList<CommentResponseDTOItem> = mutableStateListOf()
-    val lastCommentId: String? = null
+    private var lastCommentId: String? = null;
     //refreshing variable
     var isRefreshing by mutableStateOf(false)
         private set;
@@ -113,6 +115,8 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     comments.clear()
                     error = ""
+                    if(!result.data.isEmpty())
+                        lastPostId = result.data.last().id
                     val dto = result.data
                     dto.forEach { comment -> comments.add(comment) }
                 }
@@ -120,8 +124,41 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false
         }
     }
+    fun loadMoreComments(username: String){
+        if (endReached)
+            return;
+        viewModelScope.launch {
+            isRefreshing = true;
+            when (val fetchComemnts = commentRepository.getComments(cursor = lastPostId , authorName = username)) {
+                is Result.Error -> {
+                    error = when (fetchComemnts.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    error = ""
+                    if (fetchComemnts.data.isNotEmpty()) {
+                        lastPostId = fetchComemnts.data.last().id
+                        comments.addAll(fetchComemnts.data.map { it })
+                    }
+                    else {
+                        endReached = true
+                    }
+                }
+            }
+            isRefreshing = false;
+        }
+    }
     fun fetchUserProfile(username: String) {
         viewModelScope.launch {
+            isMe = if(username == me.value!!.username){
+                true;
+            } else{
+                false;
+            }
             when (val result = authRepository.getOther(username)) {
                 is Result.Error -> {
                     error = when (result.error) {
