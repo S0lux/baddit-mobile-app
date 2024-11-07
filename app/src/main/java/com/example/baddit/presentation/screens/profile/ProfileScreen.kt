@@ -7,9 +7,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,16 +21,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -146,7 +151,11 @@ fun ProfileScreen(
             },
             actions = {},
         )
-        ProfileHeader(loggedIn = loggedIn, currentUser = viewModel.user.value)
+        ProfileHeader(
+            loggedIn = loggedIn,
+            currentUser = viewModel.user.value,
+            viewModel = viewModel
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -208,12 +217,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileHeader(
     loggedIn: Boolean,
-    currentUser: GetOtherResponseDTO?
+    currentUser: GetOtherResponseDTO?,
+    viewModel: ProfileViewModel
 ) {
-    val gradientList = listOf(
-        Color(0xFF232526),
-        Color(0xFF414345),
-    )
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -263,7 +269,8 @@ fun ProfileHeader(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .defaultMinSize(100.dp)
+                    .padding(10.dp)
                     .background(Color.Transparent)
             ) {
                 Row(
@@ -287,42 +294,39 @@ fun ProfileHeader(
                                 )
                             )
                         }
-                        Text(
-                            text = "Username",
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.textPrimary,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 15.sp
-                            )
-                        )
-                    }
-                    Column(
-                        horizontalAlignment = Alignment.Start
-                    ) {
                         currentUser?.registeredAt?.let {
                             val localDateTime =
                                 LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
                             val dateTimeFormatted =
                                 localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                             Text(
-                                text = dateTimeFormatted,
+                                text = "Cake day: $dateTimeFormatted",
                                 style = TextStyle(
                                     color = MaterialTheme.colorScheme.textPrimary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 20.sp
+                                    fontStyle = FontStyle.Italic,
+                                    fontSize = 15.sp
                                 )
                             )
                         }
-                        Text(
-                            text = "Cake day",
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.textPrimary,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 15.sp
-                            )
-                        )
-                    }
+                        Spacer(modifier = Modifier.height(10.dp))
 
+                        if (viewModel.isMe) {
+                            OutlinedButton(
+                                onClick = { /*TODO*/ },
+                                border = BorderStroke(2.dp, MaterialTheme.colorScheme.textPrimary),
+                                contentPadding = PaddingValues(3.dp)
+                            ) {
+                                Text(
+                                    text = "Edit", style = TextStyle(
+                                        color = MaterialTheme.colorScheme.textPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+                                )
+
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -451,7 +455,7 @@ fun ProfileCommentsSection(
             .distinctUntilChanged()
             .collect { isAtEnd ->
                 if (isAtEnd) {
-                    //viewModel.loadMorePosts(username)
+                    viewModel.loadMoreComments(username)
                 }
             }
     }
@@ -466,7 +470,7 @@ fun ProfileCommentsSection(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listState) {
                 items(items = viewModel.comments) { it ->
                     CommentCard(
                         details = it,
@@ -480,13 +484,21 @@ fun ProfileCommentsSection(
                         },
                         isLoggedIn = viewModel.loggedIn.value,
                         onComponentClick = {},
-                        navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
-                            postId = null,
-                            commentContent = content,
-                            commentId = commentId,
-                            darkMode = darkMode
-                        )) },
-                        deleteFn = { commentId: String -> viewModel.commentRepository.deleteComment(commentId) },
+                        navigateEdit = { commentId: String, content: String ->
+                            navController.navigate(
+                                Editing(
+                                    postId = null,
+                                    commentContent = content,
+                                    commentId = commentId,
+                                    darkMode = darkMode
+                                )
+                            )
+                        },
+                        deleteFn = { commentId: String ->
+                            viewModel.commentRepository.deleteComment(
+                                commentId
+                            )
+                        },
                         loggedInUser = viewModel.authRepository.currentUser.value
                     )
                 }
