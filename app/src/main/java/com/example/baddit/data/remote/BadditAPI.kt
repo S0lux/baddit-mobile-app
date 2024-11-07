@@ -1,5 +1,6 @@
 package com.example.baddit.data.remote
 
+import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
@@ -24,6 +25,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -99,6 +101,9 @@ interface BadditAPI {
 
     @POST("/v1/comments/votes")
     suspend fun voteComment(@Body voteBody: VoteCommentRequestBody): Response<Unit>
+
+    @PATCH("/v1/auth/update-password")
+    suspend fun changePassword(@Body changePasswordBody: ChangePasswordRequestBody): Response<Unit>
 
     @POST("/v1/comments")
     suspend fun replyPost(@Body replyBody: PostCommentRequestBody): Response<Unit>

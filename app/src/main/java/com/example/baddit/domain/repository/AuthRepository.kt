@@ -16,4 +16,5 @@
         suspend fun verifyEmail(token: String): Result<Unit, DataError.NetworkError>
         suspend fun getOther(username: String):Result<GetOtherResponseDTO,DataError.NetworkError>
         suspend fun logout(): Result<Unit, DataError.NetworkError>
+        suspend fun changePassword(oldPassword: String, newPassword: String): Result<Unit, DataError.NetworkError>
     }

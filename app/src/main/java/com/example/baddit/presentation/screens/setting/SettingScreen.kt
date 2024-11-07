@@ -14,15 +14,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuDefaults.outlinedTextFieldColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,12 +46,22 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextAlign
+import androidx.wear.compose.material3.OutlinedButton
 import com.example.baddit.R
+import com.example.baddit.domain.error.Result
+import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -52,23 +70,31 @@ import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.launch
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingScreen(navController: NavController,
-                  switchTheme: suspend (String) -> Unit,
-                  darkTheme: Boolean?) {
-
+fun SettingScreen(
+    navController: NavController,
+    switchTheme: suspend (String) -> Unit,
+    darkTheme: Boolean?,
+    viewModel: SettingViewModel = hiltViewModel()
+) {
     var coroutine = rememberCoroutineScope();
 
-    var selectedTheme by remember { mutableStateOf(when(darkTheme) {
-        true -> "Dark"
-        false -> "Light"
-        else -> "System"
-    }) }
+    var selectedTheme by remember {
+        mutableStateOf(
+            when (darkTheme) {
+                true -> "Dark"
+                false -> "Light"
+                else -> "System"
+            }
+        )
+    }
 
     val themes = listOf("Dark", "Light", "System")
 
     Column {
+
         TopAppBar(
             title = {
                 val titleText = "Settings"
@@ -98,14 +124,20 @@ fun SettingScreen(navController: NavController,
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
         )
 
-        val openDialog = remember { mutableStateOf(false) }
-        if (openDialog.value) {
-            Dialog(onDismissRequest = { openDialog.value = false }) {
+        val openThemeDialog = remember { mutableStateOf(false) }
+
+        val openPasswordDialog = remember { mutableStateOf(false) }
+
+        val openConfirmDialog = remember { mutableStateOf(false) }
+
+        // Dialog to select theme
+        if (openThemeDialog.value) {
+            Dialog(onDismissRequest = { openThemeDialog.value = false }) {
                 Card(
                     modifier = Modifier
                         .wrapContentHeight()
                         .fillMaxWidth(0.85f)
-                        .padding(14.dp)
+                        .padding(start = 14.dp, top = 14.dp, end = 14.dp, bottom =18.dp)
                         .align(Alignment.CenterHorizontally),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
 
@@ -117,11 +149,12 @@ fun SettingScreen(navController: NavController,
                         Text(
                             text = "Select Theme",
                             modifier = Modifier
-                                .padding(10.dp)
-                                .align(Alignment.CenterHorizontally),
+                                .padding(start = 10.dp, end = 10.dp,top = 15.dp ,bottom = 10.dp)
+                                .align(Alignment.CenterHorizontally).fillMaxWidth(),
                             color = MaterialTheme.colorScheme.textPrimary,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
 
                         themes.forEach { theme ->
@@ -133,7 +166,7 @@ fun SettingScreen(navController: NavController,
                                         coroutine.launch {
                                             switchTheme(theme)
                                         }
-                                              },
+                                    },
                                     modifier = Modifier.selectable(
                                         selected = selectedTheme == theme,
                                         onClick = { selectedTheme = theme }
@@ -159,13 +192,262 @@ fun SettingScreen(navController: NavController,
             }
         }
 
+        // Dialog to change password
+        if (openPasswordDialog.value) {
+            Dialog(onDismissRequest = { openPasswordDialog.value = false }) {
+                Card(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                        .align(Alignment.CenterHorizontally),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+
+                ) {
+                    Column(
+                        modifier = Modifier
+                    ) {
+
+                        Text(
+                            text = "Change Password",
+                            modifier = Modifier
+                                .padding(start = 10.dp, end = 10.dp, top = 20.dp, bottom = 10.dp)
+                                .align(Alignment.CenterHorizontally),
+                            color = MaterialTheme.colorScheme.textPrimary,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        CustomPasswordField(
+                            value = viewModel.oldPasswordState.value,
+                            onValueChange = { oldPassword: String ->
+                                viewModel.setOldPassword(oldPassword)
+                            },
+                            label = "Current password",
+                            isError = viewModel.oldPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.oldPasswordState.error
+                        )
+
+                        CustomPasswordField(
+                            value = viewModel.newPasswordState.value,
+                            onValueChange = { newPassword: String ->
+                                viewModel.setNewPassword(newPassword)
+                            },
+                            label = "New password",
+                            isError = viewModel.newPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.newPasswordState.error
+                        )
+
+                        CustomPasswordField(
+                            value = viewModel.confirmPasswordState.value,
+                            onValueChange = { checkPassword: String ->
+                                viewModel.setConfirmPassword(checkPassword)
+                            },
+                            label = "Comfirm password",
+                            isError = viewModel.confirmPasswordState.error.isNotEmpty(),
+                            supportingText = viewModel.confirmPasswordState.error
+                        )
+
+                        if(viewModel.error.value.isNotEmpty()){
+                            Text(text = viewModel.error.value, color = Color.Red, modifier = Modifier.fillMaxWidth().padding(start = 20.dp), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(20.dp)
+                        ) {
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            OutlinedButton(
+                                shape = RoundedCornerShape(10.dp),
+                                onClick = { openPasswordDialog.value = false },
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .height(45.dp)
+                            ) {
+                                Text(
+                                    "Cancel",
+                                    modifier = Modifier
+                                        .padding(5.dp)
+                                        .align(Alignment.CenterVertically),
+                                    color = MaterialTheme.colorScheme.textPrimary,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Button(
+                                shape = RoundedCornerShape(10.dp),
+                                onClick = {
+                                    coroutine.launch {
+                                        val result = viewModel.ChangePassword()
+
+                                        if (result is Result.Success) {
+                                            openPasswordDialog.value = false;
+                                            openConfirmDialog.value = true;
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .height(45.dp),
+                                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
+                                enabled = viewModel.newPasswordState.error.isEmpty() && viewModel.confirmPasswordState.error.isEmpty() && viewModel.oldPasswordState.error.isEmpty() && !viewModel.isLoading
+                            ) {
+                                Text(
+                                    "Save",
+                                    modifier = Modifier
+                                        .padding(5.dp)
+                                        .align(Alignment.CenterVertically),
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+        //Confirm dialog
+        if (openConfirmDialog.value) {
+            AlertDialog(modifier = Modifier.wrapContentHeight(),
+                title = {
+                    Text(
+                        text = "Password Changed",
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+                },
+                text = {
+                    Text(
+                        modifier = Modifier.padding(
+                            start = 20.dp,
+                            top = 10.dp,
+                            end = 20.dp,
+                        ), text = "Your password has been changed successfully", fontSize = 18.sp, textAlign = TextAlign.Center
+                    )
+                },
+                onDismissRequest = { openConfirmDialog.value = false },
+                confirmButton = {
+                    Button(
+                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            openConfirmDialog.value = false
+                        },
+                        modifier = Modifier
+                            .height(45.dp),
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
+                    ) {
+                        Text(
+                            "OK",
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .align(Alignment.CenterVertically),
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(10.dp),
+                containerColor = MaterialTheme.colorScheme.background
+            )
+        }
+
+
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
+                .fillMaxWidth()
+                .height(20.dp), verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "General Setting",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.textPrimary,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier.padding(start = 13.dp)
+            )
+        }
+
+        val icon = if (darkTheme == true) {
+            R.drawable.baseline_dark_mode_24
+        } else {
+            R.drawable.baseline_light_mode_24
+        }
+
         SettingItem(
-            icon = painterResource(id = R.drawable.baseline_light_mode_24),
+            icon = painterResource(id = icon),
             text = "Theme",
-            onClick = { openDialog.value = true })
+            onClick = { openThemeDialog.value = true })
+
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
+                .fillMaxWidth()
+                .height(20.dp), verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Account Setting",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.textPrimary,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier.padding(start = 13.dp)
+            )
+        }
+
+        SettingItem(
+            icon = painterResource(id = R.drawable.key),
+            text = "Change Password",
+            onClick = { openPasswordDialog.value = true })
+
+        SettingItem(
+            icon = painterResource(id = R.drawable.baseline_account_box_24),
+            text = "Update User Avatar (WIP)",
+            onClick = { })
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isError: Boolean,
+    supportingText: String = "",
+) {
+    OutlinedTextField(
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        singleLine = true,
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = MaterialTheme.colorScheme.appBlue,
+            unfocusedContainerColor = Color.Transparent,
+            focusedLabelColor = MaterialTheme.colorScheme.appBlue,
+            focusedContainerColor = Color.Transparent,
+            focusedTextColor = MaterialTheme.colorScheme.textPrimary,
+            unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
+            errorContainerColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.textPrimary,
+        ),
+        isError = isError,
+        supportingText = { Text(supportingText) },
+    )
+}
 
 @Composable
 fun SettingItem(icon: Painter, text: String, onClick: () -> Unit) {

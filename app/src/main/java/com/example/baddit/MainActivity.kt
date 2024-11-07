@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         when (it) {
                             "Dark" -> bool.value = true
                             "Light" -> bool.value = false
-                            else -> bool.value = null
+                            else -> bool.value;
                         }
                     }
                 }

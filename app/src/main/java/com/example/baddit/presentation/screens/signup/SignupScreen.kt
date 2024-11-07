@@ -42,7 +42,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(isDarkMode: Boolean = isSystemInDarkTheme(),viewModel: SignupViewModel = hiltViewModel(), navigateToLogin: () -> Unit, navigateHome: () -> Unit) {
+fun SignupScreen(
+    isDarkMode: Boolean = isSystemInDarkTheme(),
+    viewModel: SignupViewModel = hiltViewModel(),
+    navigateToLogin: () -> Unit,
+    navigateHome: () -> Unit
+) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
