@@ -5,12 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.presentation.utils.FieldState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,7 +29,7 @@ class LoginViewModel @Inject constructor(
         private set;
 
     val loggedIn = authRepository.isLoggedIn;
-    val currentUser = authRepository.currentUser;
+    var currentUser = authRepository.currentUser;
 
     fun onUsernameChange(input: String) {
         usernameState = usernameState.copy(value = input, error = "")
@@ -60,6 +62,12 @@ class LoginViewModel @Inject constructor(
             }
         }
         return result;
+    }
+
+    fun refreshAvatar(){
+        viewModelScope.launch {
+            currentUser = authRepository.currentUser;
+        }
     }
 
     suspend fun logout() {
