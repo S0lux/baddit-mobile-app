@@ -4,6 +4,7 @@ import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
+import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
@@ -110,4 +111,31 @@ interface BadditAPI {
 
     @DELETE("/v1/posts/{postId}")
     suspend fun deletePost(@Path("postId") postId: String): Response<Unit>
+
+    @DELETE("/v1/comments/{commentId}")
+    suspend fun deleteComment(@Path("commentId") commentId: String): Response<Unit>
+
+    @PUT("/v1/comments")
+    suspend fun editComment(@Body editBody: EditCommentRequestBody): Response<Unit>
+
+    @POST("v1/communities/{communityName}/members")
+    suspend fun joinCommunity(@Path("communityName") communityName: String): Response<Unit>
+
+    @DELETE("v1/communities/{communityName}/members")
+    suspend fun leaveCommunity(@Path("communityName") communityName: String): Response<Unit>
+    @Multipart
+    @POST("v1/communities/{communityName}/banner")
+    suspend fun uploadBanner(
+        @Path("communityName") communityName: String,
+        @Part banner: MultipartBody.Part
+    ): Response<Unit>
+    @Multipart
+    @POST("v1/communities/{communityName}/logo")
+    suspend fun uploadLogo(
+        @Path("communityName") communityName: String,
+        @Part logo: MultipartBody.Part
+    ): Response<Unit>
+
+    @DELETE("v1/communities/{communityName}")
+    suspend fun deleteCommunity(@Path("communityName") communityName: String): Response<Unit>
 }

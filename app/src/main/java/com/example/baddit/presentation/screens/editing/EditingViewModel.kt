@@ -48,19 +48,39 @@ class EditingViewModel @Inject constructor(
 
         isLoading = true
         viewModelScope.launch {
-            val result = postRepository.editPost(postId = arguments.postId!!, content = userInput)
-            isLoading = false
+            // Means this is a post edit request since no comment was passed as argument
+            if (arguments.commentId == null) {
+                val result = postRepository.editPost(postId = arguments.postId!!, content = userInput)
+                isLoading = false
 
-            when (result) {
-                is Result.Success -> {
-                    success = true
+                when (result) {
+                    is Result.Success -> {
+                        success = true
+                    }
+
+                    is Result.Error -> {
+                        error = when (result.error) {
+                            DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                            DataError.NetworkError.UNAUTHORIZED -> "You do not have permission"
+                            else -> "An unexpected error has occurred"
+                        }
+                    }
                 }
+            } // Otherwise, it is a comment edit request
+            else {
+                val result = commentRepository.editComment(commentId = arguments.commentId, content = userInput)
 
-                is Result.Error -> {
-                    error = when (result.error) {
-                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
-                        DataError.NetworkError.UNAUTHORIZED -> "You do not have permission"
-                        else -> "An unexpected error has occurred"
+                when (result) {
+                    is Result.Success -> {
+                        success = true
+                    }
+
+                    is Result.Error -> {
+                        error = when (result.error) {
+                            DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                            DataError.NetworkError.UNAUTHORIZED -> "You do not have permission"
+                            else -> "An unexpected error has occurred"
+                        }
                     }
                 }
             }

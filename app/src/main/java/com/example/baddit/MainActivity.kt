@@ -49,7 +49,9 @@ import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.comment.CommentScreen
+import com.example.baddit.presentation.screens.community.CommunityDetailScreen
 import com.example.baddit.presentation.screens.community.CommunityScreen
+import com.example.baddit.presentation.screens.community.EditCommunityScreen
 import com.example.baddit.presentation.screens.createPost.CreateMediaPostSCcreen
 import com.example.baddit.presentation.screens.createPost.CreatePostBottomSheet
 import com.example.baddit.presentation.screens.createPost.CreateTextPostScreen
@@ -64,8 +66,10 @@ import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
+import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.CreateMediaPost
 import com.example.baddit.presentation.utils.CreateTextPost
+import com.example.baddit.presentation.utils.EditCommunity
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.FAButtons
 import com.example.baddit.presentation.utils.Home
@@ -164,11 +168,16 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(Community)
                                         drawerState.close()
                                     }
-                                })
+                                },
+                                navController = navController,
+                                drawerState =  drawerState)
                         }, drawerState = drawerState)
                         {
                             Scaffold(
-                                modifier = Modifier.clickable(interactionSource = interactionSource, indication = null) {
+                                modifier = Modifier.clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) {
                                     if (drawerState.isOpen) scope.launch { drawerState.close() }
                                 },
                                 bottomBar = {
@@ -177,6 +186,7 @@ class MainActivity : ComponentActivity() {
                                         barState = barState,
                                         navItems = navItems,
                                         selectedItem = selectedBottomNavigation,
+                                        drawerState = drawerState
                                     )
                                 },
                                 topBar = {
@@ -244,7 +254,8 @@ class MainActivity : ComponentActivity() {
                                                     scope.launch {
                                                         if (drawerState.isOpen) drawerState.close()
                                                     }
-                                                }
+                                                },
+                                                drawerState = drawerState
                                             )
                                         }
                                         composable<Community> {
@@ -262,33 +273,33 @@ class MainActivity : ComponentActivity() {
 
                                             val username = it.arguments?.getString("username");
 
-                                    activeFAB = null
-                                    ProfileScreen(
-                                        username = username!!,
-                                        navController = navController,
-                                        navigatePost = { postId: String ->
-                                            navController.navigate(
-                                                Post(postId = postId)
+                                            activeFAB = null
+                                            ProfileScreen(
+                                                username = username!!,
+                                                navController = navController,
+                                                navigatePost = { postId: String ->
+                                                    navController.navigate(
+                                                        Post(postId = postId)
+                                                    )
+                                                },
+                                                navigateLogin = { navController.navigate(Login) },
+                                                navigateReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = null,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false
                                             )
-                                        },
-                                        navigateLogin = { navController.navigate(Login) },
-                                        navigateReply = { id: String, content: String ->
-                                            activeCommentId = id
-                                            activeCommentComment = content
-                                            navController.navigate(
-                                                Comment(
-                                                    postId = null,
-                                                    commentId = activeCommentId,
-                                                    commentContent = activeCommentComment,
-                                                    darkMode = bool.value ?: false,
-                                                )
-                                            )
-                                        },
-                                        darkMode = bool.value ?: false
-                                    )
-                                }
-                                composable<CreateTextPost> {
-                                    selectedBottomNavigation = -1
+                                        }
+                                        composable<CreateTextPost> {
+                                            selectedBottomNavigation = -1
 
                                             activeFAB = null
                                             barState.value = false
@@ -319,31 +330,31 @@ class MainActivity : ComponentActivity() {
                                             barState.value = true
                                             userTopBarState.value = false
 
-                                    activePostId = it.toRoute<Post>().postId
-                                    PostScreen(
-                                        navController = navController,
-                                        navReply = { id: String, content: String ->
-                                            activeCommentId = id
-                                            activeCommentComment = content
-                                            navController.navigate(
-                                                Comment(
-                                                    postId = activePostId,
-                                                    commentId = activeCommentId,
-                                                    commentContent = activeCommentComment,
-                                                    darkMode = bool.value ?: false,
-                                                )
+                                            activePostId = it.toRoute<Post>().postId
+                                            PostScreen(
+                                                navController = navController,
+                                                navReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = activePostId,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false,
+                                                onComponentClick = {
+                                                    if (drawerState.isOpen) scope.launch {
+                                                        drawerState.close()
+                                                    }
+                                                }
                                             )
-                                        },
-                                        darkMode = bool.value ?: false,
-                                        onComponentCLick = {
-                                            if (drawerState.isOpen) scope.launch {
-                                                drawerState.close()
-                                            }
                                         }
-                                    )
-                                }
-                                composable<Setting> {
-                                    selectedBottomNavigation = -1
+                                        composable<Setting> {
+                                            selectedBottomNavigation = -1
 
                                             activeFAB = null
                                             barState.value = false
@@ -413,6 +424,43 @@ class MainActivity : ComponentActivity() {
                                                 navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
                                                 token
                                             )
+                                        }
+                                        composable<CommunityDetail> {
+                                            selectedBottomNavigation = -1
+                                            barState.value = true
+                                            userTopBarState.value = true
+
+                                            val name = it.arguments?.getString("name");
+                                            CommunityDetailScreen(
+                                                name = name!!,
+                                                navController = navController,
+                                                navigatePost = { postId: String ->
+                                                    navController.navigate(
+                                                        Post(postId = postId)
+                                                    )
+                                                },
+                                                navigateLogin = { navController.navigate(Login) },
+                                                navigateReply = { id: String, content: String ->
+                                                    activeCommentId = id
+                                                    activeCommentComment = content
+                                                    navController.navigate(
+                                                        Comment(
+                                                            postId = null,
+                                                            commentId = activeCommentId,
+                                                            commentContent = activeCommentComment,
+                                                            darkMode = bool.value ?: false,
+                                                        )
+                                                    )
+                                                },
+                                                darkMode = bool.value ?: false,
+                                            )
+                                        }
+                                        composable<EditCommunity> {
+                                            selectedBottomNavigation = -1
+                                            barState.value = false
+                                            userTopBarState.value = true
+                                            val name = it.arguments?.getString("name");
+                                            EditCommunityScreen(name = name!!, navController)
                                         }
                                     }
                                 }

@@ -1,14 +1,12 @@
 package com.example.baddit.presentation.screens.profile
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +19,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -33,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -64,13 +59,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
@@ -81,7 +74,6 @@ import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
-import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
@@ -204,7 +196,9 @@ fun ProfileScreen(
             viewModel = viewModel,
             isPostSectionSelected = isPostSectionSelected,
             navigateLogin = navigateLogin,
-            navigateReply = navigateReply
+            navigateReply = navigateReply,
+            navController = navController,
+            darkMode = darkMode
         )
     }
 }
@@ -441,7 +435,9 @@ fun ProfileCommentsSection(
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean,
     navigateLogin: () -> Unit,
-    navigateReply: (String, String) -> Unit
+    navigateReply: (String, String) -> Unit,
+    navController: NavController,
+    darkMode: Boolean
 ) {
 
     val listState = rememberLazyListState()
@@ -483,7 +479,15 @@ fun ProfileCommentsSection(
                             )
                         },
                         isLoggedIn = viewModel.loggedIn.value,
-                        onComponenClick = {}
+                        onComponentClick = {},
+                        navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
+                            postId = null,
+                            commentContent = content,
+                            commentId = commentId,
+                            darkMode = darkMode
+                        )) },
+                        deleteFn = { commentId: String -> viewModel.commentRepository.deleteComment(commentId) },
+                        loggedInUser = viewModel.authRepository.currentUser.value
                     )
                 }
             }

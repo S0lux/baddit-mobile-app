@@ -11,6 +11,10 @@ import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.repository.CommunityRepository
 import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
 
 class CommunityRepositoryImpl @Inject constructor(
@@ -28,6 +32,42 @@ class CommunityRepositoryImpl @Inject constructor(
         name: String,
         description: String
     ): Result<Unit, DataError.NetworkError> {
-        return safeApiCall { badditAPI.createCommunity(CreateRequestBody(name, description)) }
+        return safeApiCall {badditAPI.createCommunity(CreateRequestBody(name, description))}
+    }
+
+    override suspend fun joinCommunity(communityName: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.joinCommunity(communityName) }
+    }
+
+    override suspend fun leaveCommunity(communityName: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.leaveCommunity(communityName) }
+    }
+
+    override suspend fun updateCommunityBanner(
+        communityName: String,
+        imageFile: File
+    ): Result<Unit, DataError.NetworkError> {
+        val requestBody = MultipartBody.Part.createFormData(
+            "banner",
+            imageFile.name,
+            imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        )
+        return safeApiCall { badditAPI.uploadBanner(communityName, requestBody)}
+    }
+
+    override suspend fun updateCommunityLogo(
+        communityName: String,
+        imageFile: File
+    ): Result<Unit, DataError.NetworkError> {
+        val requestBody = MultipartBody.Part.createFormData(
+            "logo",
+            imageFile.name,
+            imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        )
+        return safeApiCall { badditAPI.uploadLogo(communityName, requestBody)}
+    }
+
+    override suspend fun deleteCommunity(communityName: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.deleteCommunity(communityName) }
     }
 }

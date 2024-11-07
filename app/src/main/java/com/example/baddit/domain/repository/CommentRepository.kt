@@ -27,4 +27,13 @@ interface CommentRepository {
         postId: String,
         content: String
     ): Result<Unit, DataError.NetworkError>
+
+    suspend fun editComment(
+        commentId: String,
+        content: String,
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun deleteComment(
+        commentId: String
+    ): Result<Unit, DataError.NetworkError>
 }

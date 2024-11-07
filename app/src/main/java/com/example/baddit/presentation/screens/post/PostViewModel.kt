@@ -17,6 +17,7 @@ import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.presentation.utils.Post
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +25,7 @@ import javax.inject.Inject
 class PostViewModel @Inject constructor(
     val authRepository: AuthRepository,
     val postRepository: PostRepository,
-    private val commentRepository: CommentRepository,
+    val commentRepository: CommentRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -62,6 +63,7 @@ class PostViewModel @Inject constructor(
                         error = ""
                         val dto = result.data
                         comments.clear()
+                        delay(5)
                         comments.addAll(dto)
                     }
                 }

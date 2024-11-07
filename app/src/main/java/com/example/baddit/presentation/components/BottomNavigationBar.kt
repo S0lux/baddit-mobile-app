@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -16,6 +17,7 @@ import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -28,6 +30,7 @@ import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -36,15 +39,19 @@ fun BottomNavigationBar(
     navController: NavHostController,
     selectedItem: Int,
     barState: MutableState<Boolean>,
+    drawerState: DrawerState
 ) {
     val selectedIndex = selectedItem
+    val scope = rememberCoroutineScope()
     AnimatedVisibility(
         visible = barState.value,
         exit = slideOutVertically(),
         enter = slideInVertically()
     ) {
         NavigationBar(
-            modifier = Modifier.height(60.dp).shadow(elevation = 1.dp),
+            modifier = Modifier
+                .height(60.dp)
+                .shadow(elevation = 1.dp),
             containerColor = MaterialTheme.colorScheme.cardBackground
         ) {
             navItems.forEachIndexed { index, item ->
@@ -61,7 +68,12 @@ fun BottomNavigationBar(
                         disabledTextColor = Color.Transparent
                     ),
                     onClick = {
-                        if(selectedIndex!=index){
+                        if(drawerState.isOpen){
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        }
+                        if(selectedIndex!=index&&drawerState.isClosed){
                             navController.navigate(navItems[index].value)
                         }
                     },
