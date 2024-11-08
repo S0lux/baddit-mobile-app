@@ -1,6 +1,11 @@
 package com.example.baddit.presentation.screens.profile
 
 import android.annotation.SuppressLint
+import android.app.Activity.RESULT_CANCELED
+import android.app.Activity.RESULT_OK
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -8,6 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +27,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,15 +81,18 @@ import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.presentation.styles.gradientBackGroundBrush
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -154,7 +166,8 @@ fun ProfileScreen(
         ProfileHeader(
             loggedIn = loggedIn,
             currentUser = viewModel.user.value,
-            viewModel = viewModel
+            viewModel = viewModel,
+            navController
         )
         Box(
             modifier = Modifier
@@ -218,8 +231,31 @@ fun ProfileScreen(
 fun ProfileHeader(
     loggedIn: Boolean,
     currentUser: GetOtherResponseDTO?,
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel,
+    navController: NavController,
+    loginViewModel: LoginViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
+    var avatarImg by remember { mutableStateOf<File?>(null) }
+    val avatarLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == RESULT_CANCELED) {
+            viewModel.isEditting = false;
+            avatarImg = null;
+        } else if (result.resultCode == RESULT_OK) {
+            viewModel.isEditting = true;
+            result.data?.data?.let { uri ->
+                val file = File(context.cacheDir, "${System.currentTimeMillis()}.jpg")
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    file.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                avatarImg = file
+            }
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,18 +275,87 @@ fun ProfileHeader(
         ) {
             if (loggedIn) {
                 currentUser?.let { currentUser ->
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(currentUser.avatarUrl)
-                            .build(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .height(100.dp)
-                            .aspectRatio(1f)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (!viewModel.isMe) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(currentUser.avatarUrl)
+                                .build(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .height(100.dp)
+                                .aspectRatio(1f)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+
+                        Box() {
+                            Box(
+                                modifier = Modifier
+                                    .size(104.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .padding(2.dp)
+                                    .align(Alignment.Center)
+                                    .padding(2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(Color.Gray)
+                                ) {
+                                    if (!viewModel.isEditting) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(currentUser.avatarUrl)
+                                                .build(),
+                                            contentDescription = "Avatar Image",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .clip(CircleShape)
+                                                .fillMaxSize()
+                                        )
+                                    } else {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(avatarImg)
+                                                .build(),
+                                            contentDescription = "Avatar Image",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .clip(CircleShape)
+                                                .fillMaxSize()
+                                        )
+                                    }
+                                }
+
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .clickable {
+                                        avatarLauncher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
+                                            type = "image/*"
+                                        });
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Icon",
+                                    tint = Color.Gray,
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .align(Alignment.Center)
+                                )
+                            }
+                        }
+                    }
                 }
             } else {
                 AsyncImage(
@@ -310,20 +415,51 @@ fun ProfileHeader(
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        if (viewModel.isMe) {
-                            OutlinedButton(
-                                onClick = { /*TODO*/ },
-                                border = BorderStroke(2.dp, MaterialTheme.colorScheme.textPrimary),
-                                contentPadding = PaddingValues(3.dp)
+                        if (viewModel.isMe && viewModel.isEditting && avatarImg != null) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                Text(
-                                    text = "Edit", style = TextStyle(
-                                        color = MaterialTheme.colorScheme.textPrimary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
+                                OutlinedButton(
+                                    onClick = { viewModel.isEditting = false },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        Color.Red
+                                    ),
+                                    contentPadding = PaddingValues(10.dp)
+                                ) {
+                                    Text(
+                                        text = "Cancel", style = TextStyle(
+                                            color = Color.Red,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 20.sp
+                                        )
                                     )
-                                )
 
+                                }
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.updateAvatar((avatarImg!!));
+                                        loginViewModel.refreshAvatar();
+                                        currentUser?.let {
+                                            viewModel.fetchUserProfile(it.username)
+                                            navController.navigate(Profile(username = currentUser.username))
+                                        };
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        Color.Green
+                                    ),
+                                    contentPadding = PaddingValues(10.dp)
+                                ) {
+                                    Text(
+                                        text = "Save", style = TextStyle(
+                                            color = Color.Green,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 20.sp
+                                        )
+                                    )
+
+                                }
                             }
                         }
                     }

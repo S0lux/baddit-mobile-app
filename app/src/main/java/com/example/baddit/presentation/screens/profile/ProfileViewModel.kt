@@ -18,15 +18,18 @@ import com.example.baddit.domain.model.profile.UserProfile
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
+import com.example.baddit.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     val authRepository: AuthRepository,
     val postRepository: PostRepository,
-    val commentRepository: CommentRepository
+    val commentRepository: CommentRepository,
+    val userRepository: UserRepository
     ) : ViewModel() {
 
     //user
@@ -45,6 +48,7 @@ class ProfileViewModel @Inject constructor(
     //refreshing variable
     var isRefreshing by mutableStateOf(false)
         private set;
+    var isEditting by mutableStateOf(false)
     //error
     var error by mutableStateOf("")
 
@@ -174,6 +178,26 @@ class ProfileViewModel @Inject constructor(
                 }
             }
 
+        }
+    }
+    fun updateAvatar( imageFile: File) {
+        viewModelScope.launch {
+
+            val result = userRepository.updateAvatar(imageFile)
+            when (result) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    error = ""
+                    isEditting = false
+                }
+            }
         }
     }
 

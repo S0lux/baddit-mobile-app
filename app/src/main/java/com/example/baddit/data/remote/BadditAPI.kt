@@ -143,4 +143,11 @@ interface BadditAPI {
 
     @DELETE("v1/communities/{communityName}")
     suspend fun deleteCommunity(@Path("communityName") communityName: String): Response<Unit>
+
+
+    @Multipart
+    @POST("/v1/users/avatar")
+    suspend fun updateAvatar(
+        @Part avatar: MultipartBody.Part
+    ):Response<Unit>
 }
