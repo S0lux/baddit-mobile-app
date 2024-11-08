@@ -1,8 +1,6 @@
 package com.example.baddit.presentation.screens.profile
 
-import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,14 +10,13 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
-import com.example.baddit.domain.model.profile.UserProfile
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -30,25 +27,31 @@ class ProfileViewModel @Inject constructor(
     val postRepository: PostRepository,
     val commentRepository: CommentRepository,
     val userRepository: UserRepository
-    ) : ViewModel() {
+) : ViewModel() {
 
     //user
     val user = mutableStateOf<GetOtherResponseDTO?>(null)
-    val me = authRepository.currentUser
+    var me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
     var isMe by mutableStateOf(false)
         private set;
+
     //posts
     val posts = postRepository.postCache;
     private var lastPostId: String? = null;
     var endReached = false;
+
     //comments
     val comments: MutableList<CommentResponseDTOItem> = mutableStateListOf()
     private var lastCommentId: String? = null;
+
     //refreshing variable
     var isRefreshing by mutableStateOf(false)
         private set;
-    var isEditting by mutableStateOf(false)
+    var isEditing by mutableStateOf(false)
+
+    var isUpdating by mutableStateOf(false)
+
     //error
     var error by mutableStateOf("")
 
@@ -68,7 +71,7 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     posts.clear()
                     error = ""
-                    if(!fetchPosts.data.isEmpty())
+                    if (!fetchPosts.data.isEmpty())
                         lastPostId = fetchPosts.data.last().id
                     posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
@@ -76,12 +79,14 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false
         }
     }
-    fun loadMorePosts(username: String){
+
+    fun loadMorePosts(username: String) {
         if (endReached)
             return;
         viewModelScope.launch {
             isRefreshing = true;
-            when (val fetchPosts = postRepository.getPosts(cursor = lastPostId , authorName = username)) {
+            when (val fetchPosts =
+                postRepository.getPosts(cursor = lastPostId, authorName = username)) {
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -95,8 +100,7 @@ class ProfileViewModel @Inject constructor(
                     if (fetchPosts.data.isNotEmpty()) {
                         lastPostId = fetchPosts.data.last().id
                         posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
-                    }
-                    else {
+                    } else {
                         endReached = true
                     }
                 }
@@ -104,7 +108,8 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false;
         }
     }
-    fun refreshComments(username: String){
+
+    fun refreshComments(username: String) {
         viewModelScope.launch {
             isRefreshing = true;
             when (val result = commentRepository.getComments(authorName = username)) {
@@ -119,7 +124,7 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     comments.clear()
                     error = ""
-                    if(!result.data.isEmpty())
+                    if (!result.data.isEmpty())
                         lastPostId = result.data.last().id
                     val dto = result.data
                     dto.forEach { comment -> comments.add(comment) }
@@ -128,12 +133,14 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false
         }
     }
-    fun loadMoreComments(username: String){
+
+    fun loadMoreComments(username: String) {
         if (endReached)
             return;
         viewModelScope.launch {
             isRefreshing = true;
-            when (val fetchComemnts = commentRepository.getComments(cursor = lastPostId , authorName = username)) {
+            when (val fetchComemnts =
+                commentRepository.getComments(cursor = lastPostId, authorName = username)) {
                 is Result.Error -> {
                     error = when (fetchComemnts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -147,8 +154,7 @@ class ProfileViewModel @Inject constructor(
                     if (fetchComemnts.data.isNotEmpty()) {
                         lastPostId = fetchComemnts.data.last().id
                         comments.addAll(fetchComemnts.data.map { it })
-                    }
-                    else {
+                    } else {
                         endReached = true
                     }
                 }
@@ -156,11 +162,12 @@ class ProfileViewModel @Inject constructor(
             isRefreshing = false;
         }
     }
+
     fun fetchUserProfile(username: String) {
         viewModelScope.launch {
-            isMe = if(username == me.value!!.username){
+            isMe = if (username == me.value!!.username) {
                 true;
-            } else{
+            } else {
                 false;
             }
             when (val result = authRepository.getOther(username)) {
@@ -180,24 +187,41 @@ class ProfileViewModel @Inject constructor(
 
         }
     }
-    fun updateAvatar( imageFile: File) {
+
+    fun reloadAvatarDisplay() {
+        viewModelScope.launch {
+            authRepository.getMe();
+            me = authRepository.currentUser;
+            fetchUserProfile(me.value!!.username)
+            refreshPosts(me.value!!.username)
+            refreshComments(me.value!!.username)
+        }
+    }
+
+    fun updateAvatar(imageFile: File) {
         viewModelScope.launch {
 
-            val result = userRepository.updateAvatar(imageFile)
-            when (result) {
-                is Result.Error -> {
-                    error = when (result.error) {
-                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
-                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
-                        else -> "An unknown network error has occurred"
+            isUpdating = true
+            viewModelScope.launch {
+                val result = userRepository.updateAvatar(imageFile)
+                when (result) {
+                    is Result.Error -> {
+                        error = when (result.error) {
+                            DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                            DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                            else -> "An unknown network error has occurred"
+                        }
+                    }
+
+                    is Result.Success -> {
+                        error = ""
+                        isUpdating = false
+                        isEditing = false
+                        reloadAvatarDisplay()
                     }
                 }
-
-                is Result.Success -> {
-                    error = ""
-                    isEditting = false
-                }
             }
+            isUpdating = false
         }
     }
 
