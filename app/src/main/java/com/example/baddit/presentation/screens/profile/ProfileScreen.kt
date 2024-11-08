@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -12,7 +13,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,16 +28,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -82,7 +80,6 @@ import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.screens.login.LoginViewModel
-import com.example.baddit.presentation.styles.gradientBackGroundBrush
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
@@ -119,6 +116,7 @@ fun ProfileScreen(
 
 
     LaunchedEffect(username) {
+        viewModel.reloadAvatarDisplay()
         viewModel.fetchUserProfile(username)
         viewModel.refreshPosts(username)
         viewModel.refreshComments(username)
@@ -241,10 +239,10 @@ fun ProfileHeader(
         contract = ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == RESULT_CANCELED) {
-            viewModel.isEditting = false;
+            viewModel.isEditing = false;
             avatarImg = null;
         } else if (result.resultCode == RESULT_OK) {
-            viewModel.isEditting = true;
+            viewModel.isEditing = true;
             result.data?.data?.let { uri ->
                 val file = File(context.cacheDir, "${System.currentTimeMillis()}.jpg")
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -270,7 +268,7 @@ fun ProfileHeader(
                 .background(
                     Color.Transparent
                 ),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (loggedIn) {
@@ -306,7 +304,7 @@ fun ProfileHeader(
                                         .clip(CircleShape)
                                         .background(Color.Gray)
                                 ) {
-                                    if (!viewModel.isEditting) {
+                                    if (!viewModel.isEditing) {
                                         AsyncImage(
                                             model = ImageRequest.Builder(LocalContext.current)
                                                 .data(currentUser.avatarUrl)
@@ -415,12 +413,12 @@ fun ProfileHeader(
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        if (viewModel.isMe && viewModel.isEditting && avatarImg != null) {
+                        if (viewModel.isMe && viewModel.isEditing && avatarImg != null) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
                                 OutlinedButton(
-                                    onClick = { viewModel.isEditting = false },
+                                    onClick = { viewModel.isEditing = false },
                                     border = BorderStroke(
                                         1.dp,
                                         Color.Red
@@ -439,11 +437,6 @@ fun ProfileHeader(
                                 OutlinedButton(
                                     onClick = {
                                         viewModel.updateAvatar((avatarImg!!));
-                                        loginViewModel.refreshAvatar();
-                                        currentUser?.let {
-                                            viewModel.fetchUserProfile(it.username)
-                                            navController.navigate(Profile(username = currentUser.username))
-                                        };
                                     },
                                     border = BorderStroke(
                                         1.dp,

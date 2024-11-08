@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -15,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +35,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.presentation.screens.login.LoginViewModel
+import com.example.baddit.presentation.screens.profile.ProfileViewModel
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Search
@@ -45,9 +48,10 @@ fun TopNavigationBar(
     navController: NavHostController,
     barState: MutableState<Boolean>,
     userTopBarState: MutableState<Boolean>,
-    viewModel: LoginViewModel = hiltViewModel(),
     showAvatarMenu: MutableState<Boolean>,
-    onDrawerClicked: () -> Unit
+    onDrawerClicked: () -> Unit,
+    profileViewModal : ProfileViewModel = hiltViewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
@@ -63,6 +67,9 @@ fun TopNavigationBar(
             navigateLogin = { navController.navigate(Login) },
             onDismiss = { showLoginDialog = false })
     }
+
+
+
     AnimatedVisibility(
         visible = barState.value && !userTopBarState.value,
         exit = slideOutVertically(),
@@ -94,7 +101,7 @@ fun TopNavigationBar(
                     )
                 }
                 if (loggedIn) {
-                    viewModel.currentUser.value?.let { currentUser ->
+                    profileViewModal.me.value?.let { currentUser ->
                         IconButton(onClick = {
                             showAvatarMenu.value = true;
                         }) {
