@@ -21,6 +21,7 @@ import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Profile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,6 +115,7 @@ fun PostScreen(
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
                     navigateReply = navReply,
+                    navigateProfile = {navController.navigate(Profile(username = it.author.username))},
                     onComponentClick = onComponentClick,
                     navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
                         postId = null,
