@@ -30,7 +30,7 @@ interface PostRepository {
         title: String,
         content: String,
         type: String,
-        communityName: String,
+        communityName: String?,
         image: File?
     ): Result<Unit, DataError.NetworkError>
 

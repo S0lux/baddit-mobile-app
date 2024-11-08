@@ -76,7 +76,7 @@ interface BadditAPI {
         @Part("title") title: RequestBody ,
         @Part("content") content: RequestBody,
         @Part("type") type: RequestBody,
-        @Part("communityName") communityName: RequestBody,
+        @Part("communityName") communityName: RequestBody?,
         @Part image: MultipartBody.Part?
     )
     :Response<Unit>
