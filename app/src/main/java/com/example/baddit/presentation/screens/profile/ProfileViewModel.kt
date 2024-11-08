@@ -54,7 +54,19 @@ class ProfileViewModel @Inject constructor(
 
     var isUpdating by mutableStateOf(false)
 
-    var isPostSectionSelected by mutableStateOf(true)
+    val isPostSectionSelected = mutableStateOf(false)
+
+    fun togglePostSection(boolean: Boolean) {
+        viewModelScope.launch {
+            isPostSectionSelected.value = boolean
+            if(boolean){
+                refreshPosts(username = user.value!!.username)
+            }else{
+                refreshComments(username = user.value!!.username)
+
+            }
+        }
+    }
 
     //error
     var error by mutableStateOf("")
@@ -129,10 +141,11 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     comments.clear()
                     error = ""
+                    posts.clear()
+                    error = ""
                     if (!result.data.isEmpty())
                         lastCommentId = result.data.last().id
-                    val dto = result.data
-                    dto.forEach { comment -> comments.add(comment) }
+                    comments.addAll(result.data.map { it })
                 }
             }
             isRefreshingComment = false
@@ -143,11 +156,11 @@ class ProfileViewModel @Inject constructor(
         if (endCommentReached)
             return;
         viewModelScope.launch {
-            isRefreshingComment = true;
-            when (val fetchComemnts =
-                commentRepository.getComments(cursor = lastPostId, authorName = username)) {
+            isRefreshingComment= true;
+            when (val fetchComments =
+                commentRepository.getComments(cursor = lastCommentId, authorName = username)) {
                 is Result.Error -> {
-                    error = when (fetchComemnts.error) {
+                    error = when (fetchComments.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
                         DataError.NetworkError.NO_INTERNET -> "No internet connection"
                         else -> "An unknown network error has occurred"
@@ -156,9 +169,9 @@ class ProfileViewModel @Inject constructor(
 
                 is Result.Success -> {
                     error = ""
-                    if (fetchComemnts.data.isNotEmpty()) {
-                        lastCommentId = fetchComemnts.data.last().id
-                        comments.addAll(fetchComemnts.data.map { it })
+                    if (fetchComments.data.isNotEmpty()) {
+                        lastCommentId = fetchComments.data.last().id
+                        comments.addAll(fetchComments.data.map { it })
                     } else {
                         endCommentReached = true
                     }
