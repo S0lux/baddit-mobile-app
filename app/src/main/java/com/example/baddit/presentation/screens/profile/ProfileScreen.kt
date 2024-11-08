@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -34,7 +33,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,7 +70,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -116,7 +113,7 @@ fun ProfileScreen(
 
 
     LaunchedEffect(username) {
-        viewModel.reloadAvatarDisplay()
+        //Log.d("ProfileScreen","Username: "+ username)
         viewModel.fetchUserProfile(username)
         viewModel.refreshPosts(username)
         viewModel.refreshComments(username)
@@ -313,7 +310,7 @@ fun ProfileHeader(
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier
                                                 .clip(CircleShape)
-                                                .fillMaxSize()
+                                                .fillMaxSize(),
                                         )
                                     } else {
                                         AsyncImage(
@@ -497,7 +494,7 @@ fun ProfilePostSection(
         enter = slideInHorizontally()
     ) {
         PullToRefreshBox(
-            isRefreshing = viewModel.isRefreshing,
+            isRefreshing = viewModel.isRefreshingPost,
             onRefresh = { viewModel.refreshPosts(username) }) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -597,7 +594,7 @@ fun ProfileCommentsSection(
         enter = slideInHorizontally()
     ) {
         PullToRefreshBox(
-            isRefreshing = viewModel.isRefreshing,
+            isRefreshing = viewModel.isRefreshingComment,
             onRefresh = { viewModel.refreshComments(username) }) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listState) {
                 items(items = viewModel.comments) { it ->
@@ -605,6 +602,7 @@ fun ProfileCommentsSection(
                         details = it,
                         navigateLogin = navigateLogin,
                         navigateReply = navigateReply,
+                        navigateProfile = {},
                         voteFn = { commentId: String, state: String ->
                             viewModel.commentRepository.voteComment(
                                 commentId,
@@ -612,7 +610,7 @@ fun ProfileCommentsSection(
                             )
                         },
                         isLoggedIn = viewModel.loggedIn.value,
-                        onComponentClick = {},
+                        onComponentClick = {navController.navigate(Profile(username = username))},
                         navigateEdit = { commentId: String, content: String ->
                             navController.navigate(
                                 Editing(

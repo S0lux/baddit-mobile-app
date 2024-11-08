@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.profile
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,6 @@ import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -30,7 +30,7 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     //user
-    val user = mutableStateOf<GetOtherResponseDTO?>(null)
+    var user = mutableStateOf<GetOtherResponseDTO?>(null)
     var me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
     var isMe by mutableStateOf(false)
@@ -39,26 +39,30 @@ class ProfileViewModel @Inject constructor(
     //posts
     val posts = postRepository.postCache;
     private var lastPostId: String? = null;
-    var endReached = false;
+    var endPostReached = false;
 
     //comments
     val comments: MutableList<CommentResponseDTOItem> = mutableStateListOf()
     private var lastCommentId: String? = null;
+    var endCommentReached = false;
 
     //refreshing variable
-    var isRefreshing by mutableStateOf(false)
+    var isRefreshingPost by mutableStateOf(false)
+    var isRefreshingComment by mutableStateOf(false)
         private set;
     var isEditing by mutableStateOf(false)
 
     var isUpdating by mutableStateOf(false)
 
+    var isPostSectionSelected by mutableStateOf(true)
+
     //error
     var error by mutableStateOf("")
 
     fun refreshPosts(username: String) {
-        endReached = false;
+        endPostReached = false;
         viewModelScope.launch {
-            isRefreshing = true;
+            isRefreshingPost = true;
             when (val fetchPosts = postRepository.getPosts(authorName = username)) {
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
@@ -76,15 +80,15 @@ class ProfileViewModel @Inject constructor(
                     posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
             }
-            isRefreshing = false
+            isRefreshingPost = false
         }
     }
 
     fun loadMorePosts(username: String) {
-        if (endReached)
+        if (endPostReached)
             return;
         viewModelScope.launch {
-            isRefreshing = true;
+            isRefreshingPost = true;
             when (val fetchPosts =
                 postRepository.getPosts(cursor = lastPostId, authorName = username)) {
                 is Result.Error -> {
@@ -101,17 +105,18 @@ class ProfileViewModel @Inject constructor(
                         lastPostId = fetchPosts.data.last().id
                         posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                     } else {
-                        endReached = true
+                        endPostReached = true
                     }
                 }
             }
-            isRefreshing = false;
+            isRefreshingPost = false;
         }
     }
 
     fun refreshComments(username: String) {
+        endCommentReached = false;
         viewModelScope.launch {
-            isRefreshing = true;
+            isRefreshingComment = true;
             when (val result = commentRepository.getComments(authorName = username)) {
                 is Result.Error -> {
                     error = when (result.error) {
@@ -125,20 +130,20 @@ class ProfileViewModel @Inject constructor(
                     comments.clear()
                     error = ""
                     if (!result.data.isEmpty())
-                        lastPostId = result.data.last().id
+                        lastCommentId = result.data.last().id
                     val dto = result.data
                     dto.forEach { comment -> comments.add(comment) }
                 }
             }
-            isRefreshing = false
+            isRefreshingComment = false
         }
     }
 
     fun loadMoreComments(username: String) {
-        if (endReached)
+        if (endCommentReached)
             return;
         viewModelScope.launch {
-            isRefreshing = true;
+            isRefreshingComment = true;
             when (val fetchComemnts =
                 commentRepository.getComments(cursor = lastPostId, authorName = username)) {
                 is Result.Error -> {
@@ -152,14 +157,14 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     error = ""
                     if (fetchComemnts.data.isNotEmpty()) {
-                        lastPostId = fetchComemnts.data.last().id
+                        lastCommentId = fetchComemnts.data.last().id
                         comments.addAll(fetchComemnts.data.map { it })
                     } else {
-                        endReached = true
+                        endCommentReached = true
                     }
                 }
             }
-            isRefreshing = false;
+            isRefreshingComment = false;
         }
     }
 
@@ -181,6 +186,7 @@ class ProfileViewModel @Inject constructor(
 
                 is Result.Success -> {
                     user.value = result.data
+                    Log.d("ProfileScreen","Data: "+ user.value!!.username)
                     error = ""
                 }
             }

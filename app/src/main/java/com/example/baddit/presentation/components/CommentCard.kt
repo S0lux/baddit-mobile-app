@@ -5,10 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -43,14 +49,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.protobuf.Internal.BooleanList
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.comment.Author
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
-import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
@@ -64,7 +70,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
@@ -73,6 +78,7 @@ fun CommentCard(
     level: Int = 1,
     navigateLogin: () -> Unit,
     navigateReply: (String, String) -> Unit,
+    navigateProfile: () -> Unit,
     voteFn: suspend (String, String) -> Result<Unit, DataError.NetworkError>,
     isLoggedIn: Boolean = false,
     onComponentClick: () -> Unit,
@@ -162,7 +168,12 @@ fun CommentCard(
             )
         },
         background = Color(0xFF60B626),
-        onSwipe = { if (!isLoggedIn) showLoginDialog = true else navigateReply(details.id, details.content) },
+        onSwipe = {
+            if (!isLoggedIn) showLoginDialog = true else navigateReply(
+                details.id,
+                details.content
+            )
+        },
         weight = 3.0,
     )
 
@@ -210,6 +221,8 @@ fun CommentCard(
                     ) {
                         CommentMeta(
                             authorName = details.author.username,
+                            avatarUrl = details.author.avatarUrl,
+                            navigateProfile = navigateProfile,
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
@@ -218,7 +231,7 @@ fun CommentCard(
                         )
 
                         Spacer(modifier = Modifier.height(1.dp))
-                        
+
                         CommentTextContent(content = details.content, collapsedState, isDeleted)
                     }
                 }
@@ -250,6 +263,7 @@ fun CommentCard(
                     level = level + 1,
                     voteFn = voteFn,
                     navigateLogin = navigateLogin,
+                    navigateProfile = navigateProfile,
                     isLoggedIn = isLoggedIn,
                     navigateReply = navigateReply,
                     onComponentClick = onComponentClick,
@@ -288,6 +302,8 @@ fun CommentHierarchyIndicator(level: Int) {
 @Composable
 fun CommentMeta(
     authorName: String,
+    avatarUrl: String,
+    navigateProfile: () -> Unit,
     score: Int,
     creationDate: String,
     voteState: String? = null,
@@ -300,10 +316,33 @@ fun CommentMeta(
         else -> MaterialTheme.colorScheme.textSecondary
     }
 
-    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .defaultMinSize(25.dp)
+                .clickable(
+                    onClick = navigateProfile
+                ),
+            ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(avatarUrl)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .height(25.dp)
+                    .aspectRatio(1f)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+        }
         Text(
             text = if (isDeleted) "[deleted]" else authorName,
-            fontSize = 12.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.textSecondary,
             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
@@ -340,7 +379,7 @@ fun CommentMeta(
         AnimatedVisibility(visible = collapsed) {
             Text(
                 text = " C ",
-                fontSize = 12.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.textSecondary,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
@@ -357,7 +396,7 @@ fun CommentTextContent(content: String, collapsed: Boolean, isDeleted: Boolean =
     Text(
         text = if (isDeleted) "[deleted]" else content,
         color = MaterialTheme.colorScheme.textPrimary,
-        fontSize = 12.sp,
+        fontSize = 15.sp,
         maxLines = if (collapsed) 3 else 100,
         overflow = TextOverflow.Ellipsis,
         style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
@@ -549,7 +588,8 @@ fun CommentActions(
         if (loggedInUser?.username == details.author.username ||
             loggedInUser?.communities?.find { it.name == details.community?.name }?.role == "MODERATOR" ||
             loggedInUser?.communities?.find { it.name == details.community?.name }?.role == "ADMIN" ||
-            loggedInUser?.role == "ADMIN") {
+            loggedInUser?.role == "ADMIN"
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.trash),
                 contentDescription = null,
@@ -662,14 +702,17 @@ fun CommentCardPreview() {
         Surface(
             modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
         ) {
-            CommentCard(details,
+            CommentCard(
+                details,
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
                 navigateReply = { a: String, b: String -> Unit },
+                navigateProfile = {},
                 onComponentClick = {},
                 navigateEdit = { a: String, b: String -> /* TODO() */ },
                 deleteFn = { Result.Success(Unit) },
-                loggedInUser = null)
+                loggedInUser = null
+            )
         }
     }
 }
