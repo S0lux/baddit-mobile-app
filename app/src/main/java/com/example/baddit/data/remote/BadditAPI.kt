@@ -94,7 +94,7 @@ interface BadditAPI {
 
     // community
     @GET("v1/communities")
-    suspend fun getCommunities(): Response<GetCommunityListResponseDTO>
+    suspend fun getCommunities(@Query("cursor") cursor: String?): Response<GetCommunityListResponseDTO>
 
     @GET("v1/communities/{communityName}")
     suspend fun getCommunity(@Path("communityName") communityName: String): Response<GetACommunityResponseDTO>

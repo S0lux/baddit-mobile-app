@@ -3,6 +3,7 @@ package com.example.baddit.presentation.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
@@ -11,6 +12,8 @@ import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.community.Members
 import com.example.baddit.domain.model.community.Moderators
+import com.example.baddit.domain.model.community.MutableCommunityResponseDTOItem
+import com.example.baddit.domain.model.community.toMutableCommunityResponseDTOItem
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommunityRepository
@@ -23,13 +26,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val communityRepository: CommunityRepository,
+    val communityRepository: CommunityRepository,
     val postRepository: PostRepository,
     val authRepository: AuthRepository
 ) : ViewModel() {
 
     val communityList = mutableStateOf<GetCommunityListResponseDTO>(GetCommunityListResponseDTO())
     val community = mutableStateOf<GetACommunityResponseDTO?>(null)
+
+    val listCommunity =  SnapshotStateList<MutableCommunityResponseDTOItem>()
 
     val memberList = mutableStateOf(Members())
     val moderatorList = mutableStateOf(Moderators())
@@ -59,6 +64,67 @@ class CommunityViewModel @Inject constructor(
         private set;
 
     var error by mutableStateOf("")
+
+    var endCommunityReached = false;
+    private var lastCursor: String? = null;
+    var isRefreshingCommunity by mutableStateOf(false)
+
+    fun refreshCommunities(){
+        endCommunityReached = false;
+        viewModelScope.launch {
+            isRefreshingCommunity = true;
+            when (val fetchCommunities = communityRepository.getCommunities()) {
+                is Result.Error -> {
+                    error = when (fetchCommunities.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    communityRepository.communityCache.clear()
+                    error = ""
+                    if (!fetchCommunities.data.isEmpty())
+                        lastCursor = fetchCommunities.data[fetchCommunities.data.size -2].id
+                    communityRepository.communityCache.addAll(fetchCommunities.data.map { it.toMutableCommunityResponseDTOItem() })
+                }
+            }
+            isRefreshingCommunity = false
+        }
+    }
+
+    fun loadMoreCommunities(){
+        if (endCommunityReached || isRefreshingCommunity) return
+        viewModelScope.launch {
+            isRefreshingCommunity = true
+            when (val fetchCommunities = communityRepository.getCommunities(cursor = lastCursor)) {
+                is Result.Error -> {
+                    error = when (fetchCommunities.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+                is Result.Success -> {
+                    error = ""
+                    val newCommunities = fetchCommunities.data.filter { newCommunity ->
+                        communityRepository.communityCache.none { existingCommunity ->
+                            existingCommunity.id == newCommunity.id
+                        }
+                    }
+                    if (newCommunities.isNotEmpty()) {
+                        lastCursor = newCommunities.last().id
+                        communityRepository.communityCache.addAll(newCommunities.map { it.toMutableCommunityResponseDTOItem() })
+                    } else {
+                        endCommunityReached = true
+                    }
+                }
+            }
+            isRefreshingCommunity = false
+        }
+    }
+
 
     fun fetchCommunityList() {
         viewModelScope.launch {
@@ -141,6 +207,7 @@ class CommunityViewModel @Inject constructor(
             is Result.Error -> handleCreateCommunityError(result.error)
             is Result.Success -> {
                 isCreateDone = true
+                refreshCommunities()
             }
         }
 

@@ -1,15 +1,18 @@
 package com.example.baddit.domain.repository
 
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.community.Members
 import com.example.baddit.domain.model.community.Moderators
+import com.example.baddit.domain.model.community.MutableCommunityResponseDTOItem
 import java.io.File
 
 interface  CommunityRepository {
-    suspend fun getCommunities(): Result<GetCommunityListResponseDTO, DataError.NetworkError>;
+    suspend fun getCommunities(cursor: String? = null): Result<GetCommunityListResponseDTO, DataError.NetworkError>
+    var communityCache: SnapshotStateList<MutableCommunityResponseDTOItem>
     suspend fun getCommunity(communityName: String): Result<GetACommunityResponseDTO, DataError.NetworkError>;
     suspend fun createCommunity(name: String, description: String): Result<Unit, DataError.NetworkError>
     suspend fun joinCommunity(communityName: String): Result<Unit, DataError.NetworkError>
