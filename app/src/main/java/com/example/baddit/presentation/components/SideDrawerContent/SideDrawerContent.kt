@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.components.SideDrawerContent
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,21 +50,24 @@ import kotlinx.coroutines.launch
 @Composable
 fun SideDrawerContent(
     onExploreClick: () -> Unit,
-    navController:NavHostController,
+    navController: NavHostController,
     viewModel: SideDrawerContentViewModel = hiltViewModel(),
     drawerState: DrawerState
 ) {
     val isLoggedIn by viewModel.isLoggedIn
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val refreshboxState = rememberPullToRefreshState()
     if (isLoggedIn) {
-        LaunchedEffect(true) {
+        LaunchedEffect("") {
             viewModel.getJoinCommunity()
         }
     } else {
-        LaunchedEffect(true) {
+        LaunchedEffect("") {
             viewModel.joinedCommunities.clear()
         }
     }
+
     DismissibleDrawerSheet(
         modifier = Modifier
             .width(250.dp)
@@ -75,55 +80,57 @@ fun SideDrawerContent(
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing.value,
-            onRefresh = { viewModel.getJoinCommunity() }) {
-            Column {
-                DrawerHeader(header = "Your Communities")
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp)
-                        .clickable {
-                            onExploreClick()
-                        },
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_explore_24),
-                        contentDescription = null
-                    )
-                    Text(text = "Explore more", style = MaterialTheme.typography.bodyMedium)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                if (viewModel.joinedCommunities.isEmpty() && !viewModel.isRefreshing.value) {
-                    Text(
-                        text = if (isLoggedIn) "Consider joining some communities!" else "Login to see your communities",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.textSecondary
-                    )
-                }
-                if (viewModel.isRefreshing.value) {
-                    Text(
-                        text = "Loading...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.textSecondary
-                    )
-                }
-
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(viewModel.joinedCommunities) {
-                        DrawerItem(
-                            communityName = it.name,
-                            logoUrl = it.logoUrl,
-                            onClick = {
-                                scope.launch {
-                                    drawerState.close()
-                                    navController.navigate(CommunityDetail(name = it.name))
-                                }
-                            }
+            onRefresh = { viewModel.getJoinCommunity() },
+            state = refreshboxState
+        ) {
+            LazyColumn (verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                item {
+                    DrawerHeader(header = "Your Communities")
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onExploreClick()
+                            },
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_explore_24),
+                            contentDescription = null
+                        )
+                        Text(text = "Explore more", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    if (viewModel.joinedCommunities.isEmpty() && !viewModel.isRefreshing.value) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = if (isLoggedIn) "Consider joining some communities!" else "Login to see your communities",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.textSecondary
+                        )
+                    }
+                    if (viewModel.isRefreshing.value) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = "Loading...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.textSecondary
                         )
                     }
                 }
+                items(viewModel.joinedCommunities) {
+                    DrawerItem(
+                        communityName = it.community.name,
+                        logoUrl = it.community.logoUrl,
+                        onClick = {
+                            scope.launch {
+                                drawerState.close()
+                                navController.navigate(CommunityDetail(name = it.community.name))
+                            }
+                        }
+                    )
+                }
+
             }
         }
     }

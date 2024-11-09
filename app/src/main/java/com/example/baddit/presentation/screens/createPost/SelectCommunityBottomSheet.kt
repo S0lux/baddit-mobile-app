@@ -10,14 +10,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +38,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.community.Community
-import com.example.baddit.domain.model.community.CommunityDTO
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -55,18 +50,22 @@ fun CommunitySelector(onClick: () -> Unit, viewmodel: CreatePostViewodel) {
             .fillMaxWidth()
     ) {
         TextField(
-            value = viewmodel.selectedCommunity.value,
+            value = viewmodel.selectedCommunity ?: "",
             onValueChange = {},
             colors = textFieldColors(),
-            isError = viewmodel.selectedCommunity.error.isNotEmpty(),
             readOnly = true,
             modifier = Modifier
                 .fillMaxWidth(),
-            placeholder = { Text(text = "subreddit") },
-            prefix = { Text(text = "r/ ") },
-            supportingText = {Text(text = viewmodel.selectedCommunity.error)},
+            prefix = {
+                if (!viewmodel.selectedCommunity.isNullOrEmpty()) {
+                    Text(text = "r/ ")
+
+                } else {
+                    Text(text = "u/ ${viewmodel.user?.username}")
+                }
+            },
             leadingIcon = {
-                if (!viewmodel.selectedCommunity.value.isEmpty()) {
+                if (!viewmodel.selectedCommunity.isNullOrEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(viewmodel.selectedCommunityLogo)
@@ -82,7 +81,9 @@ fun CommunitySelector(onClick: () -> Unit, viewmodel: CreatePostViewodel) {
                 } else {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("https://i.imgur.com/mJQpR31.png")
+                            .data(
+                                viewmodel.user?.avatarUrl ?: ""
+                            )
                             .build(),
                         contentDescription = null,
                         modifier = Modifier
@@ -117,6 +118,7 @@ fun SelectCommunityBottomSheet(
     viewmodel: CreatePostViewodel = hiltViewModel(),
 ) {
     val communities = viewmodel.communities
+    val joinedCommunity = viewmodel.joinedCommunities
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
@@ -159,11 +161,56 @@ fun SelectCommunityBottomSheet(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
+            item {
+                Text(text = "Personal account", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .padding(5.dp)
+                        .fillMaxWidth()
+                        .clickable { viewmodel.selectedCommunity = null; onDismissRequest() }
+                ) {
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(viewmodel.user?.avatarUrl ?: "")
+                            .build(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .height(33.dp)
+                            .aspectRatio(1f)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Text(
+                        text = "u/ ${viewmodel.user?.username ?: ""}",
+                        style = MaterialTheme.typography.titleSmall.copy(MaterialTheme.colorScheme.textPrimary),
+                    )
+                }
+            }
+            if (joinedCommunity.isNotEmpty()) {
+                item {
+                    Text(text = "Your communities", style = MaterialTheme.typography.titleMedium)
+                }
+                items(items = joinedCommunity) {
+                    Community(community = it.community, onSelected = {
+                        viewmodel.selectedCommunity = it.community.name
+                        viewmodel.selectedCommunityLogo = it.community.logoUrl
+                        onDismissRequest()
+                    })
+                }
+            }
+
+            item {
+                Text(text = "Communities", style = MaterialTheme.typography.titleMedium)
+            }
             items(items = communities) { it ->
                 Community(
                     community = it,
                     onSelected = {
-                        viewmodel.selectedCommunity = viewmodel.selectedCommunity.copy(value = it.name, error = "")
+                        viewmodel.selectedCommunity = it.name
                         viewmodel.selectedCommunityLogo = it.logoUrl
                         onDismissRequest()
                     })
@@ -186,7 +233,7 @@ private fun Community(community: Community, onSelected: () -> Unit) {
 
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(community.logoUrl ?: "https://i.imgur.com/mJQpR31.png")
+                .data(community.logoUrl)
                 .build(),
             contentDescription = null,
             modifier = Modifier

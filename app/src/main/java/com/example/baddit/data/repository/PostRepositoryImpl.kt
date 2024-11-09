@@ -58,7 +58,7 @@ class PostRepositoryImpl @Inject constructor(
         title: String,
         content: String,
         type: String,
-        communityName: String,
+        communityName: String?,
         image: File?
     ): Result<Unit, DataError.NetworkError> {
 
@@ -66,7 +66,7 @@ class PostRepositoryImpl @Inject constructor(
             badditAPI.upLoadPost(
                 title = title.toRequestBody("text/plain".toMediaTypeOrNull()),
                 content = content.toRequestBody("text/plain".toMediaTypeOrNull()),
-                communityName = communityName.toRequestBody("text/plain".toMediaTypeOrNull()),
+                communityName = communityName?.toRequestBody("text/plain".toMediaTypeOrNull()),
                 type = type.toRequestBody("text/plain".toMediaTypeOrNull()),
                 image = prepareFilePart("files", image)
             )

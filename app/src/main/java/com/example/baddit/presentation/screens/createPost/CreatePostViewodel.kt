@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.Community
+import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommunityRepository
 import com.example.baddit.domain.repository.PostRepository
@@ -32,13 +33,17 @@ class CreatePostViewodel @Inject constructor(
 
     var title by mutableStateOf(FieldState())
     var content by mutableStateOf(FieldState())
-    var selectedCommunity by mutableStateOf(FieldState())
+    var selectedCommunity by mutableStateOf<String?>(null)
     var selectedCommunityLogo by mutableStateOf("")
 
     var selectedImageUri by mutableStateOf<Uri?>(Uri.EMPTY)
     val isLoggedIn = auth.isLoggedIn
 
+    var user = auth.currentUser.value
+
     var communities = mutableListOf<Community>()
+    var joinedCommunities = mutableListOf<GetACommunityResponseDTO>()
+
 
     var error by mutableStateOf("")
 
@@ -65,25 +70,68 @@ class CreatePostViewodel @Inject constructor(
                     communities.addAll(res.data)
                 }
             }
+            if(isLoggedIn.value){
+                joinedCommunities.clear()
+                when (val res = auth.getMe()) {
+                    is Result.Error -> {
+                        error = when (res.error) {
+                            DataError.NetworkError.NO_INTERNET -> "No internet connection."
+                            DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Server is down."
+                            DataError.NetworkError.UNAUTHORIZED -> "Wrong username/password"
+                            DataError.NetworkError.CONFLICT -> "This error shouldn't happen unless something changed in the backend."
+                            DataError.NetworkError.UNKNOWN_ERROR -> "An unknown error has occurred"
+                            DataError.NetworkError.FORBIDDEN -> "Email not verified."
+                            else -> "This error shouldn't happen unless something changed in the backend."
+                        }
+                        error = ""
+                    }
+
+                    is Result.Success -> {
+                        if (res.data.communities.isNotEmpty()) {
+                            res.data.communities.forEach {
+                                when (val result = community.getCommunity(communityName = it.name)) {
+                                    is Result.Error -> {
+                                        Log.d("second join", result.error.toString())
+                                        error = when (result.error) {
+                                            DataError.NetworkError.NO_INTERNET -> "No internet connection."
+                                            DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Server is down."
+                                            DataError.NetworkError.UNAUTHORIZED -> "Wrong username/password"
+                                            DataError.NetworkError.CONFLICT -> "This error shouldn't happen unless something changed in the backend."
+                                            DataError.NetworkError.UNKNOWN_ERROR -> "An unknown error has occurred from finding joined."
+                                            DataError.NetworkError.FORBIDDEN -> "Email not verified."
+                                            else -> "This error shouldn't happen unless something changed in the backend."
+                                        }
+                                        error = ""
+                                    }
+
+                                    is Result.Success -> {
+                                        joinedCommunities.add(result.data)
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
         }
     }
 
     fun uploadTextPost(context: Context) {
         if (title.value.isEmpty()) title = title.copy(error = "Missing title")
         if (content.value.isEmpty()) content = content.copy(error = "Missing content")
-        if (selectedCommunity.value.isEmpty()) selectedCommunity =
-            selectedCommunity.copy(error = "Missing community")
-        if (content.error.isEmpty() && title.error.isEmpty() && selectedCommunity.error.isEmpty()) {
+        if (content.error.isEmpty() && title.error.isEmpty()) {
             viewModelScope.launch(context = Dispatchers.IO) {
                 isPosting = true
                 when (val res = post.upLoadPost(
                     title = title.value,
                     content = content.value,
-                    communityName = selectedCommunity.value,
+                    communityName = selectedCommunity,
                     type = "TEXT",
                     image = uriToFile(context, selectedImageUri)
                 )) {
-
                     is Result.Error -> {
                         isPosting = false
                         error = when (res.error) {
@@ -103,6 +151,7 @@ class CreatePostViewodel @Inject constructor(
                         isPosting = false
                         error = "Success"
                     }
+
                 }
 
             }
@@ -112,8 +161,6 @@ class CreatePostViewodel @Inject constructor(
 
     fun uploadMediaPost(context: Context) {
         if (title.value.isEmpty()) title = title.copy(error = "Missing title")
-        if (selectedCommunity.value.isEmpty()) selectedCommunity =
-            selectedCommunity.copy(error = "Missing community")
         if (selectedImageUri!!.equals(Uri.EMPTY)||selectedImageUri==null) {
             viewModelScope.launch(Dispatchers.IO) {
                 error = "Please choose an image"
@@ -121,14 +168,14 @@ class CreatePostViewodel @Inject constructor(
                 error = ""
             }
         }
-        if (title.error.isEmpty() && selectedCommunity.error.isEmpty() && !selectedImageUri!!.equals(Uri.EMPTY) && selectedImageUri!=null) {
+        if (title.error.isEmpty() && !selectedImageUri!!.equals(Uri.EMPTY) && selectedImageUri!=null) {
             viewModelScope.launch(Dispatchers.IO) {
                 isPosting = true
                 when (val res = post.upLoadPost(
                     title = title.value,
                     content = "",
                     type = "MEDIA",
-                    communityName = selectedCommunity.value,
+                    communityName = selectedCommunity,
                     image = uriToFile(context, selectedImageUri)
                 )) {
                     is Result.Error -> {
