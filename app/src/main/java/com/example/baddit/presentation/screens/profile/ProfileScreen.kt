@@ -105,7 +105,7 @@ fun ProfileScreen(
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
 
-    var isPostSectionSelected by remember { mutableStateOf(true) }
+
 
     if (error.isNotEmpty()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
@@ -113,7 +113,6 @@ fun ProfileScreen(
 
 
     LaunchedEffect(username) {
-        //Log.d("ProfileScreen","Username: "+ username)
         viewModel.fetchUserProfile(username)
         viewModel.refreshPosts(username)
         viewModel.refreshComments(username)
@@ -176,8 +175,8 @@ fun ProfileScreen(
             ) {
                 TextButton(
                     modifier = Modifier
-                        .bottomBorder(3.dp, Color.Blue, isPostSectionSelected),
-                    onClick = { isPostSectionSelected = true }) {
+                        .bottomBorder(3.dp, Color.Blue, viewModel.isPostSectionSelected.value),
+                    onClick = { viewModel.togglePostSection(true) }) {
                     Text(
                         text = "Posts",
                         style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
@@ -186,8 +185,8 @@ fun ProfileScreen(
                 }
                 TextButton(
                     modifier = Modifier
-                        .bottomBorder(3.dp, Color.Blue, !isPostSectionSelected),
-                    onClick = { isPostSectionSelected = false }
+                        .bottomBorder(3.dp, Color.Blue, !viewModel.isPostSectionSelected.value),
+                    onClick = { viewModel.togglePostSection(false) }
                 ) {
                     Text(
                         text = "Comments",
@@ -204,14 +203,14 @@ fun ProfileScreen(
             navigateLogin = { navController.navigate(Login) },
             navigatePost = navigatePost,
             viewModel = viewModel,
-            isPostSectionSelected = isPostSectionSelected,
+            isPostSectionSelected = viewModel.isPostSectionSelected.value,
             navController = navController,
             darkMode = darkMode
         )
         ProfileCommentsSection(
             username = username,
             viewModel = viewModel,
-            isPostSectionSelected = isPostSectionSelected,
+            isPostSectionSelected = viewModel.isPostSectionSelected.value,
             navigateLogin = navigateLogin,
             navigateReply = navigateReply,
             navController = navController,
@@ -570,12 +569,12 @@ fun ProfileCommentsSection(
     darkMode: Boolean
 ) {
 
-    val listState = rememberLazyListState()
-    LaunchedEffect(username, listState) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+    val listStateComments = rememberLazyListState()
+    LaunchedEffect(username, listStateComments) {
+        snapshotFlow { listStateComments.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
                 val lastVisibleItem = visibleItems.lastOrNull()
-                val lastItem = listState.layoutInfo.totalItemsCount - 1
+                val lastItem = listStateComments.layoutInfo.totalItemsCount - 1
                 lastVisibleItem?.index == lastItem
             }
             .distinctUntilChanged()
@@ -586,21 +585,19 @@ fun ProfileCommentsSection(
             }
     }
 
-    val comments = viewModel.comments
-
     AnimatedVisibility(
-        visible = !isPostSectionSelected,
+        visible = !viewModel.isPostSectionSelected.value,
         exit = slideOutHorizontally() + fadeOut(),
         enter = slideInHorizontally()
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshingComment,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listState) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listStateComments) {
                 items(items = viewModel.comments) { it ->
                     CommentCard(
                         details = it,
-                        navigateLogin = navigateLogin,
+                        navigateLogin = {},
                         navigateReply = navigateReply,
                         navigateProfile = {},
                         voteFn = { commentId: String, state: String ->
@@ -610,7 +607,7 @@ fun ProfileCommentsSection(
                             )
                         },
                         isLoggedIn = viewModel.loggedIn.value,
-                        onComponentClick = {navController.navigate(Profile(username = username))},
+                        onComponentClick = {},
                         navigateEdit = { commentId: String, content: String ->
                             navController.navigate(
                                 Editing(
