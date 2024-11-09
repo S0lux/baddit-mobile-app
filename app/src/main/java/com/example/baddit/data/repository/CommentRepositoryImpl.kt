@@ -21,9 +21,10 @@ class CommentRepositoryImpl @Inject constructor(
         postId: String?,
         commentId: String?,
         authorName: String?,
-        cursor: String?
+        cursor: String?,
+        orderByScore: String?
     ): Result<CommentResponseDTO, DataError.NetworkError> {
-        return safeApiCall { badditAPI.getComments(postId, commentId, authorName, cursor) }
+        return safeApiCall { badditAPI.getComments(postId, commentId, authorName, cursor,orderByScore) }
     }
 
     override suspend fun voteComment(

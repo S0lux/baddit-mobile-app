@@ -547,7 +547,8 @@ fun ProfilePostSection(
                                     )
                                 )
                             },
-                            onComponentClick = {}
+                            onComponentClick = {},
+                            navController = navController
                         )
                     }
                 }

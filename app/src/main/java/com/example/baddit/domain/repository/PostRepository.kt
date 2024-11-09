@@ -12,7 +12,8 @@ interface PostRepository {
         communityName: String? = null,
         authorName: String? = null,
         cursor: String? = null,
-        postTitle: String? = null
+        postTitle: String? = null,
+        orderByScore: String? = null
     ): Result<PostResponseDTO, DataError.NetworkError>;
 
     var postCache: SnapshotStateList<MutablePostResponseDTOItem>

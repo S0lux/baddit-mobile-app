@@ -6,13 +6,20 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
@@ -20,8 +27,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -34,8 +43,10 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
+import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.presentation.screens.profile.ProfileViewModel
+import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Search
@@ -50,13 +61,16 @@ fun TopNavigationBar(
     userTopBarState: MutableState<Boolean>,
     showAvatarMenu: MutableState<Boolean>,
     onDrawerClicked: () -> Unit,
-    profileViewModal : ProfileViewModel = hiltViewModel(),
+    profileViewModal: ProfileViewModel = hiltViewModel(),
     viewModel: LoginViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
 ) {
     val navItems = listOf(
         TopNavigationItem(icon = R.drawable.baseline_menu_24, value = LeftSideBar),
-        TopNavigationItem(icon = R.drawable.baseline_search_24, value = Search),
+        TopNavigationItem(icon = R.drawable.baseline_sort_24, value = Search),
     )
+
+    var expanded by remember { mutableStateOf(false) }
 
     val loggedIn by viewModel.loggedIn
 
@@ -94,7 +108,9 @@ fun TopNavigationBar(
                 }
             },
             actions = {
-                IconButton(onClick = { }) {
+                IconButton(onClick = {
+                    expanded = true
+                }) {
                     Icon(
                         painter = painterResource(id = navItems[1].icon),
                         contentDescription = null
@@ -139,6 +155,24 @@ fun TopNavigationBar(
 
             }
         )
+        Box( modifier = Modifier.fillMaxWidth()
+            .wrapContentSize(Alignment.TopEnd))
+        {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Sort By Score") },
+                    onClick = { homeViewModel.refreshPosts("true") }
+                )
+                DropdownMenuItem(
+                    text = { Text("Sort By Date") },
+                    onClick = { homeViewModel.refreshPosts() }
+                )
+            }
+        }
+
     }
 }
 

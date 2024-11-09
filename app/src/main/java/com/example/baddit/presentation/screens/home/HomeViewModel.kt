@@ -32,12 +32,12 @@ class HomeViewModel @Inject constructor(
 
     private var lastPostId: String? = null;
 
-    fun refreshPosts() {
+    fun refreshPosts(orderByScore : String? = null) {
         noMorePosts = false
 
         viewModelScope.launch {
             isRefreshing = true;
-            when (val fetchPosts = postRepository.getPosts()) {
+            when (val fetchPosts = postRepository.getPosts(orderByScore = orderByScore)) {
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -88,6 +88,8 @@ class HomeViewModel @Inject constructor(
             isRefreshing = false;
         }
     }
+
+
 
     init {
         refreshPosts();

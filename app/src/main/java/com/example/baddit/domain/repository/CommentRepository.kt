@@ -9,7 +9,8 @@ interface CommentRepository {
         postId: String?=null,
         commentId: String? = null,
         authorName: String? = null,
-        cursor: String? = null
+        cursor: String? = null,
+        orderByScore:String?=null
     ): Result<CommentResponseDTO, DataError.NetworkError>
 
     suspend fun voteComment(

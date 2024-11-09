@@ -29,14 +29,16 @@ class PostRepositoryImpl @Inject constructor(
         communityName: String?,
         authorName: String?,
         cursor: String?,
-        postTitle: String?
+        postTitle: String?,
+        orderByScore: String?
     ): Result<PostResponseDTO, DataError.NetworkError> {
         val result = safeApiCall<PostResponseDTO, DataError.NetworkError> {
             badditAPI.getPosts(
                 communityName = communityName,
                 authorName = authorName,
                 cursor = cursor,
-                postTitle = postTitle
+                postTitle = postTitle,
+                orderByScore = orderByScore
             )
         }
 
