@@ -57,6 +57,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -203,7 +204,7 @@ fun CommunityDetailScreen(
                             }
 
                             memberList.value.isNotEmpty() -> {
-                                    MembersView(memberList.value, navController)
+                                MembersView(memberList.value, navController)
                             }
 
                             else -> {
@@ -527,8 +528,10 @@ fun MembersView(memberList: ArrayList<Member>, navController: NavController) {
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.textPrimary
                     )
-                    Text(text = member.communityRole,
-                        color = MaterialTheme.colorScheme.textPrimary)
+                    Text(
+                        text = member.communityRole,
+                        color = MaterialTheme.colorScheme.textPrimary
+                    )
 
                 }
             }
@@ -539,4 +542,5 @@ fun MembersView(memberList: ArrayList<Member>, navController: NavController) {
 fun checkModerator(moderatorList: ArrayList<Member>, user: GetMeResponseDTO): Boolean {
     return moderatorList.any { it.userId == user.id }
 }
+
 

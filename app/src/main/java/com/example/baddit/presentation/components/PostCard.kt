@@ -252,7 +252,7 @@ fun PostCard(
             modifier = Modifier
                 .padding(15.dp)
         ) {
-            PostHeader(postDetails = postDetails, navController)
+            PostHeader(postDetails = postDetails, navController, loggedIn, showLoginDialog = { showLoginDialog = true })
 
             PostTitle(title = postDetails.title)
 
@@ -304,7 +304,7 @@ fun handleVote(
 }
 
 @Composable
-fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavController) {
+fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavController, loggedIn: Boolean, showLoginDialog: () -> Unit,) {
     val communityName = postDetails.community?.name.orEmpty()
     val communityLogo = postDetails.community?.logoUrl.orEmpty()
     val authorName = postDetails.author.username
@@ -329,7 +329,12 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavContro
                 navController.navigate(CommunityDetail(communityName))
             }
             else{
-                navController.navigate(Profile(authorName))
+                if(!loggedIn){
+                    showLoginDialog()
+                }
+                else{
+                    navController.navigate(Profile(authorName))
+                }
             }
         }
     ) {
