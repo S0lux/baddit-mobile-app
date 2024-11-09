@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.GifDecoder
@@ -63,7 +64,9 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -91,7 +94,8 @@ fun PostCard(
     deletePostFn: suspend (String) -> Unit,
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
-    onComponentClick:()->Unit
+    onComponentClick:()->Unit,
+    navController: NavController
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -248,7 +252,7 @@ fun PostCard(
             modifier = Modifier
                 .padding(15.dp)
         ) {
-            PostHeader(postDetails = postDetails)
+            PostHeader(postDetails = postDetails, navController)
 
             PostTitle(title = postDetails.title)
 
@@ -300,7 +304,7 @@ fun handleVote(
 }
 
 @Composable
-fun PostHeader(postDetails: MutablePostResponseDTOItem) {
+fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavController) {
     val communityName = postDetails.community?.name.orEmpty()
     val communityLogo = postDetails.community?.logoUrl.orEmpty()
     val authorName = postDetails.author.username
@@ -319,7 +323,15 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem) {
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clickable {
+            if(communityName.isNotEmpty()){
+                navController.navigate(CommunityDetail(communityName))
+            }
+            else{
+                navController.navigate(Profile(authorName))
+            }
+        }
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current).data(logo).build(),

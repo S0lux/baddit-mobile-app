@@ -9,6 +9,7 @@ import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
+import com.example.baddit.data.dto.community.ModerateMemberRequestBody
 import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
@@ -17,6 +18,8 @@ import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.model.comment.CommentResponseDTO
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
+import com.example.baddit.domain.model.community.Members
+import com.example.baddit.domain.model.community.Moderators
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -150,4 +153,22 @@ interface BadditAPI {
     suspend fun updateAvatar(
         @Part avatar: MultipartBody.Part
     ):Response<Unit>
+
+    @GET("v1/communities/{communityName}/members")
+    suspend fun getMembers(@Path("communityName") communityName: String): Response<Members>
+
+    @GET("v1/communities/{communityName}/moderators")
+    suspend fun getModerators(@Path("communityName") communityName: String): Response<Moderators>
+
+    @POST("/v1/communities/{communityName}/moderators")
+    suspend fun moderateMember(
+        @Path("communityName") communityName: String,
+        @Body moderateBody : ModerateMemberRequestBody
+    ): Response<Unit>
+
+    @DELETE("/v1/communities/{communityName}/moderators/{memberName}")
+    suspend fun unModerateMember(
+        @Path("communityName") communityName: String,
+        @Path("memberName") memberName: String
+    ): Response<Unit>
 }

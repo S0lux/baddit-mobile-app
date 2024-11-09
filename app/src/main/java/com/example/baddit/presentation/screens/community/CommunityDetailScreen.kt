@@ -5,9 +5,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,16 +25,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,13 +64,16 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
+import com.example.baddit.domain.model.community.Member
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.screens.profile.bottomBorder
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.EditCommunity
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -86,6 +93,10 @@ fun CommunityDetailScreen(
     val community = viewModel.community
     val error = viewModel.error
     val me = viewModel.me
+    val memberList = viewModel.memberList
+    val isRefreshing = viewModel.isRefreshing
+    val moderatorList = viewModel.moderatorList
+
 
     val loggedIn by viewModel.loggedIn
 
@@ -98,6 +109,8 @@ fun CommunityDetailScreen(
     LaunchedEffect(name) {
         viewModel.fetchCommunity(name)
         viewModel.refreshPosts(name)
+        viewModel.fetchMembers(name)
+        viewModel.fetchModerators(name)
     }
 
 
@@ -115,27 +128,54 @@ fun CommunityDetailScreen(
                     .fillMaxSize()
             ) {
                 BannerCommunity(community.value!!, navController)
-                AvatarCommunity(commmunity = community.value!!, me = me, viewModel, navController, loggedIn)
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                AvatarCommunity(
+                    commmunity = community.value!!,
+                    me = me,
+                    viewModel,
+                    navController,
+                    loggedIn,
+                    moderatorList.value
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(80.dp)
                     ) {
-                        Icon(
-                            Icons.Filled.List,
-                            contentDescription = "",
-                            tint = MaterialTheme.colorScheme.textPrimary
-                        )
+                        TextButton(
+                            modifier = Modifier
+                                .bottomBorder(3.dp, Color.Blue, isPostSectionSelected),
+                            onClick = { isPostSectionSelected = true }) {
+                            Text(
+                                text = "Post",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = MaterialTheme.colorScheme.textPrimary
+                            )
+                        }
+                        TextButton(
+                            modifier = Modifier
+                                .bottomBorder(3.dp, Color.Blue, !isPostSectionSelected),
+                            onClick = { isPostSectionSelected = false }
+                        ) {
+                            Text(
+                                text = "Members",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = MaterialTheme.colorScheme.textPrimary
+                            )
+                        }
+
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Posts",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
+
                 }
                 PostViewCommunity(
                     name = name,
@@ -147,6 +187,31 @@ fun CommunityDetailScreen(
                     navController = navController,
                     darkMode = darkMode
                 )
+
+                if (!isPostSectionSelected) {
+                    Box(modifier = Modifier.padding(10.dp)) {
+                        when {
+                            isRefreshing -> {
+                                CircularProgressIndicator()
+                            }
+
+                            error.isNotEmpty() -> {
+                                Text(
+                                    text = error,
+                                    color = Color.Red,
+                                )
+                            }
+
+                            memberList.value.isNotEmpty() -> {
+                                    MembersView(memberList.value, navController)
+                            }
+
+                            else -> {
+                                Text(text = "No members")
+                            }
+                        }
+                    }
+                }
 
             }
         }
@@ -200,7 +265,8 @@ fun AvatarCommunity(
     me: MutableState<GetMeResponseDTO?>,
     viewModel: CommunityViewModel,
     navController: NavController,
-    loggedIn: Boolean
+    loggedIn: Boolean,
+    moderatorList: ArrayList<Member>
 ) {
     val showLeaveDialog = remember { mutableStateOf(false) }
 
@@ -249,8 +315,12 @@ fun AvatarCommunity(
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        if(loggedIn){
-            if (me.value?.id == commmunity.community.ownerId) {
+        if (loggedIn) {
+            if (me.value?.id == commmunity.community.ownerId || checkModerator(
+                    moderatorList,
+                    me.value!!
+                )
+            ) {
                 OutlinedButton(onClick = {
                     navController.navigate(EditCommunity(commmunity.community.name))
                 }
@@ -269,10 +339,9 @@ fun AvatarCommunity(
                     }
                 }
             }
-        }
-        else{
+        } else {
             OutlinedButton(onClick = { navController.navigate(Login) }) {
-                Text(text = "Log in", color = MaterialTheme.colorScheme.textPrimary )
+                Text(text = "Log in", color = MaterialTheme.colorScheme.textPrimary)
             }
         }
 
@@ -289,7 +358,7 @@ fun PostViewCommunity(
     viewModel: CommunityViewModel,
     isPostSectionSelected: Boolean,
     navController: NavController,
-    darkMode: Boolean
+    darkMode: Boolean,
 ) {
 
     val listState = rememberLazyListState()
@@ -368,7 +437,8 @@ fun PostViewCommunity(
                                     )
                                 )
                             },
-                            onComponentClick = {}
+                            onComponentClick = {},
+                            navController = navController
                         )
                     }
                 }
@@ -423,5 +493,50 @@ fun LeaveCommunityDialog(
             }
         }
     )
+}
+
+@Composable
+fun MembersView(memberList: ArrayList<Member>, navController: NavController) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.semantics { traversalIndex = 1f },
+    ) {
+        items(memberList) { member ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clickable { navController.navigate(Profile(member.username)) }
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(member.avatarUrl).build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .height(36.dp)
+                        .aspectRatio(1f),
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        member.username,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.textPrimary
+                    )
+                    Text(text = member.communityRole,
+                        color = MaterialTheme.colorScheme.textPrimary)
+
+                }
+            }
+        }
+    }
+}
+
+fun checkModerator(moderatorList: ArrayList<Member>, user: GetMeResponseDTO): Boolean {
+    return moderatorList.any { it.userId == user.id }
 }
 

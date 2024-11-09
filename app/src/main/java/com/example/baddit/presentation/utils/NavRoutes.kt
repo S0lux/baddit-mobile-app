@@ -78,3 +78,8 @@ data class CommunityDetail(
 data class EditCommunity(
     val name: String
 )
+
+@Serializable
+data class AddModerator(
+    val name: String
+)

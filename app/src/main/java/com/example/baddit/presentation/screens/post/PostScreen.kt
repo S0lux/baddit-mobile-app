@@ -97,7 +97,8 @@ fun PostScreen(
                             )
                         )
                     },
-                    onComponentClick = onComponentClick
+                    onComponentClick = onComponentClick,
+                    navController = navController
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))

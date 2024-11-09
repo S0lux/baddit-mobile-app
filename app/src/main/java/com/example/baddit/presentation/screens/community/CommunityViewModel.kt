@@ -9,6 +9,8 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
+import com.example.baddit.domain.model.community.Members
+import com.example.baddit.domain.model.community.Moderators
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommunityRepository
@@ -27,8 +29,11 @@ class CommunityViewModel @Inject constructor(
 ) : ViewModel() {
 
     val communityList = mutableStateOf<GetCommunityListResponseDTO>(GetCommunityListResponseDTO())
-
     val community = mutableStateOf<GetACommunityResponseDTO?>(null)
+
+    val memberList = mutableStateOf(Members())
+    val moderatorList = mutableStateOf(Moderators())
+
 
     val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
@@ -166,6 +171,7 @@ class CommunityViewModel @Inject constructor(
                 is Result.Success -> {
                     error = ""
                     fetchCommunity(communityName)
+                    fetchMembers(communityName)
                 }
             }
         }
@@ -189,6 +195,7 @@ class CommunityViewModel @Inject constructor(
                 is Result.Success -> {
                     error = ""
                     fetchCommunity(communityName)
+                    fetchMembers(communityName)
                 }
             }
         }
@@ -275,7 +282,7 @@ class CommunityViewModel @Inject constructor(
                 is Result.Success -> {
                     posts.clear()
                     error = ""
-                    if(!fetchPosts.data.isEmpty())
+                    if (!fetchPosts.data.isEmpty())
                         lastPostId = fetchPosts.data.last().id
                     posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
                 }
@@ -284,12 +291,13 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    fun loadMorePosts(communityName: String){
+    fun loadMorePosts(communityName: String) {
         if (endReached)
             return;
         viewModelScope.launch {
             isRefreshing = true;
-            when (val fetchPosts = postRepository.getPosts(cursor = lastPostId , communityName = communityName)) {
+            when (val fetchPosts =
+                postRepository.getPosts(cursor = lastPostId, communityName = communityName)) {
                 is Result.Error -> {
                     error = when (fetchPosts.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -303,13 +311,104 @@ class CommunityViewModel @Inject constructor(
                     if (fetchPosts.data.isNotEmpty()) {
                         lastPostId = fetchPosts.data.last().id
                         posts.addAll(fetchPosts.data.map { it.toMutablePostResponseDTOItem() })
-                    }
-                    else {
+                    } else {
                         endReached = true
                     }
                 }
             }
             isRefreshing = false;
+        }
+    }
+
+    fun fetchMembers(communityName: String) {
+        viewModelScope.launch {
+            isLoading = true
+            when (val result = communityRepository.getMembers(communityName)) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                    isLoading = false
+                }
+
+                is Result.Success -> {
+                    error = ""
+                    memberList.value = result.data
+                    isLoading = false
+                }
+            }
+        }
+    }
+
+    fun fetchModerators(communityName: String) {
+        viewModelScope.launch {
+            isLoading = true
+            when (val result = communityRepository.getModerators(communityName)) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                    isLoading = false
+                }
+
+                is Result.Success -> {
+                    moderatorList.value = result.data
+                    error = ""
+                    isLoading = false
+                }
+            }
+        }
+    }
+
+    fun moderateMember(communityName: String, memberName: String) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = communityRepository.moderateMember(communityName, memberName)
+            isLoading = false
+            when (result) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.CONFLICT -> "User already in this community"
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    error = ""
+                    fetchCommunity(communityName)
+                    fetchMembers(communityName)
+                }
+            }
+        }
+    }
+
+    fun unModerateMember(communityName: String, memberName: String) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = communityRepository.unModerateMember(communityName, memberName)
+            isLoading = false
+            when (result) {
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.CONFLICT -> "User already in this community"
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown network error has occurred"
+                    }
+                }
+
+                is Result.Success -> {
+                    error = ""
+                    fetchCommunity(communityName)
+                    fetchMembers(communityName)
+                }
+            }
         }
     }
 

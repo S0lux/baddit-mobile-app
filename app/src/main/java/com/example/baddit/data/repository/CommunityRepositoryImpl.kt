@@ -3,12 +3,15 @@ package com.example.baddit.data.repository
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.RegisterRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
+import com.example.baddit.data.dto.community.ModerateMemberRequestBody
 import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
+import com.example.baddit.domain.model.community.Members
+import com.example.baddit.domain.model.community.Moderators
 import com.example.baddit.domain.repository.CommunityRepository
 import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -69,5 +72,27 @@ class CommunityRepositoryImpl @Inject constructor(
 
     override suspend fun deleteCommunity(communityName: String): Result<Unit, DataError.NetworkError> {
         return safeApiCall { badditAPI.deleteCommunity(communityName) }
+    }
+
+    override suspend fun getMembers(communityName: String): Result<Members, DataError.NetworkError> {
+        return safeApiCall { badditAPI.getMembers(communityName) }
+    }
+
+    override suspend fun getModerators(communityName: String): Result<Moderators, DataError.NetworkError> {
+        return safeApiCall { badditAPI.getModerators(communityName) }
+    }
+
+    override suspend fun moderateMember(
+        communityName: String,
+        memberName: String
+    ): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.moderateMember(communityName, ModerateMemberRequestBody(memberName)) }
+    }
+
+    override suspend fun unModerateMember(
+        communityName: String,
+        memberName: String
+    ): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.unModerateMember(communityName, memberName) }
     }
 }

@@ -49,6 +49,7 @@ import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
 import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.comment.CommentScreen
+import com.example.baddit.presentation.screens.community.AddModeratorScreen
 import com.example.baddit.presentation.screens.community.CommunityDetailScreen
 import com.example.baddit.presentation.screens.community.CommunityScreen
 import com.example.baddit.presentation.screens.community.EditCommunityScreen
@@ -63,6 +64,7 @@ import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.setting.SettingScreen
 import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
+import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
@@ -461,6 +463,13 @@ class MainActivity : ComponentActivity() {
                                             userTopBarState.value = true
                                             val name = it.arguments?.getString("name");
                                             EditCommunityScreen(name = name!!, navController)
+                                        }
+                                        composable<AddModerator> {
+                                            selectedBottomNavigation = -1
+                                            barState.value = false
+                                            userTopBarState.value = true
+                                            val name = it.arguments?.getString("name");
+                                            AddModeratorScreen(name = name!!, navController = navController )
                                         }
                                     }
                                 }

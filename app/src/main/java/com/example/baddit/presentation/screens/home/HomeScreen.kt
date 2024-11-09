@@ -143,7 +143,8 @@ fun HomeScreen(
                                 )
                             )
                         },
-                        onComponentClick = onComponentClick
+                        onComponentClick = onComponentClick,
+                        navController = navController
                     )
                 }
             }
