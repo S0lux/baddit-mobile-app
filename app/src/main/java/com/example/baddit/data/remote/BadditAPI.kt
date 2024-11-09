@@ -42,7 +42,8 @@ interface BadditAPI {
         @Query("communityName") communityName: String? = null,
         @Query("authorName") authorName: String? = null,
         @Query("cursor") cursor: String? = null,
-        @Query("postTitle") postTitle: String? = null
+        @Query("postTitle") postTitle: String? = null,
+        @Query("orderByScore") orderByScore: String? = null
     ): Response<PostResponseDTO>
 
     @GET("/v1/posts")
@@ -89,7 +90,8 @@ interface BadditAPI {
         @Query("postId") postId: String?=null,
         @Query("commentId") commentId: String? = null,
         @Query("authorName") authorName: String? = null,
-        @Query("cursor") cursor: String? = null
+        @Query("cursor") cursor: String? = null,
+        @Query("orderByScore") orderByScore: String? = null,
     ): Response<CommentResponseDTO>
 
     // community

@@ -497,7 +497,6 @@ fun PostActions(
                             showLoginDialog()
                             return@Button
                         }
-
                         navigateReply(postId)
                         showModal = false
                     },
@@ -520,7 +519,6 @@ fun PostActions(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(text = "Reply")
                     }
-
                 }
                 if (loggedInUser?.username == postAuthor && postType != "MEDIA") {
                     Button(
