@@ -203,6 +203,7 @@ fun EditCommunityScreen(
 
                 Box(modifier = Modifier.offset(x = 500.dp, y = 0.dp)){
                     DropdownMenu(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
