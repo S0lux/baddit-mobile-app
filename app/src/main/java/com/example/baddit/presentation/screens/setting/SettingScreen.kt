@@ -2,6 +2,9 @@ package com.example.baddit.presentation.screens.setting
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,9 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 
 import androidx.compose.material3.ButtonDefaults
@@ -57,7 +62,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.wear.compose.material3.OutlinedButton
 import com.example.baddit.R
 import com.example.baddit.domain.error.Result
@@ -94,7 +103,6 @@ fun SettingScreen(
     val themes = listOf("Dark", "Light", "System")
 
     Column {
-
         TopAppBar(
             title = {
                 val titleText = "Settings"
@@ -130,6 +138,10 @@ fun SettingScreen(
 
         val openConfirmDialog = remember { mutableStateOf(false) }
 
+        val openBugReportDialog = remember { mutableStateOf(false) }
+
+        val openContentPolicyDialog = remember { mutableStateOf(false) }
+
         // Dialog to select theme
         if (openThemeDialog.value) {
             Dialog(onDismissRequest = { openThemeDialog.value = false }) {
@@ -137,7 +149,7 @@ fun SettingScreen(
                     modifier = Modifier
                         .wrapContentHeight()
                         .fillMaxWidth(0.85f)
-                        .padding(start = 14.dp, top = 14.dp, end = 14.dp, bottom =18.dp)
+                        .padding(start = 14.dp, top = 14.dp, end = 14.dp, bottom = 18.dp)
                         .align(Alignment.CenterHorizontally),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
 
@@ -149,8 +161,9 @@ fun SettingScreen(
                         Text(
                             text = "Select Theme",
                             modifier = Modifier
-                                .padding(start = 10.dp, end = 10.dp,top = 15.dp ,bottom = 10.dp)
-                                .align(Alignment.CenterHorizontally).fillMaxWidth(),
+                                .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 10.dp)
+                                .align(Alignment.CenterHorizontally)
+                                .fillMaxWidth(),
                             color = MaterialTheme.colorScheme.textPrimary,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
@@ -248,8 +261,16 @@ fun SettingScreen(
                             supportingText = viewModel.confirmPasswordState.error
                         )
 
-                        if(viewModel.error.value.isNotEmpty()){
-                            Text(text = viewModel.error.value, color = Color.Red, modifier = Modifier.fillMaxWidth().padding(start = 20.dp), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        if (viewModel.error.value.isNotEmpty()) {
+                            Text(
+                                text = viewModel.error.value,
+                                color = Color.Red,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 20.dp),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
 
                         Row(
@@ -287,6 +308,8 @@ fun SettingScreen(
                                         if (result is Result.Success) {
                                             openPasswordDialog.value = false;
                                             openConfirmDialog.value = true;
+                                            viewModel.confirmDialogText.value = "Your password has been changed successfully"
+                                            viewModel.confirmDialogTitle.value = "Password Changed"
                                         }
                                     }
                                 },
@@ -317,10 +340,11 @@ fun SettingScreen(
 
         //Confirm dialog
         if (openConfirmDialog.value) {
-            AlertDialog(modifier = Modifier.wrapContentHeight(),
+            AlertDialog(
+                modifier = Modifier.wrapContentHeight(),
                 title = {
                     Text(
-                        text = "Password Changed",
+                        text = viewModel.confirmDialogTitle.value,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .fillMaxWidth(),
@@ -333,7 +357,10 @@ fun SettingScreen(
                             start = 20.dp,
                             top = 10.dp,
                             end = 20.dp,
-                        ), text = "Your password has been changed successfully", fontSize = 18.sp, textAlign = TextAlign.Center
+                        ),
+                        text = viewModel.confirmDialogText.value,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
                     )
                 },
                 onDismissRequest = { openConfirmDialog.value = false },
@@ -362,21 +389,91 @@ fun SettingScreen(
             )
         }
 
-
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
-                .fillMaxWidth()
-                .height(20.dp), verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "General Setting",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.textPrimary,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.padding(start = 13.dp)
+        // Dialog to report a bug
+        if (openBugReportDialog.value) {
+            AlertDialog(
+                onDismissRequest = { openBugReportDialog.value = false },
+                confirmButton = {TextButton(onClick = {
+                    openBugReportDialog.value = false
+                    viewModel.confirmDialogText.value = "Thank you for your feedback"
+                    viewModel.confirmDialogTitle.value = "Report Sent"
+                    viewModel.reportBugTitleState.value = ""
+                    viewModel.reportBugDesState.value = ""
+                    openConfirmDialog.value = true
+                }, enabled = viewModel.reportBugTitleState.value.isNotEmpty()){
+                    Text("Sent", color = MaterialTheme.colorScheme.textPrimary)
+                }},
+                title = { Text(text = "Bug Report", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+                text = { Column {
+                    Text("Title: ", modifier = Modifier.padding(10.dp))
+                    TextField(value = viewModel.reportBugTitleState.value, onValueChange = {text -> viewModel.setReportBugTitle(text)}, colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = MaterialTheme.colorScheme.appBlue,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedLabelColor = MaterialTheme.colorScheme.appBlue,
+                        focusedContainerColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.textPrimary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
+                        errorContainerColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.textPrimary,
+                    ))
+                    Text("Description: ", modifier = Modifier.padding(10.dp))
+                    TextField(value = viewModel.reportBugDesState.value, onValueChange = {text -> viewModel.setReportBugDes(text)}, colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = MaterialTheme.colorScheme.appBlue,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedLabelColor = MaterialTheme.colorScheme.appBlue,
+                        focusedContainerColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.textPrimary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
+                        errorContainerColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.textPrimary,))
+                } },
+                shape = RoundedCornerShape(10.dp),
+                containerColor = MaterialTheme.colorScheme.background
             )
         }
+
+        if (openContentPolicyDialog.value) {
+            AlertDialog(
+                onDismissRequest = { openContentPolicyDialog.value = false },
+                confirmButton = {TextButton(onClick = { openContentPolicyDialog.value = false }) {
+                    Text("Confirm", color = MaterialTheme.colorScheme.textPrimary)
+                }},
+                title = { Text(text = "Content Policy", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+                text = { Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("1: Prohibition of Hate Speech and Harassment:\n")
+                    }
+                    append("\nContent that promotes violence or hatred against individuals or groups based on attributes such as race, ethnicity, religion, gender, sexual orientation, disability, or nationality is not allowed. Harassment, bullying, and threats are also strictly prohibited.\n\n")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("2: Ban on Explicit Content:\n")
+                    }
+                    append("\nPosting sexually explicit content, including pornography, is prohibited. This policy also includes the sharing of graphic violence, gore, and other disturbing imagery that is intended to shock or disgust.\n\n")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("3: No Illegal Activities:\n")
+                    }
+                    append("\nContent that promotes, encourages, or facilitates illegal activities is banned. This includes drug trafficking, human trafficking, illegal weapons sales, and any form of criminal activity.\n\n")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("4: Protection of Intellectual Property:\n")
+                    }
+                    append("\nContent that infringes on someone else's intellectual property rights, such as copyright or trademark violations, is not allowed. Users must ensure they have the necessary rights to share any content they post.\n\n")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("5: Misinformation and False Information:\n")
+                    }
+                    append("\nSpreading false information, particularly that which can cause harm, such as health-related misinformation (e.g., false medical advice), or misinformation affecting public safety and elections, is prohibited.")
+                }) }},
+                shape = RoundedCornerShape(10.dp),
+                containerColor = MaterialTheme.colorScheme.background
+                
+            )
+        }
+
+
+        CustomDivider(label = "General Setting")
 
         val icon = if (darkTheme == true) {
             R.drawable.baseline_dark_mode_24
@@ -389,33 +486,47 @@ fun SettingScreen(
             text = "Theme",
             onClick = { openThemeDialog.value = true })
 
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
-                .fillMaxWidth()
-                .height(20.dp), verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Account Setting",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.textPrimary,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.padding(start = 13.dp)
-            )
-        }
+        CustomDivider(label = "Account Setting")
 
         SettingItem(
             icon = painterResource(id = R.drawable.key),
             text = "Change Password",
             onClick = { openPasswordDialog.value = true })
 
+        CustomDivider(label = "Other")
+
         SettingItem(
-            icon = painterResource(id = R.drawable.baseline_account_box_24),
-            text = "Update User Avatar (WIP)",
-            onClick = { })
+            icon = painterResource(id = R.drawable.baseline_bug_report_24),
+            text = "Bug Report",
+            onClick = { openBugReportDialog.value = true })
+
+        SettingItem(
+            icon = painterResource(id = R.drawable.baseline_policy_24),
+            text = "Content Policy",
+            onClick = { openContentPolicyDialog.value = true })
+
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomDivider(label: String) {
+    Row(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
+            .fillMaxWidth()
+            .height(20.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.textPrimary,
+            fontWeight = FontWeight.Light,
+            modifier = Modifier.padding(start = 13.dp)
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

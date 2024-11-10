@@ -31,6 +31,27 @@ class SettingViewModel @Inject constructor(
     var confirmPasswordState by mutableStateOf(FieldState())
         private set
 
+    var reportBugTitleState by mutableStateOf(FieldState())
+        private set
+
+    var reportBugDesState by mutableStateOf(FieldState())
+        private set
+
+    var confirmDialogText = mutableStateOf("");
+    var confirmDialogTitle = mutableStateOf("");
+
+    fun setReportBugTitle(content: String){
+        reportBugTitleState = reportBugTitleState.copy(value = content, error = validateEmpty(content))
+    }
+
+    fun setReportBugDes(content: String){
+        reportBugDesState = reportBugDesState.copy(value = content)
+    }
+
+    private fun validateEmpty(input: String): String {
+        return if (input.length <= 0) "Please fill this field" else ""
+    }
+
     var newPassword = mutableStateOf(FieldState());
     var checkPassword= mutableStateOf(FieldState());
     fun setOldPassword(content: String){

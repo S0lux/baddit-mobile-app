@@ -1,5 +1,7 @@
 package com.example.baddit.presentation.screens.post
 
+import androidx.compose.foundation.Indication
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,10 +9,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -22,6 +29,8 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.ui.theme.CustomTheme.appBlue
+import com.example.baddit.ui.theme.CustomTheme.appOrange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +39,7 @@ fun PostScreen(
     navReply: (String, String) -> Unit,
     viewModel: PostViewModel = hiltViewModel(),
     darkMode: Boolean,
-    onComponentClick:() -> Unit,
+    onComponentClick: () -> Unit,
 ) {
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
@@ -118,13 +127,21 @@ fun PostScreen(
                     navigateReply = navReply,
                     navController = navController,
                     onComponentClick = onComponentClick,
-                    navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
-                        postId = null,
-                        commentContent = content,
-                        commentId = commentId,
-                        darkMode = darkMode
-                    )) },
-                    deleteFn = { commentId: String -> viewModel.commentRepository.deleteComment(commentId) },
+                    navigateEdit = { commentId: String, content: String ->
+                        navController.navigate(
+                            Editing(
+                                postId = null,
+                                commentContent = content,
+                                commentId = commentId,
+                                darkMode = darkMode
+                            )
+                        )
+                    },
+                    deleteFn = { commentId: String ->
+                        viewModel.commentRepository.deleteComment(
+                            commentId
+                        )
+                    },
                     loggedInUser = viewModel.authRepository.currentUser.value
                 )
             }
