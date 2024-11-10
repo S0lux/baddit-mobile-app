@@ -116,7 +116,7 @@ fun PostScreen(
                     isLoggedIn = viewModel.isLoggedIn,
                     navigateLogin = { navController.navigate(Login) },
                     navigateReply = navReply,
-                    navigateProfile = {navController.navigate(Profile(username = it.author.username))},
+                    navController = navController,
                     onComponentClick = onComponentClick,
                     navigateEdit = { commentId: String, content: String -> navController.navigate(Editing(
                         postId = null,

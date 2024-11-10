@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
@@ -57,6 +58,7 @@ import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.comment.Author
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
+import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
@@ -78,7 +80,7 @@ fun CommentCard(
     level: Int = 1,
     navigateLogin: () -> Unit,
     navigateReply: (String, String) -> Unit,
-    navigateProfile: () -> Unit,
+    navController: NavController? = null,
     voteFn: suspend (String, String) -> Result<Unit, DataError.NetworkError>,
     isLoggedIn: Boolean = false,
     onComponentClick: () -> Unit,
@@ -222,7 +224,7 @@ fun CommentCard(
                         CommentMeta(
                             authorName = details.author.username,
                             avatarUrl = details.author.avatarUrl,
-                            navigateProfile = navigateProfile,
+                            navigateProfile = {navController!!.navigate(Profile(username = details.author.username))},
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
@@ -263,7 +265,7 @@ fun CommentCard(
                     level = level + 1,
                     voteFn = voteFn,
                     navigateLogin = navigateLogin,
-                    navigateProfile = navigateProfile,
+                    navController = navController,
                     isLoggedIn = isLoggedIn,
                     navigateReply = navigateReply,
                     onComponentClick = onComponentClick,
@@ -707,7 +709,6 @@ fun CommentCardPreview() {
                 voteFn = { a: String, b: String -> Result.Error(DataError.NetworkError.INTERNAL_SERVER_ERROR) },
                 navigateLogin = { },
                 navigateReply = { a: String, b: String -> Unit },
-                navigateProfile = {},
                 onComponentClick = {},
                 navigateEdit = { a: String, b: String -> /* TODO() */ },
                 deleteFn = { Result.Success(Unit) },
