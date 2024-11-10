@@ -222,9 +222,11 @@ fun CommentCard(
                             .padding(start = 0.dp, top = 8.dp, bottom = 8.dp, end = 5.dp)
                     ) {
                         CommentMeta(
+                            isLoggedIn = isLoggedIn,
                             authorName = details.author.username,
                             avatarUrl = details.author.avatarUrl,
-                            navigateProfile = {navController!!.navigate(Profile(username = details.author.username))},
+                            showLoginPrompt = { showLoginDialog = true },
+                            navigateProfile = { navController!!.navigate(Profile(username = details.author.username)) },
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
@@ -303,6 +305,8 @@ fun CommentHierarchyIndicator(level: Int) {
 
 @Composable
 fun CommentMeta(
+    isLoggedIn: Boolean,
+    showLoginPrompt: () -> Unit,
     authorName: String,
     avatarUrl: String,
     navigateProfile: () -> Unit,
@@ -325,10 +329,16 @@ fun CommentMeta(
         Box(
             modifier = Modifier
                 .defaultMinSize(25.dp)
-                .clickable(
-                    onClick = navigateProfile
-                ),
-            ) {
+                .clickable {
+                    if (isDeleted) {
+
+                    } else if (!isLoggedIn) {
+                        showLoginPrompt()
+                    } else {
+                        navigateProfile
+                    }
+                }
+        ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(avatarUrl)
