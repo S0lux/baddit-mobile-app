@@ -600,7 +600,6 @@ fun ProfileCommentsSection(
                         details = it,
                         navigateLogin = {},
                         navigateReply = navigateReply,
-                        navigateProfile = {},
                         voteFn = { commentId: String, state: String ->
                             viewModel.commentRepository.voteComment(
                                 commentId,

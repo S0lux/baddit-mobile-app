@@ -54,7 +54,7 @@ class ProfileViewModel @Inject constructor(
 
     var isUpdating by mutableStateOf(false)
 
-    val isPostSectionSelected = mutableStateOf(false)
+    val isPostSectionSelected = mutableStateOf(true)
 
     fun togglePostSection(boolean: Boolean) {
         viewModelScope.launch {
