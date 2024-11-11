@@ -35,11 +35,11 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 fun CreatePostBottomSheet(
     onDismissRequest: () -> Unit,
     sheetState: SheetState,
-    viewmodel: CreatePostViewodel = hiltViewModel(),
     navController: NavHostController
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        containerColor = MaterialTheme.colorScheme.background,
         sheetState = sheetState,
         modifier = Modifier
             .fillMaxWidth()

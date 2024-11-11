@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
@@ -156,8 +157,8 @@ fun TopNavigationBar(
 
             }
         )
-        Box( modifier = Modifier.fillMaxWidth()
-            .wrapContentSize(Alignment.TopEnd))
+        Box(modifier = Modifier.fillMaxWidth()
+            .wrapContentSize(Alignment.TopEnd).padding(end = 50.dp))
         {
             DropdownMenu(
                 modifier = Modifier.background(MaterialTheme.colorScheme.background),
