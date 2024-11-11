@@ -60,6 +60,7 @@ import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.community.MutableCommunityResponseDTOItem
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -113,6 +114,7 @@ fun BodyBottomSheet(
                     },
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
+                    colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
                 ) {
                     SearchListCommunity(filteredCommunities, navController)
                 }

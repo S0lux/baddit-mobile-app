@@ -4,8 +4,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,9 +61,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.wear.compose.material3.TextButtonDefaults
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
@@ -76,6 +80,7 @@ import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -140,7 +145,6 @@ fun CommunityDetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
                         .background(MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -149,26 +153,35 @@ fun CommunityDetailScreen(
                     ) {
                         TextButton(
                             modifier = Modifier
-                                .bottomBorder(3.dp, Color.Blue, isPostSectionSelected),
-                            onClick = { isPostSectionSelected = true }) {
+                                .bottomBorder(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.neutralGray,
+                                    isPostSectionSelected
+                                ),
+                            shape = RoundedCornerShape(10.dp),
+                            onClick = { isPostSectionSelected = true },) {
                             Text(
                                 text = "Post",
                                 style = TextStyle(
-                                    fontSize = 20.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold
                                 ),
-                                color = MaterialTheme.colorScheme.textPrimary
+                                color = MaterialTheme.colorScheme.textPrimary,
                             )
                         }
                         TextButton(
                             modifier = Modifier
-                                .bottomBorder(3.dp, Color.Blue, !isPostSectionSelected),
+                                .bottomBorder(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.neutralGray,
+                                    !isPostSectionSelected
+                                ),
                             onClick = { isPostSectionSelected = false }
                         ) {
                             Text(
                                 text = "Members",
                                 style = TextStyle(
-                                    fontSize = 20.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold
                                 ),
                                 color = MaterialTheme.colorScheme.textPrimary
@@ -224,7 +237,7 @@ fun CommunityDetailScreen(
 }
 
 @Composable
-fun BannerCommunity(commmunity: GetACommunityResponseDTO, navController: NavController) {
+fun BannerCommunity(community: GetACommunityResponseDTO, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,7 +246,7 @@ fun BannerCommunity(commmunity: GetACommunityResponseDTO, navController: NavCont
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(commmunity.community.bannerUrl).build(),
+                .data(community.community.bannerUrl).build(),
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
