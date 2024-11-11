@@ -122,6 +122,8 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val interactionSource = remember { MutableInteractionSource() }
 
+            val sidebarEnabled = remember { mutableStateOf(true) }
+
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
                     localThemes.readDarkTheme().collect {
@@ -173,7 +175,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 navController = navController,
                                 drawerState =  drawerState)
-                        }, drawerState = drawerState)
+                        }, drawerState = drawerState,
+                            gesturesEnabled = sidebarEnabled.value)
                         {
                             Scaffold(
                                 modifier = Modifier.clickable(
@@ -247,6 +250,7 @@ class MainActivity : ComponentActivity() {
                                             selectedBottomNavigation = 0
                                             barState.value = true
                                             userTopBarState.value = false
+                                            sidebarEnabled.value = true
 
                                             activeFAB = FAButtons.POST_CREATE
                                             HomeScreen(
@@ -261,6 +265,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         composable<Community> {
+                                            sidebarEnabled.value = true
                                             selectedBottomNavigation = 1
                                             barState.value = true
                                             userTopBarState.value = true
@@ -269,6 +274,7 @@ class MainActivity : ComponentActivity() {
                                             CommunityScreen(navController)
                                         }
                                         composable<Profile> {
+                                            sidebarEnabled.value = true
                                             selectedBottomNavigation = -1
                                             barState.value = true
                                             userTopBarState.value = true
@@ -302,6 +308,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<CreateTextPost> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
 
                                             activeFAB = null
                                             barState.value = false
@@ -315,6 +322,7 @@ class MainActivity : ComponentActivity() {
 
                                         composable<CreateMediaPost> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
 
                                             activeFAB = null
                                             barState.value = false
@@ -327,6 +335,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<Post> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = true
 
                                             activeFAB = FAButtons.POST_REPLY
                                             barState.value = true
@@ -357,6 +366,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<Setting> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
 
                                             activeFAB = null
                                             barState.value = false
@@ -370,6 +380,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<Comment> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
 
                                             activeFAB = null
                                             barState.value = false
@@ -391,6 +402,7 @@ class MainActivity : ComponentActivity() {
                                     navigation<Auth>(startDestination = Login) {
                                         composable<SignUp> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
 
                                             barState.value = false;
                                             userTopBarState.value = false;
@@ -402,6 +414,8 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<Login> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
+
 
                                             barState.value = false;
                                             userTopBarState.value = false;
@@ -417,6 +431,8 @@ class MainActivity : ComponentActivity() {
                                                     "https://baddit.life/auth?emailToken={token}"
                                             })
                                         ) {
+                                            sidebarEnabled.value = false
+
                                             selectedBottomNavigation = -1
                                             barState.value = false;
                                             userTopBarState.value = false;
@@ -431,6 +447,8 @@ class MainActivity : ComponentActivity() {
                                             selectedBottomNavigation = -1
                                             barState.value = true
                                             userTopBarState.value = true
+                                            sidebarEnabled.value = true
+
 
                                             val name = it.arguments?.getString("name");
                                             CommunityDetailScreen(
@@ -459,6 +477,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<EditCommunity> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
                                             barState.value = false
                                             userTopBarState.value = true
                                             val name = it.arguments?.getString("name");
@@ -466,6 +485,8 @@ class MainActivity : ComponentActivity() {
                                         }
                                         composable<AddModerator> {
                                             selectedBottomNavigation = -1
+                                            sidebarEnabled.value = false
+
                                             barState.value = false
                                             userTopBarState.value = true
                                             val name = it.arguments?.getString("name");
