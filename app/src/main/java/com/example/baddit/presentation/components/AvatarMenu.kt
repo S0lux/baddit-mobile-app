@@ -42,6 +42,7 @@ import com.example.baddit.R
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.remember
+import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavHostController
 import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.utils.Home
@@ -118,7 +119,8 @@ fun AvatarMenu(
                                         modifier = Modifier
                                             .height(50.dp)
                                             .aspectRatio(1f)
-                                            .clip(CircleShape)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
                                 } else {
                                     AsyncImage(

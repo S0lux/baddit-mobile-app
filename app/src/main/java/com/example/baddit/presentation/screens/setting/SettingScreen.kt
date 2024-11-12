@@ -415,7 +415,7 @@ fun SettingScreen(
                         unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
                         errorContainerColor = Color.Transparent,
                         cursorColor = MaterialTheme.colorScheme.textPrimary,
-                    ))
+                    ), placeholder = {Text("Enter title")})
                     Text("Description: ", modifier = Modifier.padding(10.dp))
                     TextField(value = viewModel.reportBugDesState.value, onValueChange = {text -> viewModel.setReportBugDes(text)}, colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = MaterialTheme.colorScheme.appBlue,
@@ -425,7 +425,7 @@ fun SettingScreen(
                         focusedTextColor = MaterialTheme.colorScheme.textPrimary,
                         unfocusedTextColor = MaterialTheme.colorScheme.textPrimary,
                         errorContainerColor = Color.Transparent,
-                        cursorColor = MaterialTheme.colorScheme.textPrimary,))
+                        cursorColor = MaterialTheme.colorScheme.textPrimary,), placeholder = {Text("Enter description")})
                 } },
                 shape = RoundedCornerShape(10.dp),
                 containerColor = MaterialTheme.colorScheme.background
@@ -516,14 +516,14 @@ fun CustomDivider(label: String) {
         modifier = Modifier
             .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
             .fillMaxWidth()
-            .height(20.dp), verticalAlignment = Alignment.CenterVertically
+            .height(23.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.textPrimary,
             fontWeight = FontWeight.Light,
-            modifier = Modifier.padding(start = 13.dp)
+            modifier = Modifier.padding(start = 13.dp),
         )
     }
 }
