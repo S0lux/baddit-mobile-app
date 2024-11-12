@@ -67,13 +67,17 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.Member
+import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.errorRed
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -534,14 +538,15 @@ fun EditCommunityScreen(
                     color = MaterialTheme.colorScheme.textPrimary
                 )
             },
+            shape = RoundedCornerShape(10.dp),
+            containerColor = MaterialTheme.colorScheme.background,
             confirmButton = {
                 TextButton(
                     onClick = {
                         saveCompleted = false
                     },
-                    colors = ButtonDefaults.buttonColors(Color.Blue)
                 ) {
-                    Text("OK", color = MaterialTheme.colorScheme.textPrimary)
+                    Text("OK", color = MaterialTheme.colorScheme.mutedAppBlue)
                 }
             }
         )
@@ -561,15 +566,16 @@ fun EditCommunityScreen(
                     color = MaterialTheme.colorScheme.textPrimary
                 )
             },
+            shape = RoundedCornerShape(10.dp),
+            containerColor = MaterialTheme.colorScheme.background,
             confirmButton = {
                 TextButton(
                     onClick = {
                         isCommunityDeleted = false
                         navController.navigate(Community)
                     },
-                    colors = ButtonDefaults.buttonColors(Color.Blue)
                 ) {
-                    Text("OK", color = MaterialTheme.colorScheme.textPrimary)
+                    Text("OK", color = MaterialTheme.colorScheme.mutedAppBlue)
                 }
             }
         )
@@ -583,112 +589,19 @@ fun formatDate(dateString: String?): String {
     return zonedDateTime.format(formatter)
 }
 
+
 @Composable
 fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Confirm Deletion", color = MaterialTheme.colorScheme.textPrimary) },
-        text = {
-            Text(
-                "Are you sure you want to delete this community? This action cannot be undone.",
-                color = MaterialTheme.colorScheme.textPrimary
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(Color.Red)
-            ) {
-                Text("Delete", color = MaterialTheme.colorScheme.textPrimary)
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(Color.Blue)
-            ) {
-                Text("Cancel", color = MaterialTheme.colorScheme.textPrimary)
-            }
-        }
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun xem() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Box() {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(
-                            Color(0xFFF44336),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(5.dp)
-                        .clickable { /* Xử lý sự kiện khi nhấn */ }
-
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.textPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(3f)
-                        .background(Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp))
-                        .padding(5.dp)
-                        .clickable { /* Xử lý sự kiện khi nhấn */ }
-                ) {
-                    Text(
-                        text = "Cancel",
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(6f)
-                        .background(Color(0xFF2196F3), shape = RoundedCornerShape(4.dp))
-                        .padding(5.dp)
-                        .clickable { /* Xử lý sự kiện khi nhấn */ }
-                ) {
-                    Text(
-                        text = "Save",
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
-
-            }
-        }
-    }
+    BadditDialog(
+        title = "Confirm Deletion",
+        text = "Are you sure you want to delete this community? This action cannot be undone.",
+        confirmText = "Delete", confirmColor = MaterialTheme.colorScheme.errorRed,
+        dismissText = "Cancel",
+        onConfirm = { onConfirm() },
+        onDismiss = { onDismiss() })
 }
 
 fun GetOwnerName(memberList: ArrayList<Member>, community: GetACommunityResponseDTO): String {

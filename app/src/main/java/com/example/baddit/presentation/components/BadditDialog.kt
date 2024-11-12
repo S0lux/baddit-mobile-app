@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
@@ -28,7 +29,7 @@ fun BadditDialog(
         onDismissRequest = { onDismiss() },
         confirmButton = {
             TextButton(onClick = { onConfirm() }) {
-                Text(confirmText, color = confirmColor)
+                Text(confirmText, color = confirmColor, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
