@@ -67,6 +67,7 @@ import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.Member
+import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.screens.profile.bottomBorder
@@ -77,6 +78,7 @@ import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.errorRed
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -489,46 +491,13 @@ fun LeaveCommunityDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Leave Community",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        },
-        text = {
-            Text(
-                text = "Are you sure you want to leave this community?",
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.padding(end = 8.dp)
-            ) {
-                Text(text = "Leave")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "Cancel")
-            }
-        }
-    )
+    BadditDialog(
+        title = "Leave Community",
+        text = "Are you sure you want to leave this community?",
+        confirmText = "Leave", confirmColor = MaterialTheme.colorScheme.errorRed,
+        dismissText = "Cancel",
+        onConfirm = { onConfirm() },
+        onDismiss = { onDismiss() })
 }
 
 @Composable
