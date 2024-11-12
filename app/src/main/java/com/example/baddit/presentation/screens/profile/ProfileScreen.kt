@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,11 +40,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -84,7 +83,7 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
-import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -176,24 +175,49 @@ fun ProfileScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(125.dp)
             ) {
-                TextButton(
+                Box(
                     modifier = Modifier
-                        .bottomBorder(3.dp, Color.Blue, viewModel.isPostSectionSelected.value),
-                    onClick = { viewModel.togglePostSection(true) }) {
+                        .bottomBorder(
+                            2.dp,
+                            MaterialTheme.colorScheme.neutralGray,
+                            viewModel.isPostSectionSelected.value
+                        )
+                        .clickable(
+                            onClick = { viewModel.togglePostSection(true) },
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                        )
+                ) {
                     Text(
+                        modifier = Modifier.padding(14.dp),
                         text = "Posts",
-                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
                         color = MaterialTheme.colorScheme.textPrimary
                     )
                 }
-                TextButton(
+                Box(
                     modifier = Modifier
-                        .bottomBorder(3.dp, Color.Blue, !viewModel.isPostSectionSelected.value),
-                    onClick = { viewModel.togglePostSection(false) }
+                        .bottomBorder(
+                            2.dp,
+                            MaterialTheme.colorScheme.neutralGray,
+                            !viewModel.isPostSectionSelected.value
+                        )
+                        .clickable(
+                            onClick = { viewModel.togglePostSection(false) },
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                        )
                 ) {
                     Text(
+                        modifier = Modifier.padding(14.dp),
                         text = "Comments",
-                        style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
                         color = MaterialTheme.colorScheme.textPrimary
                     )
                 }
@@ -608,7 +632,10 @@ fun ProfileCommentsSection(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshingComment,
             onRefresh = { viewModel.refreshComments(username) }) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp), state = listStateComments) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                state = listStateComments
+            ) {
                 items(items = viewModel.comments) { it ->
                     CommentCard(
                         details = it,

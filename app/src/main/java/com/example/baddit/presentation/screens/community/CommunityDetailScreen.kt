@@ -4,10 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,9 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -66,7 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.wear.compose.material3.TextButtonDefaults
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
@@ -111,6 +105,8 @@ fun CommunityDetailScreen(
 
     var isPostSectionSelected by remember { mutableStateOf(true) }
 
+    val interactionSource = remember { MutableInteractionSource() }
+
     if (error.isNotEmpty()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
     }
@@ -154,17 +150,24 @@ fun CommunityDetailScreen(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(80.dp)
                     ) {
-                        TextButton(
+                        Box(
                             modifier = Modifier
                                 .bottomBorder(
                                     2.dp,
                                     MaterialTheme.colorScheme.neutralGray,
                                     isPostSectionSelected
-                                ),
-                            shape = RoundedCornerShape(10.dp),
-                            onClick = { isPostSectionSelected = true },) {
+                                )
+                                .clickable(
+                                    onClick = {
+                                        isPostSectionSelected = true
+                                    },
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                )
+                        ) {
                             Text(
-                                text = "Post",
+                                modifier = Modifier.padding(14.dp),
+                                text = "Posts",
                                 style = TextStyle(
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -172,16 +175,21 @@ fun CommunityDetailScreen(
                                 color = MaterialTheme.colorScheme.textPrimary,
                             )
                         }
-                        TextButton(
+                        Box(
                             modifier = Modifier
                                 .bottomBorder(
                                     2.dp,
                                     MaterialTheme.colorScheme.neutralGray,
                                     !isPostSectionSelected
-                                ),
-                            onClick = { isPostSectionSelected = false }
+                                )
+                                .clickable(
+                                    onClick = { isPostSectionSelected = false },
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                )
                         ) {
                             Text(
+                                modifier = Modifier.padding(14.dp),
                                 text = "Members",
                                 style = TextStyle(
                                     fontSize = 15.sp,
@@ -251,7 +259,7 @@ fun BannerCommunity(community: GetACommunityResponseDTO, navController: NavContr
             model = ImageRequest.Builder(LocalContext.current)
                 .data(community.community.bannerUrl).build(),
             contentDescription = null,
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
                 .aspectRatio(1f)
@@ -412,7 +420,7 @@ fun PostViewCommunity(
                     containerColor = MaterialTheme.colorScheme.background,
                     color = MaterialTheme.colorScheme.textPrimary
                 )
-            }){
+            }) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier.fillMaxSize(),
