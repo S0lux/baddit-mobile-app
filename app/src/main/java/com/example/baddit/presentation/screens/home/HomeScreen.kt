@@ -38,10 +38,7 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Post
-import com.example.baddit.ui.theme.CustomTheme.appBlue
-import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +53,6 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val refreshBoxState = rememberPullToRefreshState()
-    val context = viewModel.context
     viewModel.endReached = !listState.canScrollForward
 
     LaunchedEffect(viewModel.endReached) {
@@ -171,7 +167,7 @@ fun HomeScreen(
                         },
                         onComponentClick = onComponentClick,
                         navController = navController,
-                        imageLoader = context.imageLoader
+                        imageLoader = viewModel.imageLoader
                     )
                 }
             }

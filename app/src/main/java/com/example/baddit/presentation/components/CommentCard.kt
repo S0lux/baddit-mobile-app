@@ -335,7 +335,7 @@ fun CommentMeta(
                     } else if (!isLoggedIn) {
                         showLoginPrompt()
                     } else {
-                        navigateProfile
+                        navigateProfile()
                     }
                 }
         ) {
@@ -345,7 +345,7 @@ fun CommentMeta(
                     .build(),
                 contentDescription = null,
                 modifier = Modifier
-                    .padding(10.dp)
+                    .padding(3.dp)
                     .height(25.dp)
                     .aspectRatio(1f)
                     .clip(CircleShape),
