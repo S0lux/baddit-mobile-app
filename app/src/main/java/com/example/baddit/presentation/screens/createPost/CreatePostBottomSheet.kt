@@ -39,7 +39,6 @@ fun CreatePostBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = MaterialTheme.colorScheme.background,
         sheetState = sheetState,
         modifier = Modifier
             .fillMaxWidth()

@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.createPost
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +48,7 @@ import com.example.baddit.ui.theme.CustomTheme.textSecondary
 fun CommunitySelector(onClick: () -> Unit, viewmodel: CreatePostViewodel) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth().background(MaterialTheme.colorScheme.surface)
     ) {
         TextField(
             value = viewmodel.selectedCommunity ?: "",
@@ -119,7 +120,7 @@ fun SelectCommunityBottomSheet(
 ) {
     val communities = viewmodel.communities
     val joinedCommunity = viewmodel.joinedCommunities
-    ModalBottomSheet(
+    ModalBottomSheet(containerColor = MaterialTheme.colorScheme.background,
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         modifier = Modifier
