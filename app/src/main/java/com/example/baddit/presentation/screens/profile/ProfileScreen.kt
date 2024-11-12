@@ -43,6 +43,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -472,6 +475,7 @@ fun ProfilePostSection(
 ) {
 
     val listState = rememberLazyListState()
+    val refreshBoxState = rememberPullToRefreshState()
     LaunchedEffect(username, listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
@@ -494,7 +498,17 @@ fun ProfilePostSection(
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshingPost,
-            onRefresh = { viewModel.refreshPosts(username) }) {
+            onRefresh = { viewModel.refreshPosts(username) },
+            state = refreshBoxState,
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isRefreshingPost,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary
+                )
+            }) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier.fillMaxSize(),

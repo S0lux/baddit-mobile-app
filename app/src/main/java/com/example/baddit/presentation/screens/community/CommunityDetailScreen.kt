@@ -41,6 +41,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -376,6 +379,7 @@ fun PostViewCommunity(
 ) {
 
     val listState = rememberLazyListState()
+    val refreshBoxState = rememberPullToRefreshState()
     LaunchedEffect(name, listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
@@ -398,7 +402,17 @@ fun PostViewCommunity(
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,
-            onRefresh = { viewModel.refreshPosts(name) }) {
+            onRefresh = { viewModel.refreshPosts(name) },
+            state = refreshBoxState,
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary
+                )
+            }){
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier.fillMaxSize(),

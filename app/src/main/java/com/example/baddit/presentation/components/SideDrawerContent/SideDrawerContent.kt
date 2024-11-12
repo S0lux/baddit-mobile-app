@@ -20,8 +20,10 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,7 +70,7 @@ fun SideDrawerContent(
         }
     }
 
-    DismissibleDrawerSheet(
+    ModalDrawerSheet(
         modifier = Modifier
             .width(250.dp)
             .shadow(
@@ -81,7 +83,15 @@ fun SideDrawerContent(
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing.value,
             onRefresh = { viewModel.getJoinCommunity() },
-            state = refreshboxState
+            state = refreshboxState,
+            indicator = {
+                Indicator(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    state = refreshboxState,
+                    isRefreshing = viewModel.isRefreshing.value,
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary)
+            }
         ) {
             LazyColumn (verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 item {

@@ -39,6 +39,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -227,6 +230,7 @@ fun CommunityScreen(
 @Composable
 fun ListViewCommunities(viewModel: CommunityViewModel, navController: NavController) {
     val listState = rememberLazyListState()
+    val refreshBoxState = rememberPullToRefreshState()
 
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
@@ -250,7 +254,17 @@ fun ListViewCommunities(viewModel: CommunityViewModel, navController: NavControl
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshingCommunity,
-            onRefresh = { viewModel.refreshCommunities() }) {
+            onRefresh = { viewModel.refreshCommunities() },
+            state = refreshBoxState,
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary
+                )
+            }) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 modifier = Modifier.fillMaxSize(),

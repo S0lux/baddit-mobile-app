@@ -14,8 +14,10 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,7 @@ import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +44,7 @@ fun PostScreen(
     darkMode: Boolean,
     onComponentClick: () -> Unit,
 ) {
+    val refreshBoxState = rememberPullToRefreshState()
     LaunchedEffect(true) {
         viewModel.loadComments(viewModel.postId)
     }
@@ -55,6 +59,15 @@ fun PostScreen(
     PullToRefreshBox(
         isRefreshing = viewModel.isLoading,
         onRefresh = { viewModel.refresh() },
+        state = refreshBoxState,
+        indicator = {
+            Indicator(
+                state = refreshBoxState,
+                isRefreshing = viewModel.isLoading,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.background,
+                color = MaterialTheme.colorScheme.textPrimary)
+        },
         modifier = Modifier
             .fillMaxSize()
     ) {

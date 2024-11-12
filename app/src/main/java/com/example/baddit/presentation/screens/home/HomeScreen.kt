@@ -38,6 +38,7 @@ import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Post
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
+import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +52,7 @@ fun HomeScreen(
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val refreshBoxState = rememberPullToRefreshState()
     viewModel.endReached = !listState.canScrollForward
 
     LaunchedEffect(viewModel.endReached) {
@@ -89,7 +91,16 @@ fun HomeScreen(
 
     PullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
+        state = refreshBoxState,
         onRefresh = { viewModel.refreshPosts()},
+        indicator = {
+            Indicator(
+                state = refreshBoxState,
+                isRefreshing = viewModel.isRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.background,
+                color = MaterialTheme.colorScheme.textPrimary)
+        }
     ) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp),
