@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.home
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -13,11 +14,13 @@ import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext val context: Context,
     val postRepository: PostRepository,
     val authRepository: AuthRepository
 ) : ViewModel() {

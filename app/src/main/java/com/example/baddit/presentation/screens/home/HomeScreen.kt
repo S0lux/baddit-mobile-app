@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.home
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.imageLoader
 import com.example.baddit.R
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
@@ -39,6 +41,7 @@ import com.example.baddit.presentation.utils.Post
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +56,7 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val refreshBoxState = rememberPullToRefreshState()
+    val context = viewModel.context
     viewModel.endReached = !listState.canScrollForward
 
     LaunchedEffect(viewModel.endReached) {
@@ -166,7 +170,8 @@ fun HomeScreen(
                             )
                         },
                         onComponentClick = onComponentClick,
-                        navController = navController
+                        navController = navController,
+                        imageLoader = context.imageLoader
                     )
                 }
             }

@@ -95,7 +95,8 @@ fun PostCard(
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
     onComponentClick:()->Unit,
-    navController: NavController
+    navController: NavController,
+    imageLoader: ImageLoader? = null
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -261,7 +262,7 @@ fun PostCard(
             }
 
             if (postDetails.type == "MEDIA") {
-                PostMediaContent(mediaUrls = postDetails.mediaUrls)
+                PostMediaContent(mediaUrls = postDetails.mediaUrls, imageLoader)
             }
 
             PostActions(
@@ -420,7 +421,7 @@ fun PostTextContent(content: String, isExpanded: Boolean) {
 }
 
 @Composable
-fun PostMediaContent(mediaUrls: List<String>) {
+fun PostMediaContent(mediaUrls: List<String>, imageLoader: ImageLoader?) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
@@ -429,23 +430,16 @@ fun PostMediaContent(mediaUrls: List<String>) {
             .fillMaxWidth()
             .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
     ) {
-        val context = LocalContext.current
-        val imageLoader = ImageLoader.Builder(context).components {
-            if (SDK_INT >= 28) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }.build()
-
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(mediaUrls.first()).build(),
-            imageLoader = imageLoader,
-            contentDescription = null,
-            modifier = Modifier
-                .heightIn(50.dp, 450.dp),
-            contentScale = ContentScale.Fit
-        )
+        if (imageLoader != null) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(mediaUrls.first()).build(),
+                imageLoader = imageLoader,
+                contentDescription = null,
+                modifier = Modifier
+                    .heightIn(50.dp, 450.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 
