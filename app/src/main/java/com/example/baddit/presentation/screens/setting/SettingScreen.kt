@@ -360,26 +360,24 @@ fun SettingScreen(
                         ),
                         text = viewModel.confirmDialogText.value,
                         fontSize = 18.sp,
-                        textAlign = TextAlign.Center
                     )
                 },
                 onDismissRequest = { openConfirmDialog.value = false },
                 confirmButton = {
-                    Button(
+                    TextButton(
                         shape = RoundedCornerShape(10.dp),
                         onClick = {
                             openConfirmDialog.value = false
                         },
                         modifier = Modifier
                             .height(45.dp),
-                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
                     ) {
                         Text(
                             "OK",
                             modifier = Modifier
                                 .padding(5.dp)
                                 .align(Alignment.CenterVertically),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.textPrimary,
                             fontSize = 14.sp
                         )
                     }
@@ -442,27 +440,27 @@ fun SettingScreen(
                 text = { Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("1: Prohibition of Hate Speech and Harassment:\n")
+                        append("1. Prohibition of Hate Speech and Harassment:\n")
                     }
                     append("\nContent that promotes violence or hatred against individuals or groups based on attributes such as race, ethnicity, religion, gender, sexual orientation, disability, or nationality is not allowed. Harassment, bullying, and threats are also strictly prohibited.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("2: Ban on Explicit Content:\n")
+                        append("2. Ban on Explicit Content:\n")
                     }
                     append("\nPosting sexually explicit content, including pornography, is prohibited. This policy also includes the sharing of graphic violence, gore, and other disturbing imagery that is intended to shock or disgust.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("3: No Illegal Activities:\n")
+                        append("3. No Illegal Activities:\n")
                     }
                     append("\nContent that promotes, encourages, or facilitates illegal activities is banned. This includes drug trafficking, human trafficking, illegal weapons sales, and any form of criminal activity.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("4: Protection of Intellectual Property:\n")
+                        append("4. Protection of Intellectual Property:\n")
                     }
                     append("\nContent that infringes on someone else's intellectual property rights, such as copyright or trademark violations, is not allowed. Users must ensure they have the necessary rights to share any content they post.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("5: Misinformation and False Information:\n")
+                        append("5. Misinformation and False Information:\n")
                     }
                     append("\nSpreading false information, particularly that which can cause harm, such as health-related misinformation (e.g., false medical advice), or misinformation affecting public safety and elections, is prohibited.")
                 }) }},
