@@ -472,6 +472,7 @@ fun SettingScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(10.dp))
 
         CustomDivider(label = "General Setting")
 
@@ -486,12 +487,16 @@ fun SettingScreen(
             text = "Theme",
             onClick = { openThemeDialog.value = true })
 
+        Spacer(modifier = Modifier.height(10.dp))
+
         CustomDivider(label = "Account Setting")
 
         SettingItem(
             icon = painterResource(id = R.drawable.key),
             text = "Change Password",
             onClick = { openPasswordDialog.value = true })
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         CustomDivider(label = "Other")
 
@@ -514,15 +519,14 @@ fun SettingScreen(
 fun CustomDivider(label: String) {
     Row(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.neutralGray.copy(alpha = 0.1f))
             .fillMaxWidth()
             .height(23.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.textPrimary,
-            fontWeight = FontWeight.Light,
+            color = MaterialTheme.colorScheme.appBlue,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(start = 13.dp),
         )
     }
