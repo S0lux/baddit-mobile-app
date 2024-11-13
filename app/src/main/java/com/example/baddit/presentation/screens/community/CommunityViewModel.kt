@@ -1,11 +1,13 @@
 package com.example.baddit.presentation.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
@@ -20,12 +22,14 @@ import com.example.baddit.domain.repository.CommunityRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.presentation.utils.FieldState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
+    val imageLoader: ImageLoader,
     val communityRepository: CommunityRepository,
     val postRepository: PostRepository,
     val authRepository: AuthRepository
