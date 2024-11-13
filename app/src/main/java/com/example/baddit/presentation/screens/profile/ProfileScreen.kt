@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
@@ -106,7 +107,7 @@ fun ProfileScreen(
 
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
-
+    val imageLoader = viewModel.imageLoader
 
 
     if (error.isNotEmpty()) {
@@ -232,7 +233,8 @@ fun ProfileScreen(
             viewModel = viewModel,
             isPostSectionSelected = viewModel.isPostSectionSelected.value,
             navController = navController,
-            darkMode = darkMode
+            darkMode = darkMode,
+            imageLoader = imageLoader
         )
         ProfileCommentsSection(
             username = username,
@@ -495,7 +497,8 @@ fun ProfilePostSection(
     viewModel: ProfileViewModel,
     isPostSectionSelected: Boolean,
     navController: NavController,
-    darkMode: Boolean
+    darkMode: Boolean,
+    imageLoader: ImageLoader
 ) {
 
     val listState = rememberLazyListState()
@@ -586,7 +589,8 @@ fun ProfilePostSection(
                                 )
                             },
                             onComponentClick = {},
-                            navController = navController
+                            navController = navController,
+                            imageLoader = imageLoader
                         )
                     }
                 }
