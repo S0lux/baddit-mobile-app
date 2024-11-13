@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
@@ -26,7 +27,8 @@ class ProfileViewModel @Inject constructor(
     val authRepository: AuthRepository,
     val postRepository: PostRepository,
     val commentRepository: CommentRepository,
-    val userRepository: UserRepository
+    val userRepository: UserRepository,
+    val imageLoader: ImageLoader,
 ) : ViewModel() {
 
     //user
