@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import coil.ImageLoader
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.comment.CommentResponseDTOItem
@@ -23,6 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PostViewModel @Inject constructor(
+    val imageLoader: ImageLoader,
     val authRepository: AuthRepository,
     val postRepository: PostRepository,
     val commentRepository: CommentRepository,

@@ -38,7 +38,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -79,11 +78,13 @@ import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.errorRed
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState as rememberPullToRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -231,7 +232,7 @@ fun CommunityDetailScreen(
                             }
 
                             memberList.value.isNotEmpty() -> {
-                                MembersView(memberList.value, navController)
+                                MembersView(memberList.value, navController, viewModel, name)
                             }
 
                             else -> {
@@ -502,46 +503,71 @@ fun LeaveCommunityDialog(
         onDismiss = { onDismiss() })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MembersView(memberList: ArrayList<Member>, navController: NavController) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.semantics { traversalIndex = 1f },
-    ) {
-        items(memberList) { member ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .clickable { navController.navigate(Profile(member.username)) }
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(member.avatarUrl).build(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .height(36.dp)
-                        .aspectRatio(1f),
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        member.username,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                    Text(
-                        text = member.communityRole,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
+fun MembersView(memberList: ArrayList<Member>, navController: NavController, viewModel: CommunityViewModel, name: String ) {
+    val refreshBoxState = rememberPullToRefreshState()
 
+        AnimatedVisibility(
+            visible = true,
+            exit = slideOutHorizontally() + fadeOut(),
+            enter = slideInHorizontally()
+        ) {
+            PullToRefreshBox(
+                isRefreshing = viewModel.isLoading,
+                onRefresh = { viewModel.fetchMembers(name) },
+                state = refreshBoxState,
+                indicator = {
+                    Indicator(
+                        state = refreshBoxState,
+                        isRefreshing = viewModel.isLoading,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        containerColor = MaterialTheme.colorScheme.background,
+                        color = MaterialTheme.colorScheme.textPrimary
+                    )
+                }) {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.semantics { traversalIndex = 1f }.background(MaterialTheme.colorScheme.cardBackground),
+                ) {
+                    items(memberList) { member ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clickable { navController.navigate(Profile(member.username)) }
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(member.avatarUrl).build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .height(36.dp)
+                                    .aspectRatio(1f),
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    member.username,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.textPrimary
+                                )
+                                Text(
+                                    text = member.communityRole,
+                                    color = MaterialTheme.colorScheme.textPrimary
+                                )
+
+                            }
+                        }
+                    }
                 }
             }
-        }
+
+
     }
 }
 

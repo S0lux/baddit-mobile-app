@@ -613,6 +613,7 @@ fun ProfileCommentsSection(
 ) {
 
     val listStateComments = rememberLazyListState()
+    val refreshBoxState = rememberPullToRefreshState()
     LaunchedEffect(username, listStateComments) {
         snapshotFlow { listStateComments.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
@@ -635,7 +636,16 @@ fun ProfileCommentsSection(
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshingComment,
-            onRefresh = { viewModel.refreshComments(username) }) {
+            onRefresh = { viewModel.refreshComments(username) },
+            state = refreshBoxState,
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isRefreshingComment,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary
+                )}) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 state = listStateComments
