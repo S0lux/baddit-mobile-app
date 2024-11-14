@@ -121,7 +121,8 @@ fun PostScreen(
                     },
                     onComponentClick = onComponentClick,
                     navController = navController,
-                    imageLoader = viewModel.imageLoader
+                    imageLoader = viewModel.imageLoader,
+                    allowNavigateSelf = false
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))

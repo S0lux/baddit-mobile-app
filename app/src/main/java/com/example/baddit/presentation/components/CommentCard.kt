@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -226,7 +227,7 @@ fun CommentCard(
                             authorName = details.author.username,
                             avatarUrl = details.author.avatarUrl,
                             showLoginPrompt = { showLoginDialog = true },
-                            navigateProfile = { navController!!.navigate(Profile(username = details.author.username)) },
+                            navigateProfile = { navController?.navigate(Profile(username = details.author.username)) },
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
@@ -329,7 +330,7 @@ fun CommentMeta(
         Box(
             modifier = Modifier
                 .defaultMinSize(25.dp)
-                .clickable {
+                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
                     if (isDeleted) {
 
                     } else if (!isLoggedIn) {

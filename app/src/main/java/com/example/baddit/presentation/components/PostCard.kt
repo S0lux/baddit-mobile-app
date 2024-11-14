@@ -91,9 +91,10 @@ fun PostCard(
     deletePostFn: suspend (String) -> Unit,
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
-    onComponentClick:()->Unit,
+    onComponentClick: () -> Unit,
     navController: NavController,
-    imageLoader: ImageLoader? = null
+    imageLoader: ImageLoader? = null,
+    allowNavigateSelf: Boolean = true
 ) {
     val colorUpvote = MaterialTheme.colorScheme.appOrange
     val colorDownvote = MaterialTheme.colorScheme.appBlue
@@ -241,7 +242,13 @@ fun PostCard(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.cardBackground)
             .fillMaxWidth()
-            .clickable { onComponentClick(); navigatePost(postDetails.id) },
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }) {
+                if (allowNavigateSelf) navigatePost(
+                    postDetails.id
+                )
+            },
         endActions = listOf(upvoteSwipe, downvoteSwipe),
         swipeThreshold = 40.dp
     ) {
@@ -250,7 +257,11 @@ fun PostCard(
             modifier = Modifier
                 .padding(15.dp)
         ) {
-            PostHeader(postDetails = postDetails, navController, loggedIn, showLoginDialog = { showLoginDialog = true })
+            PostHeader(
+                postDetails = postDetails,
+                navController,
+                loggedIn,
+                showLoginDialog = { showLoginDialog = true })
 
             PostTitle(title = postDetails.title)
 
@@ -302,7 +313,12 @@ fun handleVote(
 }
 
 @Composable
-fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavController, loggedIn: Boolean, showLoginDialog: () -> Unit,) {
+fun PostHeader(
+    postDetails: MutablePostResponseDTOItem,
+    navController: NavController,
+    loggedIn: Boolean,
+    showLoginDialog: () -> Unit,
+) {
     val communityName = postDetails.community?.name.orEmpty()
     val communityLogo = postDetails.community?.logoUrl.orEmpty()
     val authorName = postDetails.author.username
@@ -323,14 +339,12 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavContro
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.clickable {
-            if(communityName.isNotEmpty()){
+            if (communityName.isNotEmpty()) {
                 navController.navigate(CommunityDetail(communityName))
-            }
-            else{
-                if(!loggedIn){
+            } else {
+                if (!loggedIn) {
                     showLoginDialog()
-                }
-                else{
+                } else {
                     navController.navigate(Profile(authorName))
                 }
             }
@@ -343,7 +357,7 @@ fun PostHeader(postDetails: MutablePostResponseDTOItem, navController: NavContro
                 .clip(CircleShape)
                 .height(36.dp)
                 .aspectRatio(1f),
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Crop
         )
 
         Column {
@@ -544,7 +558,8 @@ fun PostActions(
                 if (loggedInUser?.username == postAuthor ||
                     loggedInUser?.communities?.find { it.name == postCommunity }?.role == "MODERATOR" ||
                     loggedInUser?.communities?.find { it.name == postCommunity }?.role == "ADMIN" ||
-                    loggedInUser?.role == "ADMIN") {
+                    loggedInUser?.role == "ADMIN"
+                ) {
                     Button(
                         onClick = {
                             coroutineScope.launch { deletePostFn(postId) }
