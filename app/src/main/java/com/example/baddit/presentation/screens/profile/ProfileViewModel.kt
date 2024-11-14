@@ -61,9 +61,9 @@ class ProfileViewModel @Inject constructor(
     fun togglePostSection(boolean: Boolean) {
         viewModelScope.launch {
             isPostSectionSelected.value = boolean
-            if(boolean){
+            if (boolean) {
                 refreshPosts(username = user.value!!.username)
-            }else{
+            } else {
                 refreshComments(username = user.value!!.username)
 
             }
@@ -147,7 +147,7 @@ class ProfileViewModel @Inject constructor(
                     error = ""
                     if (!result.data.isEmpty())
                         lastCommentId = result.data.last().id
-                    comments.addAll(result.data.map { it })
+                    comments.addAll(result.data.filter { !it.deleted })
                 }
             }
             isRefreshingComment = false
@@ -158,7 +158,7 @@ class ProfileViewModel @Inject constructor(
         if (endCommentReached)
             return;
         viewModelScope.launch {
-            isRefreshingComment= true;
+            isRefreshingComment = true;
             when (val fetchComments =
                 commentRepository.getComments(cursor = lastCommentId, authorName = username)) {
                 is Result.Error -> {
@@ -173,7 +173,7 @@ class ProfileViewModel @Inject constructor(
                     error = ""
                     if (fetchComments.data.isNotEmpty()) {
                         lastCommentId = fetchComments.data.last().id
-                        comments.addAll(fetchComments.data.map { it })
+                        comments.addAll(fetchComments.data.filter { !it.deleted })
                     } else {
                         endCommentReached = true
                     }
@@ -201,7 +201,7 @@ class ProfileViewModel @Inject constructor(
 
                 is Result.Success -> {
                     user.value = result.data
-                    Log.d("ProfileScreen","Data: "+ user.value!!.username)
+                    Log.d("ProfileScreen", "Data: " + user.value!!.username)
                     error = ""
                 }
             }
