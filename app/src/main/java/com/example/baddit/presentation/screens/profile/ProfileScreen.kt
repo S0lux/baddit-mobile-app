@@ -117,8 +117,6 @@ fun ProfileScreen(
 
     LaunchedEffect(username) {
         viewModel.fetchUserProfile(username)
-        viewModel.refreshPosts(username)
-        viewModel.refreshComments(username)
     }
 
     Column(
@@ -503,6 +501,10 @@ fun ProfilePostSection(
 
     val listState = rememberLazyListState()
     val refreshBoxState = rememberPullToRefreshState()
+    LaunchedEffect(username) {
+        viewModel.refreshPosts(username)
+    }
+
     LaunchedEffect(username, listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo }
             .map { visibleItems ->
@@ -518,8 +520,10 @@ fun ProfilePostSection(
             }
     }
 
+
+
     AnimatedVisibility(
-        visible = isPostSectionSelected,
+        visible = viewModel.isPostSectionSelected.value,
         exit = slideOutHorizontally() + fadeOut(),
         enter = slideInHorizontally()
     ) {
