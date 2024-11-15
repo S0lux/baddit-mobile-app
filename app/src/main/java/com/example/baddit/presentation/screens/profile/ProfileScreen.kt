@@ -28,12 +28,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,6 +89,7 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -441,37 +447,39 @@ fun ProfileHeader(
                                 horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
                                 OutlinedButton(
+                                    modifier = Modifier.width(87.dp),
                                     onClick = { viewModel.isEditing = false },
                                     border = BorderStroke(
                                         1.dp,
-                                        Color.Red
+                                        MaterialTheme.colorScheme.neutralGray
                                     ),
-                                    contentPadding = PaddingValues(10.dp)
+                                    contentPadding = PaddingValues(0.dp),
+                                    shape = RoundedCornerShape(10.dp)
                                 ) {
                                     Text(
                                         text = "Cancel", style = TextStyle(
-                                            color = Color.Red,
+                                            color = MaterialTheme.colorScheme.textPrimary,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 20.sp
+                                            fontSize = 16.sp
                                         )
                                     )
 
                                 }
-                                OutlinedButton(
+                                Button(modifier = Modifier.width(100.dp),
                                     onClick = {
                                         viewModel.updateAvatar((avatarImg!!));
                                     },
-                                    border = BorderStroke(
-                                        1.dp,
-                                        Color.Green
-                                    ),
-                                    contentPadding = PaddingValues(10.dp)
+                                    contentPadding = PaddingValues(0.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.appBlue
+                                    )
                                 ) {
                                     Text(
                                         text = "Save", style = TextStyle(
-                                            color = Color.Green,
+                                            color = Color.White,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 20.sp
+                                            fontSize = 16.sp
                                         )
                                     )
 
@@ -649,7 +657,8 @@ fun ProfileCommentsSection(
                     modifier = Modifier.align(Alignment.TopCenter),
                     containerColor = MaterialTheme.colorScheme.background,
                     color = MaterialTheme.colorScheme.textPrimary
-                )}) {
+                )
+            }) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 state = listStateComments

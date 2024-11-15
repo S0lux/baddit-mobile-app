@@ -79,6 +79,7 @@ import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
+import com.example.baddit.ui.theme.CustomTheme.cardForeground
 import com.example.baddit.ui.theme.CustomTheme.errorRed
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -218,7 +219,7 @@ fun CommunityDetailScreen(
                 )
 
                 if (!isPostSectionSelected) {
-                    Box(modifier = Modifier.padding(10.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         when {
                             isRefreshing -> {
                                 CircularProgressIndicator()
@@ -505,38 +506,48 @@ fun LeaveCommunityDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MembersView(memberList: ArrayList<Member>, navController: NavController, viewModel: CommunityViewModel, name: String ) {
+fun MembersView(
+    memberList: ArrayList<Member>,
+    navController: NavController,
+    viewModel: CommunityViewModel,
+    name: String
+) {
     val refreshBoxState = rememberPullToRefreshState()
 
-        AnimatedVisibility(
-            visible = true,
-            exit = slideOutHorizontally() + fadeOut(),
-            enter = slideInHorizontally()
-        ) {
-            PullToRefreshBox(
-                isRefreshing = viewModel.isLoading,
-                onRefresh = { viewModel.fetchMembers(name) },
-                state = refreshBoxState,
-                indicator = {
-                    Indicator(
-                        state = refreshBoxState,
-                        isRefreshing = viewModel.isLoading,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = MaterialTheme.colorScheme.background,
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                }) {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.semantics { traversalIndex = 1f }.background(MaterialTheme.colorScheme.cardBackground),
-                ) {
-                    items(memberList) { member ->
+    AnimatedVisibility(
+        visible = true,
+        exit = slideOutHorizontally() + fadeOut(),
+        enter = slideInHorizontally()
+    ) {
+        PullToRefreshBox(
+            isRefreshing = viewModel.isLoading,
+            onRefresh = { viewModel.fetchMembers(name) },
+            state = refreshBoxState,
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isLoading,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary
+                )
+            }) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .semantics { traversalIndex = 1f }
+                    .background(MaterialTheme.colorScheme.cardForeground),
+            ) {
+                items(memberList) { member ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).background(MaterialTheme.colorScheme.cardBackground)
+                    ) {
+
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
                                 .clickable { navController.navigate(Profile(member.username)) }
                         ) {
                             AsyncImage(
@@ -563,9 +574,11 @@ fun MembersView(memberList: ArrayList<Member>, navController: NavController, vie
 
                             }
                         }
+
                     }
                 }
             }
+        }
 
 
     }
