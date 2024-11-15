@@ -370,7 +370,7 @@ fun AvatarCommunity(
             }
         } else {
             OutlinedButton(onClick = { navController.navigate(Login) }) {
-                Text(text = "Log in", color = MaterialTheme.colorScheme.textPrimary)
+                Text(text = "Join", color = MaterialTheme.colorScheme.textPrimary)
             }
         }
 

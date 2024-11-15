@@ -345,7 +345,7 @@ fun EditCommunityScreen(
                             }
                         }
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.primary)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.textPrimary)
                     Spacer(modifier = Modifier.padding(10.dp))
                     Column(modifier = Modifier.padding(0.dp)) {
                         Text(
@@ -428,7 +428,7 @@ fun EditCommunityScreen(
                             )
                         }
                         Spacer(modifier = Modifier.weight(1f))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.primary)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.textPrimary)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
