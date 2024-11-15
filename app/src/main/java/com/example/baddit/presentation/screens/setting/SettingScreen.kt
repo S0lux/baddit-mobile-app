@@ -317,7 +317,7 @@ fun SettingScreen(
                                     .align(Alignment.CenterVertically)
                                     .height(45.dp),
                                 colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.appBlue),
-                                enabled = viewModel.oldPasswordState.value.isNotEmpty() && viewModel.newPasswordState.error.isEmpty() && viewModel.confirmPasswordState.error.isEmpty() && viewModel.oldPasswordState.error.isEmpty() && !viewModel.isLoading
+                                enabled = viewModel.newPasswordState.value.isNotEmpty() && viewModel.confirmPasswordState.value.isNotEmpty() && viewModel.oldPasswordState.value.isNotEmpty() && viewModel.newPasswordState.error.isEmpty() && viewModel.confirmPasswordState.error.isEmpty() && viewModel.oldPasswordState.error.isEmpty() && !viewModel.isLoading
                             ) {
                                 Text(
                                     "Save",
