@@ -16,3 +16,4 @@
 local.properties
 app/signing/keystore.properties
 app/signing/baddit_key.jks
+clear-cache.sh
