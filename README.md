@@ -10,9 +10,6 @@ Made by a group of students for their Mobile Application Introductory course at 
 
 - [@S0lux](https://www.github.com/S0lux)
 - [@raccooncancode](https://www.github.com/raccooncancode)
-- [@Tkhangds](https://www.github.com/Tkhangds)
-- [@NTDKhoa04](https://www.github.com/NTDKhoa04)
-- [@PhuscBui](https://www.github.com/PhuscBui)
 
 
 ## Acknowledgements
@@ -24,7 +21,7 @@ Made by a group of students for their Mobile Application Introductory course at 
 
 ### Prerequisites
 * [Android Studio](https://developer.android.com/studio)
-* [Baddit Express server](https://github.com/S0lux/baddit-express)
+* [Baddit Express server](https://github.com/S0lux/baddit-backend-app)
 * Git
 
 ### Steps
@@ -32,7 +29,7 @@ Made by a group of students for their Mobile Application Introductory course at 
 #### 1. Clone the project
 
 ```bash
-  git clone https://github.com/S0lux/baddit-mobile.git
+  git clone https://github.com/S0lux/baddit-backend-app.git
 ```
 
 #### 2. Open the project in Android Studio
