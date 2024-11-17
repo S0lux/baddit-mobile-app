@@ -51,7 +51,7 @@ class HomeViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
-                    lastPostId = fetchPosts.data.last().id
+                    lastPostId = if (fetchPosts.data.isNotEmpty()) fetchPosts.data.last().id else null
                     error = ""
 
                     postRepository.postCache.clear()

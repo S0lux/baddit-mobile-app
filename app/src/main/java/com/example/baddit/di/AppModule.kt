@@ -44,7 +44,7 @@ class AppModule {
         }.build()
 
         return Retrofit.Builder()
-            .baseUrl("https://api.baddit.life/")
+            .baseUrl("http://10.0.2.2:3001")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
