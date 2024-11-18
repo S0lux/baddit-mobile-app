@@ -480,11 +480,14 @@ fun PostActions(
     var showModal by remember { mutableStateOf(false) }
 
     if (showModal) {
-        ModalBottomSheet(onDismissRequest = { showModal = false }) {
+        ModalBottomSheet(
+            onDismissRequest = { showModal = false },
+            containerColor = MaterialTheme.colorScheme.cardBackground) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = 10.dp)
+                    .background(MaterialTheme.colorScheme.cardBackground),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalAlignment = Alignment.Start
             ) {

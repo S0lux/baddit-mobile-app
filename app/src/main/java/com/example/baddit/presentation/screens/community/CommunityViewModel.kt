@@ -89,8 +89,8 @@ class CommunityViewModel @Inject constructor(
                 is Result.Success -> {
                     communityRepository.communityCache.clear()
                     error = ""
-                    if (!fetchCommunities.data.isEmpty())
-                        lastCursor = fetchCommunities.data[fetchCommunities.data.size -2].id
+                    if (fetchCommunities.data.isNotEmpty())
+                        lastCursor = fetchCommunities.data[fetchCommunities.data.size - 1].id
                     communityRepository.communityCache.addAll(fetchCommunities.data.map { it.toMutableCommunityResponseDTOItem() })
                 }
             }
