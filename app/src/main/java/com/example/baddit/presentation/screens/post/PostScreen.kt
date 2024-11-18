@@ -1,15 +1,27 @@
 package com.example.baddit.presentation.screens.post
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
@@ -20,7 +32,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.baddit.R
@@ -30,9 +45,7 @@ import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
-import com.example.baddit.presentation.utils.Profile
-import com.example.baddit.ui.theme.CustomTheme.appBlue
-import com.example.baddit.ui.theme.CustomTheme.appOrange
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,6 +91,33 @@ fun PostScreen(
             if (viewModel.error.isNotEmpty()) return@LazyColumn
 
             item {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .background(MaterialTheme.colorScheme.cardBackground)
+                        .padding(bottom = 10.dp, top = WindowInsets.safeContent.asPaddingValues().calculateTopPadding().plus(5.dp))
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStack()
+                        },
+                        modifier = Modifier,
+                        colors = IconButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_arrow_back_24),
+                            contentDescription = null
+                        )
+                    }
+                }
                 PostCard(
                     postDetails = viewModel.post,
                     loggedIn = viewModel.isLoggedIn,

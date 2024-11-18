@@ -21,6 +21,7 @@
         tools:targetApi="34">
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:label="Baddit"
             android:exported="true"
             android:theme="@style/App.Starting.Theme">

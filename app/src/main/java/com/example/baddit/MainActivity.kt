@@ -1,8 +1,15 @@
 package com.example.baddit
 
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.WindowInsetsController
+import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
@@ -14,8 +21,14 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -35,7 +49,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -104,6 +122,28 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
+        enableEdgeToEdge()
+
+        fun setLightStatusBar() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.insetsController?.setSystemBarsAppearance(APPEARANCE_LIGHT_STATUS_BARS, APPEARANCE_LIGHT_STATUS_BARS)
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                } else {
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                }
+
+            }
+        }
+
+        fun setDarkStatusBar() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.insetsController?.setSystemBarsAppearance(0, APPEARANCE_LIGHT_STATUS_BARS)
+            }
+        }
+
         setContent {
 
             val navController = rememberNavController()
@@ -132,8 +172,14 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch {
                     localThemes.readDarkTheme().collect {
                         when (it) {
-                            "Dark" -> bool.value = true
-                            "Light" -> bool.value = false
+                            "Dark" -> {
+                                bool.value = true
+                                setDarkStatusBar()
+                            }
+                            "Light" -> {
+                                bool.value = false
+                                setLightStatusBar()
+                            }
                             else -> bool.value;
                         }
                     }
@@ -144,8 +190,12 @@ class MainActivity : ComponentActivity() {
                 localThemes.saveDarkTheme(b = darkTheme)
                 localThemes.readDarkTheme().collect {
                     when (it) {
-                        "Dark" -> bool.value = true
-                        "Light" -> bool.value = false
+                        "Dark" -> {
+                            bool.value = true
+                        }
+                        "Light" -> {
+                            bool.value = false
+                        }
                         else -> bool.value = null
                     }
                 }
@@ -158,385 +208,368 @@ class MainActivity : ComponentActivity() {
                         onDismiss = { showLoginDialog = false })
                 }
 
-                BadditTheme(darkTheme = bool.value ?: isSystemInDarkTheme()) {
-                    AvatarMenu(
-                        show = showAvatarMenu,
-                        navController = navController,
-                        switchTheme = switchTheme,
-                        isDarkTheme = bool.value ?: isSystemInDarkTheme()
-                    )
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        ModalNavigationDrawer(drawerContent = {
-                            SideDrawerContent(
-                                onExploreClick = {
-                                    scope.launch {
-                                        navController.navigate(Community)
-                                        drawerState.close()
-                                    }
-                                },
-                                navController = navController,
-                                drawerState =  drawerState)
-                        }, drawerState = drawerState,
-                            gesturesEnabled = sidebarEnabled.value)
-                        {
-                            Scaffold(
-                                modifier = Modifier.clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) {
-                                    if (drawerState.isOpen) scope.launch { drawerState.close() }
-                                },
-                                bottomBar = {
-                                    BottomNavigationBar(
-                                        navController = navController,
-                                        barState = barState,
-                                        navItems = navItems,
-                                        selectedItem = selectedBottomNavigation,
-                                        drawerState = drawerState
-                                    )
-                                },
-                                floatingActionButton = {
-                                    if (barState.value) {
-                                        when (activeFAB) {
-                                            FAButtons.POST_CREATE -> BadditActionButton(onClick = {
-                                                showBottomSheet = true
-                                            })
+                AvatarMenu(
+                    show = showAvatarMenu,
+                    navController = navController,
+                    switchTheme = switchTheme,
+                    isDarkTheme = bool.value ?: isSystemInDarkTheme()
+                )
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ModalNavigationDrawer(drawerContent = {
+                        SideDrawerContent(
+                            onExploreClick = {
+                                scope.launch {
+                                    navController.navigate(Community)
+                                    drawerState.close()
+                                }
+                            },
+                            navController = navController,
+                            drawerState =  drawerState)
+                    }, drawerState = drawerState,
+                        gesturesEnabled = sidebarEnabled.value)
+                    {
+                        Scaffold(
+                            modifier = Modifier.clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) {
+                                if (drawerState.isOpen) scope.launch { drawerState.close() }
+                            },
+                            bottomBar = {
+                                BottomNavigationBar(
+                                    navController = navController,
+                                    barState = barState,
+                                    navItems = navItems,
+                                    selectedItem = selectedBottomNavigation,
+                                    drawerState = drawerState
+                                )
+                            },
+                            floatingActionButton = {
+                                if (barState.value) {
+                                    when (activeFAB) {
+                                        FAButtons.POST_CREATE -> BadditActionButton(onClick = {
+                                            showBottomSheet = true
+                                        })
 
-                                            FAButtons.POST_REPLY -> BadditActionButton(onClick = {
-                                                if (authRepository.isLoggedIn.value.not()) {
-                                                    showLoginDialog = true
-                                                } else navController.navigate(
+                                        FAButtons.POST_REPLY -> BadditActionButton(onClick = {
+                                            if (authRepository.isLoggedIn.value.not()) {
+                                                showLoginDialog = true
+                                            } else navController.navigate(
+                                                Comment(
+                                                    postId = activePostId,
+                                                    commentId = null,
+                                                    commentContent = activeCommentComment,
+                                                    darkMode = bool.value ?: false,
+                                                )
+                                            )
+                                        }, icon = R.drawable.reply)
+
+                                        else -> Unit
+                                    }
+                                }
+                            }
+                        ) { it ->
+                            if (showBottomSheet) {
+                                CreatePostBottomSheet(
+                                    onDismissRequest = { showBottomSheet = false },
+                                    sheetState = sheetState,
+                                    navController = navController
+                                )
+                            }
+                            NavHost(
+                                navController = navController,
+                                startDestination = Main
+                            ) {
+                                navigation<Main>(startDestination = Home) {
+                                    composable<Home> {
+                                        selectedBottomNavigation = 0
+                                        barState.value = true
+                                        userTopBarState.value = false
+                                        sidebarEnabled.value = true
+
+                                        activeFAB = FAButtons.POST_CREATE
+                                        HomeScreen(
+                                            navController = navController,
+                                            darkMode = bool.value ?: isSystemInDarkTheme(),
+                                            onComponentClick = {
+                                                scope.launch {
+                                                    if (drawerState.isOpen) drawerState.close()
+                                                }
+                                            },
+                                            drawerState = drawerState,
+                                            showAvatarMenu = showAvatarMenu
+                                        )
+                                    }
+                                    composable<Community> {
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = 1
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        activeFAB = FAButtons.POST_CREATE
+                                        CommunityScreen(navController)
+                                    }
+                                    composable<Profile> {
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        val username = it.arguments?.getString("username");
+
+                                        activeFAB = null
+                                        ProfileScreen(
+                                            username = username!!,
+                                            navController = navController,
+                                            navigatePost = { postId: String ->
+                                                navController.navigate(
+                                                    Post(postId = postId)
+                                                )
+                                            },
+                                            navigateLogin = { navController.navigate(Login) },
+                                            navigateReply = { id: String, content: String ->
+                                                activeCommentId = id
+                                                activeCommentComment = content
+                                                navController.navigate(
                                                     Comment(
-                                                        postId = activePostId,
-                                                        commentId = null,
+                                                        postId = null,
+                                                        commentId = activeCommentId,
                                                         commentContent = activeCommentComment,
                                                         darkMode = bool.value ?: false,
                                                     )
                                                 )
-                                            }, icon = R.drawable.reply)
-
-                                            else -> Unit
-                                        }
-                                    }
-                                }
-                            ) { it ->
-                                if (showBottomSheet) {
-                                    CreatePostBottomSheet(
-                                        onDismissRequest = { showBottomSheet = false },
-                                        sheetState = sheetState,
-                                        navController = navController
-                                    )
-                                }
-                                NavHost(
-                                    navController = navController,
-                                    startDestination = Main,
-                                    modifier = Modifier.padding(it)
-                                ) {
-                                    navigation<Main>(startDestination = Home) {
-                                        composable<Home> {
-                                            selectedBottomNavigation = 0
-                                            barState.value = true
-                                            userTopBarState.value = false
-                                            sidebarEnabled.value = true
-
-                                            activeFAB = FAButtons.POST_CREATE
-                                            HomeScreen(
-                                                navController = navController,
-                                                darkMode = bool.value ?: isSystemInDarkTheme(),
-                                                onComponentClick = {
-                                                    scope.launch {
-                                                        if (drawerState.isOpen) drawerState.close()
-                                                    }
-                                                },
-                                                drawerState = drawerState,
-                                                showAvatarMenu = showAvatarMenu
-                                            )
-                                        }
-                                        composable<Community> {
-                                            sidebarEnabled.value = true
-                                            selectedBottomNavigation = 1
-                                            barState.value = true
-                                            userTopBarState.value = true
-
-                                            activeFAB = FAButtons.POST_CREATE
-                                            CommunityScreen(navController)
-                                        }
-                                        composable<Profile> {
-                                            sidebarEnabled.value = true
-                                            selectedBottomNavigation = -1
-                                            barState.value = true
-                                            userTopBarState.value = true
-
-                                            val username = it.arguments?.getString("username");
-
-                                            activeFAB = null
-                                            ProfileScreen(
-                                                username = username!!,
-                                                navController = navController,
-                                                navigatePost = { postId: String ->
-                                                    navController.navigate(
-                                                        Post(postId = postId)
-                                                    )
-                                                },
-                                                navigateLogin = { navController.navigate(Login) },
-                                                navigateReply = { id: String, content: String ->
-                                                    activeCommentId = id
-                                                    activeCommentComment = content
-                                                    navController.navigate(
-                                                        Comment(
-                                                            postId = null,
-                                                            commentId = activeCommentId,
-                                                            commentContent = activeCommentComment,
-                                                            darkMode = bool.value ?: false,
-                                                        )
-                                                    )
-                                                },
-                                                darkMode = bool.value ?: false
-                                            )
-                                        }
-                                        composable<CreateTextPost> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
-
-                                            activeFAB = null
-                                            barState.value = false
-                                            userTopBarState.value = false
-
-                                            CreateTextPostScreen(
-                                                navController = navController,
-                                                isDarkTheme = bool.value ?: isSystemInDarkTheme()
-                                            )
-                                        }
-
-                                        composable<CreateMediaPost> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
-
-                                            activeFAB = null
-                                            barState.value = false
-                                            userTopBarState.value = false
-
-                                            CreateMediaPostSCcreen(
-                                                navController = navController,
-                                                isDarkTheme = bool.value ?: isSystemInDarkTheme()
-                                            )
-                                        }
-                                        composable<Post>(
-                                            enterTransition =
-                                            {
-                                                slideIntoContainer(
-                                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                                    animationSpec = tween(500))
                                             },
-                                            exitTransition =
-                                            {
-                                                slideOutOfContainer(
-                                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                                    animationSpec = tween(500))
-                                            }) {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = true
+                                            darkMode = bool.value ?: false
+                                        )
+                                    }
+                                    composable<CreateTextPost> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
 
-                                            activeFAB = FAButtons.POST_REPLY
-                                            barState.value = true
-                                            userTopBarState.value = false
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
 
-                                            activePostId = it.toRoute<Post>().postId
-                                            PostScreen(
-                                                navController = navController,
-                                                navReply = { id: String, content: String ->
-                                                    activeCommentId = id
-                                                    activeCommentComment = content
-                                                    navController.navigate(
-                                                        Comment(
-                                                            postId = activePostId,
-                                                            commentId = activeCommentId,
-                                                            commentContent = activeCommentComment,
-                                                            darkMode = bool.value ?: false,
-                                                        )
+                                        CreateTextPostScreen(
+                                            navController = navController,
+                                            isDarkTheme = bool.value ?: isSystemInDarkTheme()
+                                        )
+                                    }
+
+                                    composable<CreateMediaPost> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
+
+                                        CreateMediaPostSCcreen(
+                                            navController = navController,
+                                            isDarkTheme = bool.value ?: isSystemInDarkTheme()
+                                        )
+                                    }
+                                    composable<Post>(
+                                        enterTransition =
+                                        {
+                                            slideIntoContainer(
+                                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                                animationSpec = tween(500))
+                                        },
+                                        exitTransition =
+                                        {
+                                            slideOutOfContainer(
+                                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                                animationSpec = tween(500))
+                                        }) {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = true
+
+                                        activeFAB = FAButtons.POST_REPLY
+                                        barState.value = true
+                                        userTopBarState.value = false
+
+                                        activePostId = it.toRoute<Post>().postId
+                                        PostScreen(
+                                            navController = navController,
+                                            navReply = { id: String, content: String ->
+                                                activeCommentId = id
+                                                activeCommentComment = content
+                                                navController.navigate(
+                                                    Comment(
+                                                        postId = activePostId,
+                                                        commentId = activeCommentId,
+                                                        commentContent = activeCommentComment,
+                                                        darkMode = bool.value ?: false,
                                                     )
-                                                },
-                                                darkMode = bool.value ?: false,
-                                                onComponentClick = {
-                                                    if (drawerState.isOpen) scope.launch {
-                                                        drawerState.close()
-                                                    }
+                                                )
+                                            },
+                                            darkMode = bool.value ?: false,
+                                            onComponentClick = {
+                                                if (drawerState.isOpen) scope.launch {
+                                                    drawerState.close()
                                                 }
-                                            )
-                                        }
-                                        composable<Setting> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
+                                            }
+                                        )
+                                    }
+                                    composable<Setting> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
 
-                                            activeFAB = null
-                                            barState.value = false
-                                            userTopBarState.value = false
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
 
-                                            SettingScreen(
-                                                navController = navController,
-                                                switchTheme = switchTheme,
-                                                darkTheme = bool.value
-                                            );
-                                        }
-                                        composable<Comment> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
+                                        SettingScreen(
+                                            navController = navController,
+                                            switchTheme = switchTheme,
+                                            darkTheme = bool.value
+                                        );
+                                    }
+                                    composable<Comment> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
 
-                                            activeFAB = null
-                                            barState.value = false
-                                            userTopBarState.value = false
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
 
-                                            CommentScreen(navController = navController)
-                                        }
-                                        composable<Editing> {
-                                            selectedBottomNavigation = -1
+                                        CommentScreen(navController = navController)
+                                    }
+                                    composable<Editing> {
+                                        selectedBottomNavigation = -1
 
-                                            activeFAB = null
-                                            barState.value = false
-                                            userTopBarState.value = false
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
 
-                                            EditingScreen(navController = navController)
-                                        }
-
-                                        composable<CommunityDetail> {
-                                            selectedBottomNavigation = -1
-                                            barState.value = true
-                                            userTopBarState.value = true
-                                            sidebarEnabled.value = true
-
-
-                                            val name = it.arguments?.getString("name");
-                                            CommunityDetailScreen(
-                                                name = name!!,
-                                                navController = navController,
-                                                navigatePost = { postId: String ->
-                                                    navController.navigate(
-                                                        Post(postId = postId)
-                                                    )
-                                                },
-                                                navigateLogin = { navController.navigate(Login) },
-                                                navigateReply = { id: String, content: String ->
-                                                    activeCommentId = id
-                                                    activeCommentComment = content
-                                                    navController.navigate(
-                                                        Comment(
-                                                            postId = null,
-                                                            commentId = activeCommentId,
-                                                            commentContent = activeCommentComment,
-                                                            darkMode = bool.value ?: false,
-                                                        )
-                                                    )
-                                                },
-                                                darkMode = bool.value ?: false,
-                                            )
-                                        }
-                                        composable<EditCommunity> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
-                                            barState.value = false
-                                            userTopBarState.value = true
-                                            val name = it.arguments?.getString("name");
-                                            EditCommunityScreen(name = name!!, navController)
-                                        }
-                                        composable<AddModerator> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
-
-                                            barState.value = false
-                                            userTopBarState.value = true
-                                            val name = it.arguments?.getString("name");
-                                            AddModeratorScreen(name = name!!, navController = navController )
-                                        }
+                                        EditingScreen(navController = navController)
                                     }
 
-                                    navigation<Auth>(startDestination = Login) {
-                                        composable<SignUp> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
-
-                                            barState.value = false;
-                                            userTopBarState.value = false;
-
-                                            SignupScreen(isDarkMode = bool.value
-                                                ?: isSystemInDarkTheme(),
-                                                navigateToLogin = { navController.navigate(Login) },
-                                                navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
-                                        }
-                                        composable<Login> {
-                                            selectedBottomNavigation = -1
-                                            sidebarEnabled.value = false
+                                    composable<CommunityDetail> {
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = true
+                                        sidebarEnabled.value = true
 
 
-                                            barState.value = false;
-                                            userTopBarState.value = false;
-
-                                            LoginScreen(isDarkMode = bool.value
-                                                ?: isSystemInDarkTheme(),
-                                                navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
-                                                navigateToSignup = { navController.navigate(SignUp) })
-                                        }
-                                        composable<Verify>(
-                                            deepLinks = listOf(navDeepLink {
-                                                uriPattern =
-                                                    "https://baddit.life/auth?emailToken={token}"
-                                            })
-                                        ) {
-                                            sidebarEnabled.value = false
-
-                                            selectedBottomNavigation = -1
-                                            barState.value = false;
-                                            userTopBarState.value = false;
-                                            val token = it.arguments?.getString("token")
-                                            VerifyScreen(
-                                                navigateLogin = { navController.navigate(Login) },
-                                                navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
-                                                token
-                                            )
-                                        }
-
+                                        val name = it.arguments?.getString("name");
+                                        CommunityDetailScreen(
+                                            name = name!!,
+                                            navController = navController,
+                                            navigatePost = { postId: String ->
+                                                navController.navigate(
+                                                    Post(postId = postId)
+                                                )
+                                            },
+                                            navigateLogin = { navController.navigate(Login) },
+                                            navigateReply = { id: String, content: String ->
+                                                activeCommentId = id
+                                                activeCommentComment = content
+                                                navController.navigate(
+                                                    Comment(
+                                                        postId = null,
+                                                        commentId = activeCommentId,
+                                                        commentContent = activeCommentComment,
+                                                        darkMode = bool.value ?: false,
+                                                    )
+                                                )
+                                            },
+                                            darkMode = bool.value ?: false,
+                                        )
                                     }
+                                    composable<EditCommunity> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+                                        barState.value = false
+                                        userTopBarState.value = true
+                                        val name = it.arguments?.getString("name");
+                                        EditCommunityScreen(name = name!!, navController)
+                                    }
+                                    composable<AddModerator> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+
+                                        barState.value = false
+                                        userTopBarState.value = true
+                                        val name = it.arguments?.getString("name");
+                                        AddModeratorScreen(name = name!!, navController = navController )
+                                    }
+                                }
+
+                                navigation<Auth>(startDestination = Login) {
+                                    composable<SignUp> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+
+                                        SignupScreen(isDarkMode = bool.value
+                                            ?: isSystemInDarkTheme(),
+                                            navigateToLogin = { navController.navigate(Login) },
+                                            navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } })
+                                    }
+                                    composable<Login> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+
+
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+
+                                        LoginScreen(isDarkMode = bool.value
+                                            ?: isSystemInDarkTheme(),
+                                            navigateToHome = { navController.navigate(Home) { popUpTo<Auth>() } },
+                                            navigateToSignup = { navController.navigate(SignUp) })
+                                    }
+                                    composable<Verify>(
+                                        deepLinks = listOf(navDeepLink {
+                                            uriPattern =
+                                                "https://baddit.life/auth?emailToken={token}"
+                                        })
+                                    ) {
+                                        sidebarEnabled.value = false
+
+                                        selectedBottomNavigation = -1
+                                        barState.value = false;
+                                        userTopBarState.value = false;
+                                        val token = it.arguments?.getString("token")
+                                        VerifyScreen(
+                                            navigateLogin = { navController.navigate(Login) },
+                                            navigateHome = { navController.navigate(Home) { popUpTo<Auth>() } },
+                                            token
+                                        )
+                                    }
+
                                 }
                             }
                         }
-
                     }
+
                 }
             }
         }
     }
-
-    val navItems = listOf(
-        BottomNavigationItem(
-            icon = R.drawable.round_home_24,
-            value = Home,
-            unselectedIcon = R.drawable.outline_home_24,
-            DisplayName = "Home"
-        ),
-        BottomNavigationItem(
-            icon = R.drawable.round_groups_24,
-            unselectedIcon = R.drawable.outline_groups_24,
-            value = Community,
-            DisplayName = "Explore"
-        )
-    )
-
-    @Composable
-    fun SlideVertically(content: @Composable () -> Unit) {
-        val visibleState = remember {
-            MutableTransitionState(initialState = false).apply { targetState = true }
-        }
-
-        AnimatedVisibility(
-            visibleState = visibleState,
-            modifier = Modifier,
-            enter = slideInVertically(),
-            exit = slideOutVertically() + fadeOut(),
-        ) {
-            content()
-        }
-    }
 }
+
+val navItems = listOf(
+    BottomNavigationItem(
+        icon = R.drawable.round_home_24,
+        value = Home,
+        unselectedIcon = R.drawable.outline_home_24,
+        DisplayName = "Home"
+    ),
+    BottomNavigationItem(
+        icon = R.drawable.round_groups_24,
+        unselectedIcon = R.drawable.outline_groups_24,
+        value = Community,
+        DisplayName = "Explore"
+    )
+)
 

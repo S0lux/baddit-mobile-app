@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -42,6 +43,7 @@ import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Post
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import kotlinx.coroutines.launch
 
