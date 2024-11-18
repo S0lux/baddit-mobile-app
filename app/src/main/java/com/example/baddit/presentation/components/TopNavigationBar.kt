@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -25,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,14 +39,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.presentation.screens.home.HomeViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
 import com.example.baddit.presentation.screens.profile.ProfileViewModel
-import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.LeftSideBar
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Search
@@ -58,9 +55,9 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationBar(
-    navController: NavHostController,
-    barState: MutableState<Boolean>,
-    userTopBarState: MutableState<Boolean>,
+    navController: NavController,
+    barState: Boolean,
+    userTopBarState: Boolean,
     showAvatarMenu: MutableState<Boolean>,
     onDrawerClicked: () -> Unit,
     profileViewModal: ProfileViewModel = hiltViewModel(),
@@ -87,7 +84,7 @@ fun TopNavigationBar(
 
 
     AnimatedVisibility(
-        visible = barState.value && !userTopBarState.value,
+        visible = barState && !userTopBarState,
         exit = slideOutVertically(),
         enter = slideInVertically()
     ) {

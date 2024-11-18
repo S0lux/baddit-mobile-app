@@ -185,7 +185,7 @@ class ProfileViewModel @Inject constructor(
 
     fun fetchUserProfile(username: String) {
         viewModelScope.launch {
-            isMe = if (username == me.value!!.username) {
+            isMe = if (username == me.value?.username) {
                 true;
             } else {
                 false;

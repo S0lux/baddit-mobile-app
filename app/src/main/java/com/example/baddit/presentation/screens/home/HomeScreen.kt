@@ -5,12 +5,14 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
@@ -18,6 +20,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +37,7 @@ import com.example.baddit.R
 import com.example.baddit.presentation.components.BadditDialog
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
@@ -47,6 +51,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
     darkMode: Boolean,
+    showAvatarMenu: MutableState<Boolean>,
     onComponentClick: () -> Unit,
     drawerState: DrawerState
 ) {
@@ -89,86 +94,104 @@ fun HomeScreen(
         )
     }
 
-    PullToRefreshBox(
-        isRefreshing = viewModel.isRefreshing,
-        state = refreshBoxState,
-        onRefresh = { viewModel.refreshPosts()},
-        indicator = {
-            Indicator(
-                state = refreshBoxState,
-                isRefreshing = viewModel.isRefreshing,
-                modifier = Modifier.align(Alignment.TopCenter),
-                containerColor = MaterialTheme.colorScheme.background,
-                color = MaterialTheme.colorScheme.textPrimary)
+    Scaffold(
+        topBar = {
+            TopNavigationBar(
+                navController = navController,
+                barState = true,
+                userTopBarState = false,
+                showAvatarMenu = showAvatarMenu,
+                onDrawerClicked = {
+                    scope.launch {
+                        if (drawerState.isOpen) drawerState.close()
+                        else drawerState.open()
+                    }
+                }
+            )
         }
-    ) {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.fillMaxSize(),
-            state = listState
+    ) { it ->
+        PullToRefreshBox(
+            isRefreshing = viewModel.isRefreshing,
+            state = refreshBoxState,
+            modifier = Modifier.padding(it),
+            onRefresh = { viewModel.refreshPosts()},
+            indicator = {
+                Indicator(
+                    state = refreshBoxState,
+                    isRefreshing = viewModel.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    color = MaterialTheme.colorScheme.textPrimary)
+            }
         ) {
-            if (error.isEmpty()) {
-                items(items = viewModel.postRepository.postCache) { item ->
-                    PostCard(
-                        postDetails = item,
-                        loggedIn = loggedIn,
-                        navigateLogin = { navController.navigate(Login) },
-                        votePostFn = { voteState: String ->
-                            viewModel.postRepository.votePost(
-                                item.id,
-                                voteState
-                            )
-                        },
-                        navigatePost = { postId: String ->
-                            if (drawerState.isOpen) {
-                                scope.launch {
-                                    drawerState.close()
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
+                if (error.isEmpty()) {
+                    items(items = viewModel.postRepository.postCache) { item ->
+                        PostCard(
+                            postDetails = item,
+                            loggedIn = loggedIn,
+                            navigateLogin = { navController.navigate(Login) },
+                            votePostFn = { voteState: String ->
+                                viewModel.postRepository.votePost(
+                                    item.id,
+                                    voteState
+                                )
+                            },
+                            navigatePost = { postId: String ->
+                                if (drawerState.isOpen) {
+                                    scope.launch {
+                                        drawerState.close()
+                                    }
+                                } else {
+                                    navController.navigate(
+                                        Post(postId = postId)
+                                    )
                                 }
-                            } else {
-                                navController.navigate(
-                                    Post(postId = postId)
-                                )
-                            }
 
-                        },
-                        setPostScore = { score: Int ->
-                            viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
-                                score
-                        },
-                        setVoteState = { state: String? ->
-                            viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
-                                state
-                        },
-                        loggedInUser = viewModel.authRepository.currentUser.value,
-                        deletePostFn = { postId: String ->
-                            viewModel.postRepository.deletePost(
-                                postId
-                            )
-                        },
-                        navigateEdit = { postId: String ->
-                            navController.navigate(
-                                Editing(
-                                    postId = postId,
-                                    commentId = null,
-                                    commentContent = null,
-                                    darkMode = darkMode
+                            },
+                            setPostScore = { score: Int ->
+                                viewModel.postRepository.postCache.find { it.id == item.id }!!.score.value =
+                                    score
+                            },
+                            setVoteState = { state: String? ->
+                                viewModel.postRepository.postCache.find { it.id == item.id }!!.voteState.value =
+                                    state
+                            },
+                            loggedInUser = viewModel.authRepository.currentUser.value,
+                            deletePostFn = { postId: String ->
+                                viewModel.postRepository.deletePost(
+                                    postId
                                 )
-                            )
-                        },
-                        navigateReply = { postId: String ->
-                            navController.navigate(
-                                Comment(
-                                    postId = postId,
-                                    darkMode = darkMode,
-                                    commentContent = null,
-                                    commentId = null
+                            },
+                            navigateEdit = { postId: String ->
+                                navController.navigate(
+                                    Editing(
+                                        postId = postId,
+                                        commentId = null,
+                                        commentContent = null,
+                                        darkMode = darkMode
+                                    )
                                 )
-                            )
-                        },
-                        onComponentClick = onComponentClick,
-                        navController = navController,
-                        imageLoader = viewModel.imageLoader
-                    )
+                            },
+                            navigateReply = { postId: String ->
+                                navController.navigate(
+                                    Comment(
+                                        postId = postId,
+                                        darkMode = darkMode,
+                                        commentContent = null,
+                                        commentId = null
+                                    )
+                                )
+                            },
+                            onComponentClick = onComponentClick,
+                            navController = navController,
+                            imageLoader = viewModel.imageLoader
+                        )
+                    }
                 }
             }
         }

@@ -139,7 +139,7 @@ fun ProfileScreen(
                 titleContentColor = MaterialTheme.colorScheme.textPrimary
             ),
             title = {
-                val titleText = if (viewModel.loggedIn.value) {
+                val titleText = if (viewModel.user.value != null) {
                     viewModel.user.value?.username?.let {
                         "u/$it"
                     } ?: "u/UnknownUser"
@@ -316,7 +316,6 @@ fun ProfileHeader(
                             contentScale = ContentScale.Crop
                         )
                     } else {
-
                         Box() {
                             Box(
                                 modifier = Modifier
@@ -387,7 +386,7 @@ fun ProfileHeader(
             } else {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data("https://i.imgur.com/mJQpR31.png")
+                        .data(currentUser?.avatarUrl ?: "https://i.imgur.com/mJQpR31.png")
                         .build(),
                     contentDescription = null,
                     modifier = Modifier

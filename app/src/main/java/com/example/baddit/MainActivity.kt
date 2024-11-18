@@ -3,9 +3,12 @@ package com.example.baddit
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
@@ -195,20 +198,6 @@ class MainActivity : ComponentActivity() {
                                         drawerState = drawerState
                                     )
                                 },
-                                topBar = {
-                                    TopNavigationBar(
-                                        navController = navController,
-                                        barState = barState,
-                                        userTopBarState = userTopBarState,
-                                        showAvatarMenu = showAvatarMenu,
-                                        onDrawerClicked = {
-                                            scope.launch {
-                                                if (drawerState.isOpen) drawerState.close()
-                                                else drawerState.open()
-                                            }
-                                        }
-                                    )
-                                },
                                 floatingActionButton = {
                                     if (barState.value) {
                                         when (activeFAB) {
@@ -262,7 +251,8 @@ class MainActivity : ComponentActivity() {
                                                         if (drawerState.isOpen) drawerState.close()
                                                     }
                                                 },
-                                                drawerState = drawerState
+                                                drawerState = drawerState,
+                                                showAvatarMenu = showAvatarMenu
                                             )
                                         }
                                         composable<Community> {
@@ -334,7 +324,19 @@ class MainActivity : ComponentActivity() {
                                                 isDarkTheme = bool.value ?: isSystemInDarkTheme()
                                             )
                                         }
-                                        composable<Post> {
+                                        composable<Post>(
+                                            enterTransition =
+                                            {
+                                                slideIntoContainer(
+                                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                                    animationSpec = tween(500))
+                                            },
+                                            exitTransition =
+                                            {
+                                                slideOutOfContainer(
+                                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                                    animationSpec = tween(500))
+                                            }) {
                                             selectedBottomNavigation = -1
                                             sidebarEnabled.value = true
 

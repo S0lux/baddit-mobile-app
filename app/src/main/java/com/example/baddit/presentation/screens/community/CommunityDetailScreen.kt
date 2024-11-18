@@ -276,7 +276,7 @@ fun BannerCommunity(community: GetACommunityResponseDTO, navController: NavContr
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
-                onClick = { navController.navigate(Community) },
+                onClick = { navController.popBackStack() },
                 modifier = Modifier.background(Color.Transparent),
             ) {
                 Icon(

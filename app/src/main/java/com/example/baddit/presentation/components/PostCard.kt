@@ -342,11 +342,7 @@ fun PostHeader(
             if (communityName.isNotEmpty()) {
                 navController.navigate(CommunityDetail(communityName))
             } else {
-                if (!loggedIn) {
-                    showLoginDialog()
-                } else {
-                    navController.navigate(Profile(authorName))
-                }
+                navController.navigate(Profile(authorName))
             }
         }
     ) {
