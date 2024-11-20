@@ -39,7 +39,6 @@
                 <data android:host="baddit.life" />
             </intent-filter>
         </activity>
-
         <provider
             android:authorities="${applicationId}.provider"
             android:name="androidx.core.content.FileProvider"
@@ -50,7 +49,12 @@
                 android:resource="@xml/path_provider"
                 />
         </provider>
-
+        <service
+            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
-
 </manifest>

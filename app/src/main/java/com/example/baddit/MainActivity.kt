@@ -1,35 +1,23 @@
 package com.example.baddit
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.view.WindowInsetsController
 import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -38,8 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,11 +35,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,6 +45,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.NotificationRepository
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
 import com.example.baddit.presentation.components.BadditActionButton
@@ -69,7 +53,6 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
-import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.screens.comment.CommentScreen
 import com.example.baddit.presentation.screens.community.AddModeratorScreen
 import com.example.baddit.presentation.screens.community.CommunityDetailScreen
@@ -105,6 +88,8 @@ import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
 import com.example.baddit.ui.theme.BadditTheme
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -118,11 +103,49 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var authRepository: AuthRepository
 
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("Activity", "Permission granted")
+        } else {
+            Log.d("Activity", "Permission denied")
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         enableEdgeToEdge()
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("Activity", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+
+            if (authRepository.isLoggedIn.value) {
+                lifecycleScope.launch {
+                    when (val result = notificationRepository.sendFcmTokenToServer(token)) {
+                        is com.example.baddit.domain.error.Result.Success -> {
+                            Log.d("Activity", "FCM token sent successfully")
+                        }
+                        is com.example.baddit.domain.error.Result.Error -> {
+                            Log.e("Activity", "Failed to send FCM token: ${result.error}")
+                        }
+                    }
+                }
+            }
+        })
+
+        FirebaseMessaging.getInstance().subscribeToTopic("GlobalNotification")
 
         fun setLightStatusBar() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -141,6 +164,16 @@ class MainActivity : ComponentActivity() {
         fun setDarkStatusBar() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.insetsController?.setSystemBarsAppearance(0, APPEARANCE_LIGHT_STATUS_BARS)
+            }
+        }
+
+        // Ask for notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                Log.d("Activity", "Permission already granted")
+            }
+            else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
 

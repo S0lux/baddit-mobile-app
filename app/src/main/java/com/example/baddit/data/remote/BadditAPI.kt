@@ -20,6 +20,7 @@ import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.community.Members
 import com.example.baddit.domain.model.community.Moderators
+import com.example.baddit.domain.model.notification.FcmTokenBody
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -173,4 +174,7 @@ interface BadditAPI {
         @Path("communityName") communityName: String,
         @Path("memberName") memberName: String
     ): Response<Unit>
+
+    @POST("/v1/notifications/fcm")
+    suspend fun sendFcmTokenToServer(@Body fcmTokenBody: FcmTokenBody): Response<Unit>
 }
