@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -26,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,10 +46,12 @@ import com.example.baddit.presentation.screens.login.LoginViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.remember
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.baddit.presentation.screens.home.HomeViewModel
+import com.example.baddit.presentation.screens.notifications.NotificationItem
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
+import com.example.baddit.presentation.utils.Notification
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -59,10 +64,10 @@ fun AvatarMenu(
     viewModel: LoginViewModel = hiltViewModel(),
     navController: NavHostController,
     switchTheme: suspend (String) -> Unit,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    notificationCount: Int = 0
 ) {
-    var currentUser = viewModel.currentUser.value;
-
+    val currentUser = viewModel.currentUser.value;
     val coroutineScope = rememberCoroutineScope();
 
     if (!show.value) {
@@ -73,7 +78,7 @@ fun AvatarMenu(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)) // Scrim effect
+                        .background(Color.Black.copy(alpha = 0.8f)) // Scrim effect
                         .clickable(
                             onClick = {
                                 show.value = false
@@ -140,8 +145,9 @@ fun AvatarMenu(
                                         .padding(10.dp, 14.dp, 10.dp, 14.dp)
                                 ) {
                                     Text(
-                                        text = "u/ ${currentUser?.username ?: "Anonymous"}",
+                                        text = currentUser?.username ?: "Anonymous",
                                         style = MaterialTheme.typography.titleMedium,
+                                        fontSize = 24.sp,
                                         modifier = Modifier,
                                         color = MaterialTheme.colorScheme.textPrimary
                                     )
@@ -190,6 +196,14 @@ fun AvatarMenu(
                             ) {
 
                                 if(currentUser != null){
+                                    ProfileItem(
+                                        painterResource(id = R.drawable.bell),
+                                        "Notifications",
+                                        onClick = {
+                                            navController.navigate(Notification)
+                                            show.value = false; },
+                                        notificationCount = notificationCount
+                                    )
                                     ProfileItem(
                                         painterResource(id = R.drawable.person),
                                         "Profile",

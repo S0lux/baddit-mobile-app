@@ -39,9 +39,11 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.baddit.R
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.components.TopNavigationBar
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
@@ -91,33 +93,10 @@ fun PostScreen(
             if (viewModel.error.isNotEmpty()) return@LazyColumn
 
             item {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .background(MaterialTheme.colorScheme.cardBackground)
-                        .padding(bottom = 10.dp, top = WindowInsets.safeContent.asPaddingValues().calculateTopPadding().plus(5.dp))
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    IconButton(
-                        onClick = {
-                            navController.popBackStack()
-                        },
-                        modifier = Modifier,
-                        colors = IconButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.textPrimary,
-                            disabledContentColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_arrow_back_24),
-                            contentDescription = null
-                        )
-                    }
-                }
+                BaseTopNavigationBar(
+                    title = "Post",
+                    leftIcon = R.drawable.baseline_arrow_back_24,
+                    onLeftIconClick = { navController.popBackStack() })
                 PostCard(
                     postDetails = viewModel.post,
                     loggedIn = viewModel.isLoggedIn,

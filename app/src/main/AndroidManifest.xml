@@ -50,7 +50,7 @@
                 />
         </provider>
         <service
-            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            android:name="com.example.baddit.PushNotification"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

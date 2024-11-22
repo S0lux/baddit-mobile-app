@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.NotificationRepository
 import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,20 @@ class PushNotification: FirebaseMessagingService() {
                 }
                 is com.example.baddit.domain.error.Result.Error -> {
                     Log.e("FCM", "Failed to send new token to server: ${result.error}")
+                }
+            }
+        }
+    }
+
+    override fun onMessageReceived(message: RemoteMessage) {
+        super.onMessageReceived(message)
+        CoroutineScope(Dispatchers.IO).launch {
+            when (val result = notificationRepository.fetchNewNotifications()) {
+                is com.example.baddit.domain.error.Result.Success -> {
+                    Log.d("FCM", "New notification fetched")
+                }
+                is com.example.baddit.domain.error.Result.Error -> {
+                    Log.e("FCM", "Failed to fetch new notifications from server: ${result.error}")
                 }
             }
         }

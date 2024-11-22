@@ -13,6 +13,7 @@ import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.NotificationRepository
 import com.example.baddit.domain.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     val imageLoader: ImageLoader,
     val postRepository: PostRepository,
-    val authRepository: AuthRepository
+    val authRepository: AuthRepository,
+    val notificationRepository: NotificationRepository
 ) : ViewModel() {
     var isRefreshing by mutableStateOf(false)
         private set;
@@ -33,6 +35,8 @@ class HomeViewModel @Inject constructor(
     var showNoPostWarning by mutableStateOf(false)
     val loggedIn = authRepository.isLoggedIn;
     var endReached = false;
+
+    val notifications = notificationRepository.notifications
 
     private var lastPostId: String? = null;
 

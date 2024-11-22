@@ -18,6 +18,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -64,6 +67,7 @@ import com.example.baddit.presentation.screens.createPost.CreateTextPostScreen
 import com.example.baddit.presentation.screens.editing.EditingScreen
 import com.example.baddit.presentation.screens.home.HomeScreen
 import com.example.baddit.presentation.screens.login.LoginScreen
+import com.example.baddit.presentation.screens.notifications.NotificationScreen
 import com.example.baddit.presentation.screens.post.PostScreen
 import com.example.baddit.presentation.screens.profile.ProfileScreen
 import com.example.baddit.presentation.screens.setting.SettingScreen
@@ -82,6 +86,7 @@ import com.example.baddit.presentation.utils.FAButtons
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
+import com.example.baddit.presentation.utils.Notification
 import com.example.baddit.presentation.utils.Post
 import com.example.baddit.presentation.utils.Profile
 import com.example.baddit.presentation.utils.Setting
@@ -179,6 +184,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            val notifications = notificationRepository.notifications
+
             val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
@@ -245,8 +252,10 @@ class MainActivity : ComponentActivity() {
                     show = showAvatarMenu,
                     navController = navController,
                     switchTheme = switchTheme,
-                    isDarkTheme = bool.value ?: isSystemInDarkTheme()
+                    isDarkTheme = bool.value ?: isSystemInDarkTheme(),
+                    notificationCount = notifications.size
                 )
+
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
@@ -263,7 +272,7 @@ class MainActivity : ComponentActivity() {
                             },
                             navController = navController,
                             drawerState =  drawerState)
-                    }, drawerState = drawerState,
+                    },  drawerState = drawerState,
                         gesturesEnabled = sidebarEnabled.value)
                     {
                         Scaffold(
@@ -316,7 +325,8 @@ class MainActivity : ComponentActivity() {
                             }
                             NavHost(
                                 navController = navController,
-                                startDestination = Main
+                                startDestination = Main,
+                                modifier = Modifier.padding(bottom = it.calculateBottomPadding())
                             ) {
                                 navigation<Main>(startDestination = Home) {
                                     composable<Home> {
@@ -532,6 +542,12 @@ class MainActivity : ComponentActivity() {
                                         userTopBarState.value = true
                                         val name = it.arguments?.getString("name");
                                         AddModeratorScreen(name = name!!, navController = navController )
+                                    }
+                                    composable<Notification> {
+                                        barState.value = false
+                                        NotificationScreen(
+                                            navController = navController
+                                        )
                                     }
                                 }
 

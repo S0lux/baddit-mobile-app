@@ -83,3 +83,6 @@ data class EditCommunity(
 data class AddModerator(
     val name: String
 )
+
+@Serializable
+object Notification

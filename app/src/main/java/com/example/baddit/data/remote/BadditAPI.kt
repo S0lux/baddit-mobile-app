@@ -10,6 +10,7 @@ import com.example.baddit.data.dto.comment.PostCommentRequestBody
 import com.example.baddit.data.dto.comment.VoteCommentRequestBody
 import com.example.baddit.data.dto.community.CreateRequestBody
 import com.example.baddit.data.dto.community.ModerateMemberRequestBody
+import com.example.baddit.data.dto.notification.NotificationResponseItem
 import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
@@ -177,4 +178,18 @@ interface BadditAPI {
 
     @POST("/v1/notifications/fcm")
     suspend fun sendFcmTokenToServer(@Body fcmTokenBody: FcmTokenBody): Response<Unit>
+
+    @GET("/v1/notifications/")
+    suspend fun fetchUserNotifications(
+        @Query("skip") skip: Int,
+        @Query("limit") limit: Int ): Response<Array<NotificationResponseItem>>
+
+    @GET("/v1/notifications/")
+    suspend fun fetchNewNotifications(
+        @Query("after") after: String): Response<Array<NotificationResponseItem>>
+
+    @GET("/v1/notifications/{notificationId}/mark-as-read")
+    suspend fun markNotificationAsRead(
+        @Path("notificationId")  notificationId: String
+    ): Response<Unit>
 }

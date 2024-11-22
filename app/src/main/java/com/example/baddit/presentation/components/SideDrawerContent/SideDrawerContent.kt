@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -76,10 +78,7 @@ fun SideDrawerContent(
     ModalDrawerSheet(
         modifier = Modifier
             .width(250.dp)
-            .shadow(
-                elevation = 2.dp,
-            ),
-        windowInsets = WindowInsets(left = 15.dp, right = 15.dp, top = 20.dp, bottom = 0.dp),
+            .safeDrawingPadding(),
         drawerContainerColor = MaterialTheme.colorScheme.cardBackground,
         drawerContentColor = MaterialTheme.colorScheme.textPrimary,
     ) {
@@ -95,7 +94,11 @@ fun SideDrawerContent(
                     containerColor = MaterialTheme.colorScheme.background,
                     color = MaterialTheme.colorScheme.textPrimary)
             },
-            modifier = Modifier.padding(top = WindowInsets.safeContent.asPaddingValues().calculateTopPadding())
+            modifier = Modifier.padding(
+                top = WindowInsets.safeContent.asPaddingValues().calculateTopPadding(),
+                start = WindowInsets.safeContent.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr).plus(15.dp),
+                end = 10.dp
+            )
         ) {
             LazyColumn (verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 item {
