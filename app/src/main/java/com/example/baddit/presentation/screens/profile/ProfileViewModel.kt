@@ -65,7 +65,6 @@ class ProfileViewModel @Inject constructor(
                 refreshPosts(username = user.value!!.username)
             } else {
                 refreshComments(username = user.value!!.username)
-
             }
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,11 +28,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,9 +43,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetDefaults
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -50,6 +57,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,9 +98,11 @@ import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.ui.theme.CustomTheme.appBlue
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -114,7 +124,10 @@ fun ProfileScreen(
     val error = viewModel.error
     val loggedIn by viewModel.loggedIn
     val imageLoader = viewModel.imageLoader
+    val actionMenuScrollState = rememberScrollState()
 
+    val contentSelectionModalState = rememberModalBottomSheetState()
+    var showContentSelectionModal by remember { mutableStateOf(false) }
 
     if (error.isNotEmpty()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
@@ -139,15 +152,8 @@ fun ProfileScreen(
                 titleContentColor = MaterialTheme.colorScheme.textPrimary
             ),
             title = {
-                val titleText = if (viewModel.user.value != null) {
-                    viewModel.user.value?.username?.let {
-                        "u/$it"
-                    } ?: "u/UnknownUser"
-                } else {
-                    "u/UnknownUser"
-                }
                 Text(
-                    text = titleText,
+                    text = "Profile",
                     style = TextStyle(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp
@@ -164,71 +170,52 @@ fun ProfileScreen(
             },
             actions = {},
         )
+
         ProfileHeader(
             loggedIn = loggedIn,
             currentUser = viewModel.user.value,
             viewModel = viewModel,
             navController
         )
-        Box(
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
+                .horizontalScroll(actionMenuScrollState)
+                .background(MaterialTheme.colorScheme.scaffoldBackground)
+                .padding(horizontal = 10.dp, vertical = 16.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(125.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .bottomBorder(
-                            2.dp,
-                            MaterialTheme.colorScheme.neutralGray,
-                            viewModel.isPostSectionSelected.value
-                        )
-                        .clickable(
-                            onClick = { viewModel.togglePostSection(true) },
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                        )
-                ) {
-                    Text(
-                        modifier = Modifier.padding(14.dp),
-                        text = "Posts",
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .bottomBorder(
-                            2.dp,
-                            MaterialTheme.colorScheme.neutralGray,
-                            !viewModel.isPostSectionSelected.value
-                        )
-                        .clickable(
-                            onClick = { viewModel.togglePostSection(false) },
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                        )
-                ) {
-                    Text(
-                        modifier = Modifier.padding(14.dp),
-                        text = "Comments",
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
+            IconMenuItem(
+                icon = if (viewModel.isPostSectionSelected.value) R.drawable.comment_empty else R.drawable.comment,
+                tint = MaterialTheme.colorScheme.textPrimary,
+                text = if (viewModel.isPostSectionSelected.value) "Posts" else "Comments",
+                isDropdown = true,
+                onClick = { showContentSelectionModal = true }
+            )
 
-            }
+            IconMenuItem(
+                icon = R.drawable.message,
+                tint = MaterialTheme.colorScheme.textPrimary,
+                text = "Message",
+                onClick = { TODO() }
+            )
+
+            IconMenuItem(
+                icon = R.drawable.add_user,
+                tint = MaterialTheme.colorScheme.textPrimary,
+                text = "Friend",
+                onClick = { TODO() }
+            )
+
+            IconMenuItem(
+                icon = R.drawable.block,
+                tint = MaterialTheme.colorScheme.textPrimary,
+                text = "Block",
+                onClick = { TODO() }
+            )
         }
+
         ProfilePostSection(
             username = username,
             loggedIn = loggedIn,
@@ -240,6 +227,7 @@ fun ProfileScreen(
             darkMode = darkMode,
             imageLoader = imageLoader
         )
+
         ProfileCommentsSection(
             username = username,
             viewModel = viewModel,
@@ -249,6 +237,67 @@ fun ProfileScreen(
             navController = navController,
             darkMode = darkMode
         )
+
+        if (showContentSelectionModal) {
+            ModalBottomSheet(
+                onDismissRequest = { showContentSelectionModal = false },
+                sheetState = contentSelectionModalState,
+                containerColor = MaterialTheme.colorScheme.cardBackground
+            ) {
+                Column(
+                    modifier = Modifier.safeContentPadding(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    IconMenuItem(
+                        icon = R.drawable.comment,
+                        text = "Posts",
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        iconGap = 12.dp,
+                        onClick = {
+                            viewModel.togglePostSection(true);
+                            showContentSelectionModal = false;
+                        }
+                    )
+                    IconMenuItem(
+                        icon = R.drawable.comment_empty,
+                        text = "Comments",
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        iconGap = 12.dp,
+                        onClick = {
+                            viewModel.togglePostSection(false);
+                            showContentSelectionModal = false;
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun IconMenuItem(
+    icon: Int,
+    tint: Color = MaterialTheme.colorScheme.textSecondary,
+    text: String,
+    isDropdown: Boolean = false,
+    onClick: () -> Unit = { },
+    iconGap: Dp = 6.dp
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(iconGap),
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .clickable { onClick() }
+            .background(MaterialTheme.colorScheme.cardBackground)
+            .padding(horizontal = 12.dp, vertical = 5.dp)
+    ) {
+        Icon(painter = painterResource(icon), tint = tint, contentDescription = null)
+        Text(text = text, color = tint, fontSize = 15.sp)
+        if (isDropdown)
+            Icon(
+                painter = painterResource(R.drawable.arrow_downvote),
+                tint = tint,
+                contentDescription = null)
     }
 }
 
@@ -286,6 +335,7 @@ fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.scaffoldBackground)
             .defaultMinSize(100.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -417,11 +467,11 @@ fun ProfileHeader(
                     ) {
                         currentUser?.username?.let {
                             Text(
-                                text = "u/$it",
+                                text = it,
                                 style = TextStyle(
                                     color = MaterialTheme.colorScheme.textPrimary,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 25.sp
+                                    fontSize = 32.sp
                                 )
                             )
                         }
@@ -430,15 +480,23 @@ fun ProfileHeader(
                                 LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)
                             val dateTimeFormatted =
                                 localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                            Text(
-                                text = "Cake day: $dateTimeFormatted",
-                                style = TextStyle(
-                                    color = MaterialTheme.colorScheme.textPrimary,
-                                    fontStyle = FontStyle.Italic,
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.cake),
+                                    tint = MaterialTheme.colorScheme.textSecondary,
+                                    contentDescription = null)
+
+                                Text(
+                                    text = dateTimeFormatted,
+                                    color = MaterialTheme.colorScheme.textSecondary,
                                     fontSize = 15.sp
                                 )
-                            )
+                            }
                         }
+
                         Spacer(modifier = Modifier.height(10.dp))
 
                         if (viewModel.isMe && viewModel.isEditing && avatarImg != null) {
@@ -481,7 +539,6 @@ fun ProfileHeader(
                                             fontSize = 16.sp
                                         )
                                     )
-
                                 }
                             }
                         }
@@ -527,11 +584,9 @@ fun ProfilePostSection(
             }
     }
 
-
-
     AnimatedVisibility(
         visible = viewModel.isPostSectionSelected.value,
-        exit = slideOutHorizontally() + fadeOut(),
+        exit = slideOutHorizontally(),
         enter = slideInHorizontally()
     ) {
         PullToRefreshBox(
@@ -642,7 +697,7 @@ fun ProfileCommentsSection(
 
     AnimatedVisibility(
         visible = !viewModel.isPostSectionSelected.value,
-        exit = slideOutHorizontally() + fadeOut(),
+        exit = slideOutHorizontally(),
         enter = slideInHorizontally()
     ) {
         PullToRefreshBox(

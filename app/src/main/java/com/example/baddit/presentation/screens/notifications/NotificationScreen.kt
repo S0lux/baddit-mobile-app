@@ -45,6 +45,7 @@ import com.example.baddit.presentation.screens.profile.bottomBorder
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -110,7 +111,7 @@ fun NotificationScreen(
                             modifier = Modifier
                                 .height(1.dp)
                                 .fillMaxWidth(),
-                            color = Color.LightGray
+                            color = MaterialTheme.colorScheme.background
                         )
                     }
                 }
@@ -141,7 +142,7 @@ fun NotificationItem(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = if (isRead) Color.White else Color.LightGray.copy(alpha = 0.1f),
+                color = if (isRead) MaterialTheme.colorScheme.cardBackground else MaterialTheme.colorScheme.cardBackground.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(8.dp)
             )
             .clickable(onClick = onItemClick)
@@ -153,20 +154,22 @@ fun NotificationItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isRead) FontWeight.Normal else FontWeight.Bold
+                fontWeight = if (isRead) FontWeight.Normal else FontWeight.Bold,
+                color = if (isRead) MaterialTheme.colorScheme.textSecondary else MaterialTheme.colorScheme.textPrimary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = if (isRead) MaterialTheme.colorScheme.textSecondary else MaterialTheme.colorScheme.textPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = timestamp,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = if (isRead) MaterialTheme.colorScheme.textSecondary else MaterialTheme.colorScheme.textPrimary
             )
         }
         if (!isRead) {

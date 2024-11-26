@@ -253,7 +253,7 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     switchTheme = switchTheme,
                     isDarkTheme = bool.value ?: isSystemInDarkTheme(),
-                    notificationCount = notifications.size
+                    notificationCount = notifications.count { !it.isRead }
                 )
 
                 Surface(
