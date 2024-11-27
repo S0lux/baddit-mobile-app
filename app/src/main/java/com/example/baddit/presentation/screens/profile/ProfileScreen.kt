@@ -194,26 +194,32 @@ fun ProfileScreen(
                 onClick = { showContentSelectionModal = true }
             )
 
-            IconMenuItem(
-                icon = R.drawable.message,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Message",
-                onClick = { TODO() }
-            )
+            if (!viewModel.isMe) {
+                IconMenuItem(
+                    icon = R.drawable.message,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Message",
+                    onClick = { TODO() }
+                )
 
-            IconMenuItem(
-                icon = R.drawable.add_user,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Friend",
-                onClick = { TODO() }
-            )
+                val isFriend = viewModel.user.value?.isFriend
+                if (isFriend != null && !isFriend) {
 
-            IconMenuItem(
-                icon = R.drawable.block,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Block",
-                onClick = { TODO() }
-            )
+                    IconMenuItem(
+                        icon = R.drawable.add_user,
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        text = "Friend",
+                        onClick = { TODO() }
+                    )
+                }
+
+                IconMenuItem(
+                    icon = R.drawable.block,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Block",
+                    onClick = { TODO() }
+                )
+            }
         }
 
         ProfilePostSection(
@@ -297,7 +303,8 @@ fun IconMenuItem(
             Icon(
                 painter = painterResource(R.drawable.arrow_downvote),
                 tint = tint,
-                contentDescription = null)
+                contentDescription = null
+            )
     }
 }
 
@@ -487,7 +494,8 @@ fun ProfileHeader(
                                 Icon(
                                     painter = painterResource(R.drawable.cake),
                                     tint = MaterialTheme.colorScheme.textSecondary,
-                                    contentDescription = null)
+                                    contentDescription = null
+                                )
 
                                 Text(
                                     text = dateTimeFormatted,
@@ -522,7 +530,8 @@ fun ProfileHeader(
                                     )
 
                                 }
-                                Button(modifier = Modifier.width(100.dp),
+                                Button(
+                                    modifier = Modifier.width(100.dp),
                                     onClick = {
                                         viewModel.updateAvatar((avatarImg!!));
                                     },

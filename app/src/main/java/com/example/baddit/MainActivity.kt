@@ -619,6 +619,12 @@ val navItems = listOf(
         unselectedIcon = R.drawable.outline_groups_24,
         value = Community,
         DisplayName = "Explore"
+    ),
+    BottomNavigationItem(
+        icon = R.drawable.message,
+        unselectedIcon = R.drawable.message,
+        value = Community,
+        DisplayName = "Message"
     )
 )
 

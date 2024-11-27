@@ -184,11 +184,12 @@ class ProfileViewModel @Inject constructor(
 
     fun fetchUserProfile(username: String) {
         viewModelScope.launch {
-            isMe = if (username == me.value?.username) {
-                true;
-            } else {
-                false;
-            }
+            // Determine if the profile belongs to the current user
+            isMe = username == me.value?.username
+
+            // Reset error before making the network call
+            error = ""
+
             when (val result = authRepository.getOther(username)) {
                 is Result.Error -> {
                     error = when (result.error) {
@@ -196,16 +197,20 @@ class ProfileViewModel @Inject constructor(
                         DataError.NetworkError.NO_INTERNET -> "No internet connection"
                         else -> "An unknown network error has occurred"
                     }
+                    // Ensure user is set to null in case of error
+                    user.value = null
                 }
 
                 is Result.Success -> {
+                    // Explicitly set the user value
                     user.value = result.data
-                    Log.d("ProfileScreen", "Data: " + user.value!!.username)
-                    error = ""
+
+                    // Optional: Log the isFriend status
+                    Log.d("ProfileScreen", "isFriend: ${result.data.isFriend}")
                 }
             }
-
         }
+
     }
 
     fun reloadAvatarDisplay() {
