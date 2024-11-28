@@ -4,5 +4,8 @@ data class GetOtherResponseDTO (
     val avatarUrl: String,
     val id: String,
     val registeredAt: String,
-    val username: String
+    val username: String,
+    val messagePrivacy: String,
+    val isFriend: Boolean,
+    val friendRequestStatus: String?
 )

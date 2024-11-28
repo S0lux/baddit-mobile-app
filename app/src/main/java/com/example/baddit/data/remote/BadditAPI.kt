@@ -4,6 +4,8 @@ import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.chat.DirectChannelBody
+import com.example.baddit.data.dto.chat.SendMessageBody
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
 import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
@@ -16,6 +18,8 @@ import com.example.baddit.data.dto.posts.VotePostRequestBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
+import com.example.baddit.domain.model.chat.chatChannel.ChannelResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.comment.CommentResponseDTO
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
@@ -218,4 +222,18 @@ interface BadditAPI {
     suspend fun removeFriend(
         @Path("userId") userId: String
     ): Response<Unit>
+
+
+    @POST("/v1/messages/direct")
+    suspend fun getOrCreateDirectChannel(@Body directChannelBody: DirectChannelBody): Response<ChannelResponseDTOItem>
+
+    @POST("/v1/messages")
+    suspend fun sendMessage(@Body sendMessageBody: SendMessageBody): Response<Unit>
+
+    @GET("/v1/messages/{channelId}")
+    suspend fun getChannelMessages(@Path("channelId") channelId: String): Response<ArrayList<MessageResponseDTOItem>>
+    @GET("/v1/messages/channels")
+    suspend fun  getAllChannels(): Response <ArrayList<ChannelResponseDTOItem>>
+
+
 }

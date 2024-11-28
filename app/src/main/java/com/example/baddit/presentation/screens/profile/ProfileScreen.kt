@@ -7,14 +7,12 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,16 +38,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetDefaults
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -78,7 +72,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -198,12 +191,29 @@ fun ProfileScreen(
                 onClick = { showContentSelectionModal = true }
             )
 
-            IconMenuItem(
-                icon = R.drawable.message,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Message",
-                onClick = { TODO() }
-            )
+            if (!viewModel.isMe) {
+                val messagePrivacy = viewModel.user.value?.friendRequestStatus;
+                val isFriend = viewModel.user.value?.isFriend;
+                if (messagePrivacy != null && isFriend != null) {
+                    if (messagePrivacy == "EVERYONE") {
+                        IconMenuItem(
+                            icon = R.drawable.outline_message,
+                            tint = MaterialTheme.colorScheme.textPrimary,
+                            text = "Message",
+                            onClick = { TODO() }
+                        )
+                    }
+                    else{
+                        if(isFriend == true){
+                            IconMenuItem(
+                                icon = R.drawable.outline_message,
+                                tint = MaterialTheme.colorScheme.textPrimary,
+                                text = "Message",
+                                onClick = { TODO() }
+                            )
+                        }
+                    }
+                }
 
             if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
                 IconMenuItem(
@@ -332,7 +342,6 @@ fun IconMenuItem(
                 contentDescription = null)
     }
 }
-
 
 @SuppressLint("WeekBasedYear")
 @Composable
@@ -804,5 +813,5 @@ fun Modifier.bottomBorder(strokeWidth: Dp, color: Color, isSelected: Boolean) = 
             }
         }
     }
-)
+)}
 
