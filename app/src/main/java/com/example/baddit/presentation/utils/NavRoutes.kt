@@ -86,3 +86,13 @@ data class AddModerator(
 
 @Serializable
 object Notification
+
+@Serializable
+// open by channelId or navigate to channel after click "Message" when there is no channel with target user
+data class ChannelDetail(
+    val channelId: String?,
+    val targetUserId: String?
+)
+
+@Serializable
+object ChannelList

@@ -28,7 +28,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -56,6 +54,7 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
+import com.example.baddit.presentation.screens.chat.ChannelListScreen
 import com.example.baddit.presentation.screens.comment.CommentScreen
 import com.example.baddit.presentation.screens.community.AddModeratorScreen
 import com.example.baddit.presentation.screens.community.CommunityDetailScreen
@@ -75,6 +74,7 @@ import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.Auth
+import com.example.baddit.presentation.utils.ChannelList
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CommunityDetail
@@ -357,6 +357,15 @@ class MainActivity : ComponentActivity() {
                                         activeFAB = FAButtons.POST_CREATE
                                         CommunityScreen(navController)
                                     }
+                                    composable<ChannelList> {
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = 2
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        activeFAB = FAButtons.POST_CREATE
+                                        ChannelListScreen(navController)
+                                    }
                                     composable<Profile> {
                                         sidebarEnabled.value = true
                                         selectedBottomNavigation = -1
@@ -494,6 +503,8 @@ class MainActivity : ComponentActivity() {
                                         EditingScreen(navController = navController)
                                     }
 
+
+
                                     composable<CommunityDetail> {
                                         selectedBottomNavigation = -1
                                         barState.value = true
@@ -621,9 +632,9 @@ val navItems = listOf(
         DisplayName = "Explore"
     ),
     BottomNavigationItem(
-        icon = R.drawable.message,
-        unselectedIcon = R.drawable.message,
-        value = Community,
+        icon = R.drawable.outline_message,
+        unselectedIcon = R.drawable.outline_message,
+        value = ChannelList,
         DisplayName = "Message"
     )
 )
