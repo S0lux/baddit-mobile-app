@@ -66,6 +66,7 @@ import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CreateCommunity
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.screens.community.ListViewCommunities
+import com.example.baddit.presentation.utils.ChannelDetail
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
@@ -271,7 +272,7 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
                                     .fillMaxWidth()
                                     .padding(16.dp)
                                     .clickable {
-//                                    navController.navigate(CommunityDetail(item.name))
+                                    navController.navigate(ChannelDetail(channelId = item.id, channelName = otherUser.username, channelAvatar = otherUser.avatarUrl))
                                     }
                             ) {
                                 AsyncImage(
