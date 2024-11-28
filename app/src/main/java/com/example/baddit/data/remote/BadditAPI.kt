@@ -21,6 +21,7 @@ import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.GetCommunityListResponseDTO
 import com.example.baddit.domain.model.community.Members
 import com.example.baddit.domain.model.community.Moderators
+import com.example.baddit.domain.model.friend.GetFriendsResponse
 import com.example.baddit.domain.model.notification.FcmTokenBody
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import okhttp3.MultipartBody
@@ -191,5 +192,30 @@ interface BadditAPI {
     @GET("/v1/notifications/{notificationId}/mark-as-read")
     suspend fun markNotificationAsRead(
         @Path("notificationId")  notificationId: String
+    ): Response<Unit>
+
+    @GET("/v1/friends/{userId}")
+    suspend fun getFriends(
+        @Path("userId") userId: String
+    ): Response<GetFriendsResponse>
+
+    @POST("/v1/friends/{userId}/send")
+    suspend fun sendFriendRequest(
+        @Path("userId") userId: String
+    ): Response<Unit>
+
+    @POST("/v1/friends/{userId}/accept")
+    suspend fun acceptFriendRequest(
+        @Path("userId") userId: String
+    ): Response<Unit>
+
+    @POST("/v1/friends/{userId}/reject")
+    suspend fun rejectFriendRequest(
+        @Path("userId") userId: String
+    ): Response<Unit>
+
+    @POST("/v1/friends/{userId}/remove")
+    suspend fun removeFriend(
+        @Path("userId") userId: String
     ): Response<Unit>
 }

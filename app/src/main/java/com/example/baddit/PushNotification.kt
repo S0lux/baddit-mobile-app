@@ -2,6 +2,7 @@ package com.example.baddit
 
 import android.util.Log
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.FriendRepository
 import com.example.baddit.domain.repository.NotificationRepository
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -18,6 +19,9 @@ class PushNotification: FirebaseMessagingService() {
 
     @Inject
     lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var friendRepository: FriendRepository
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -43,6 +47,12 @@ class PushNotification: FirebaseMessagingService() {
                 }
                 is com.example.baddit.domain.error.Result.Error -> {
                     Log.e("FCM", "Failed to fetch new notifications from server: ${result.error}")
+                }
+            }
+
+            if (message.data.isNotEmpty()) {
+                if (message.data["type"] == "FRIEND_REQUEST") {
+                    friendRepository.updateLocalUserFriend()
                 }
             }
         }

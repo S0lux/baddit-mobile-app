@@ -227,7 +227,10 @@ fun CommentCard(
                             authorName = details.author.username,
                             avatarUrl = details.author.avatarUrl,
                             showLoginPrompt = { showLoginDialog = true },
-                            navigateProfile = { navController?.navigate(Profile(username = details.author.username)) },
+                            navigateProfile = { navController?.navigate(
+                                Profile(
+                                    username = details.author.username,
+                                    userId = details.authorId)) },
                             score = scoreState,
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),

@@ -15,6 +15,7 @@ import com.example.baddit.domain.model.comment.CommentResponseDTOItem
 import com.example.baddit.domain.model.posts.toMutablePostResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.CommentRepository
+import com.example.baddit.domain.repository.FriendRepository
 import com.example.baddit.domain.repository.PostRepository
 import com.example.baddit.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,7 @@ class ProfileViewModel @Inject constructor(
     val authRepository: AuthRepository,
     val postRepository: PostRepository,
     val commentRepository: CommentRepository,
+    val friendRepository: FriendRepository,
     val userRepository: UserRepository,
     val imageLoader: ImageLoader,
 ) : ViewModel() {

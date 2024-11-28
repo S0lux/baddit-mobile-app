@@ -49,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.baddit.presentation.screens.notifications.NotificationItem
+import com.example.baddit.presentation.utils.Friend
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Notification
@@ -205,12 +206,20 @@ fun AvatarMenu(
                                         notificationCount = notificationCount
                                     )
                                     ProfileItem(
+                                        painterResource(id = R.drawable.baseline_account_circle_24),
+                                        "Friends",
+                                        onClick = {
+                                            navController.navigate(Friend)
+                                            show.value = false; }
+                                    )
+                                    ProfileItem(
                                         painterResource(id = R.drawable.person),
                                         "Profile",
                                         onClick = {
                                             navController.navigate(
                                                 Profile(
-                                                    viewModel.currentUser.value!!.username
+                                                    username = viewModel.currentUser.value!!.username,
+                                                    userId = viewModel.currentUser.value!!.id
                                                 )
                                             )
                                             show.value = false;

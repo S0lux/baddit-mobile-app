@@ -1,5 +1,6 @@
 package com.example.baddit
 
+import FriendsScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -83,6 +84,7 @@ import com.example.baddit.presentation.utils.CreateTextPost
 import com.example.baddit.presentation.utils.EditCommunity
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.FAButtons
+import com.example.baddit.presentation.utils.Friend
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Main
@@ -364,9 +366,11 @@ class MainActivity : ComponentActivity() {
                                         userTopBarState.value = true
 
                                         val username = it.arguments?.getString("username");
+                                        val userId = it.arguments?.getString("userId")
 
                                         activeFAB = null
                                         ProfileScreen(
+                                            userId = userId!!,
                                             username = username!!,
                                             navController = navController,
                                             navigatePost = { postId: String ->
@@ -401,6 +405,19 @@ class MainActivity : ComponentActivity() {
                                         CreateTextPostScreen(
                                             navController = navController,
                                             isDarkTheme = bool.value ?: isSystemInDarkTheme()
+                                        )
+                                    }
+
+                                    composable<Friend> {
+                                        selectedBottomNavigation = -1
+                                        sidebarEnabled.value = false
+
+                                        activeFAB = null
+                                        barState.value = false
+                                        userTopBarState.value = false
+
+                                        FriendsScreen(
+                                            navController = navController
                                         )
                                     }
 

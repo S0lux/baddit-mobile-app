@@ -343,7 +343,7 @@ fun PostHeader(
             if (communityName.isNotEmpty()) {
                 navController.navigate(CommunityDetail(communityName))
             } else {
-                navController.navigate(Profile(authorName))
+                navController.navigate(Profile(username = authorName, userId = postDetails.author.id))
             }
         }
     ) {

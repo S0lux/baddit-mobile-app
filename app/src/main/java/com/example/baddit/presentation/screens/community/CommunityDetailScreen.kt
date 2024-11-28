@@ -548,7 +548,9 @@ fun MembersView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
-                                .clickable { navController.navigate(Profile(member.username)) }
+                                .clickable { navController.navigate(Profile(
+                                    username = member.username,
+                                    userId = member.userId)) }
                         ) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)

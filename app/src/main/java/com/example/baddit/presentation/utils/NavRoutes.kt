@@ -21,6 +21,9 @@ object CreateTextPost
 object CreateMediaPost
 
 @Serializable
+object Friend
+
+@Serializable
 object Community
 
 @Serializable
@@ -45,7 +48,8 @@ object Search
 
 @Serializable
 data class Profile(
-    val username: String
+    val username: String,
+    val userId: String,
 )
 
 @Serializable

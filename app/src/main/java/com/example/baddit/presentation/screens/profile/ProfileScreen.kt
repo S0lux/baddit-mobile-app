@@ -63,6 +63,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -105,6 +106,7 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -112,6 +114,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    userId: String,
     username: String,
     navController: NavController,
     navigatePost: (String) -> Unit,
@@ -125,6 +128,7 @@ fun ProfileScreen(
     val loggedIn by viewModel.loggedIn
     val imageLoader = viewModel.imageLoader
     val actionMenuScrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
 
     val contentSelectionModalState = rememberModalBottomSheetState()
     var showContentSelectionModal by remember { mutableStateOf(false) }
@@ -201,12 +205,33 @@ fun ProfileScreen(
                 onClick = { TODO() }
             )
 
-            IconMenuItem(
-                icon = R.drawable.add_user,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Friend",
-                onClick = { TODO() }
-            )
+            if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
+                IconMenuItem(
+                    icon = R.drawable.remove_user,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Unfriend",
+                    onClick = { coroutineScope.launch { viewModel.friendRepository.removeFriend(userId) } }
+                )
+            }
+
+            if (viewModel.friendRepository.outgoingFriendRequests.any { it.id == userId }) {
+                IconMenuItem(
+                    icon = R.drawable.pending,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Pending",
+                    disabled = true
+                )
+            }
+
+            if (viewModel.friendRepository.outgoingFriendRequests.all { it.id != userId } &&
+                viewModel.friendRepository.currentFriends.all { it.id != userId }) {
+                IconMenuItem(
+                    icon = R.drawable.add_user,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Friend",
+                    onClick = { coroutineScope.launch { viewModel.friendRepository.sendFriendRequest(userId) } },
+                )
+            }
 
             IconMenuItem(
                 icon = R.drawable.block,
@@ -281,22 +306,29 @@ fun IconMenuItem(
     text: String,
     isDropdown: Boolean = false,
     onClick: () -> Unit = { },
-    iconGap: Dp = 6.dp
+    iconGap: Dp = 6.dp,
+    disabled: Boolean = false
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(iconGap),
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .clickable { onClick() }
+            .then(if (!disabled) Modifier.clickable { onClick() } else Modifier)
             .background(MaterialTheme.colorScheme.cardBackground)
             .padding(horizontal = 12.dp, vertical = 5.dp)
     ) {
-        Icon(painter = painterResource(icon), tint = tint, contentDescription = null)
-        Text(text = text, color = tint, fontSize = 15.sp)
+        Icon(
+            painter = painterResource(icon),
+            tint = if (!disabled) tint else tint.copy(alpha = 0.5F),
+            contentDescription = null)
+        Text(
+            text = text,
+            color = if (!disabled) tint else tint.copy(alpha = 0.5F),
+            fontSize = 15.sp)
         if (isDropdown)
             Icon(
                 painter = painterResource(R.drawable.arrow_downvote),
-                tint = tint,
+                tint = if (!disabled) tint else tint.copy(alpha = 0.5F),
                 contentDescription = null)
     }
 }
