@@ -206,9 +206,6 @@ class ProfileViewModel @Inject constructor(
                 is Result.Success -> {
                     // Explicitly set the user value
                     user.value = result.data
-
-                    // Optional: Log the isFriend status
-                    Log.d("ProfileScreen", "isFriend: ${result.data.isFriend}")
                 }
             }
         }

@@ -222,8 +222,7 @@ interface BadditAPI {
     suspend fun removeFriend(
         @Path("userId") userId: String
     ): Response<Unit>
-
-
+    
     @POST("/v1/messages/direct")
     suspend fun getOrCreateDirectChannel(@Body directChannelBody: DirectChannelBody): Response<ChannelResponseDTOItem>
 

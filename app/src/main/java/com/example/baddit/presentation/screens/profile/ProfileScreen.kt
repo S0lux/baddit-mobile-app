@@ -192,63 +192,76 @@ fun ProfileScreen(
             )
 
             if (!viewModel.isMe) {
-                val messagePrivacy = viewModel.user.value?.friendRequestStatus;
-                val isFriend = viewModel.user.value?.isFriend;
-                if (messagePrivacy != null && isFriend != null) {
-                    if (messagePrivacy == "EVERYONE") {
-                        IconMenuItem(
-                            icon = R.drawable.outline_message,
-                            tint = MaterialTheme.colorScheme.textPrimary,
-                            text = "Message",
-                            onClick = { TODO() }
-                        )
-                    }
-                    else{
-                        if(isFriend == true){
-                            IconMenuItem(
-                                icon = R.drawable.outline_message,
-                                tint = MaterialTheme.colorScheme.textPrimary,
-                                text = "Message",
-                                onClick = { TODO() }
-                            )
+//
+//                val messagePrivacy = viewModel.user.value?.friendRequestStatus;
+//                val isFriend = viewModel.user.value?.isFriend;
+//                if (messagePrivacy != null && isFriend != null) {
+//                    if (messagePrivacy == "EVERYONE") {
+//                        IconMenuItem(
+//                            icon = R.drawable.outline_message,
+//                            tint = MaterialTheme.colorScheme.textPrimary,
+//                            text = "Message",
+//                            onClick = { TODO() }
+//                        )
+//                    } else {
+//                        if (isFriend == true) {
+//                            IconMenuItem(
+//                                icon = R.drawable.outline_message,
+//                                tint = MaterialTheme.colorScheme.textPrimary,
+//                                text = "Message",
+//                                onClick = { TODO() }
+//                            )
+//                        }
+//                    }
+//                }
+
+                if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
+                    IconMenuItem(
+                        icon = R.drawable.remove_user,
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        text = "Unfriend",
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.friendRepository.removeFriend(
+                                    userId
+                                )
+                            }
                         }
-                    }
+                    )
                 }
 
-            if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
+                if (viewModel.friendRepository.outgoingFriendRequests.any { it.id == userId }) {
+                    IconMenuItem(
+                        icon = R.drawable.pending,
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        text = "Pending",
+                        disabled = true
+                    )
+                }
+
+                if (viewModel.friendRepository.outgoingFriendRequests.all { it.id != userId } &&
+                    viewModel.friendRepository.currentFriends.all { it.id != userId }) {
+                    IconMenuItem(
+                        icon = R.drawable.add_user,
+                        tint = MaterialTheme.colorScheme.textPrimary,
+                        text = "Friend",
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.friendRepository.sendFriendRequest(
+                                    userId
+                                )
+                            }
+                        },
+                    )
+                }
+
                 IconMenuItem(
-                    icon = R.drawable.remove_user,
+                    icon = R.drawable.block,
                     tint = MaterialTheme.colorScheme.textPrimary,
-                    text = "Unfriend",
-                    onClick = { coroutineScope.launch { viewModel.friendRepository.removeFriend(userId) } }
+                    text = "Block",
+                    onClick = { TODO() }
                 )
             }
-
-            if (viewModel.friendRepository.outgoingFriendRequests.any { it.id == userId }) {
-                IconMenuItem(
-                    icon = R.drawable.pending,
-                    tint = MaterialTheme.colorScheme.textPrimary,
-                    text = "Pending",
-                    disabled = true
-                )
-            }
-
-            if (viewModel.friendRepository.outgoingFriendRequests.all { it.id != userId } &&
-                viewModel.friendRepository.currentFriends.all { it.id != userId }) {
-                IconMenuItem(
-                    icon = R.drawable.add_user,
-                    tint = MaterialTheme.colorScheme.textPrimary,
-                    text = "Friend",
-                    onClick = { coroutineScope.launch { viewModel.friendRepository.sendFriendRequest(userId) } },
-                )
-            }
-
-            IconMenuItem(
-                icon = R.drawable.block,
-                tint = MaterialTheme.colorScheme.textPrimary,
-                text = "Block",
-                onClick = { TODO() }
-            )
         }
 
         ProfilePostSection(
@@ -813,5 +826,5 @@ fun Modifier.bottomBorder(strokeWidth: Dp, color: Color, isSelected: Boolean) = 
             }
         }
     }
-)}
+)
 

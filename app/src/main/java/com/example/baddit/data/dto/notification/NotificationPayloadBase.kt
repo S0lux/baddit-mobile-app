@@ -7,6 +7,8 @@ data class NotificationPayloadBase(
     val title: String,
     @SerializedName("body")
     val body: String,
+    @SerializedName("type")
+    val type: String?,
     @SerializedName("typeId")
     val typeId: String?,
 )
