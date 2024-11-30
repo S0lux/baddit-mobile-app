@@ -14,6 +14,7 @@ import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.chat.chatChannel.ChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatChannel.toMutableChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
 import com.example.baddit.domain.model.chat.chatMessage.toMutableMessageResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
@@ -43,8 +44,8 @@ class ChatViewModel @Inject constructor(
 
     var isSocketConnected by mutableStateOf(false)
 
-    private val _socketMessages = mutableStateListOf<MessageResponseDTOItem>()
-    val socketMessages: List<MessageResponseDTOItem> = _socketMessages
+    private val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
+    val socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
 
     init {
         // Observe socket connection status

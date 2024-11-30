@@ -2,6 +2,7 @@ package com.example.baddit.data.socket
 
 import android.util.Log
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
 import com.example.baddit.domain.model.chat.chatMessage.toMutableMessageResponseDTOItem
 import com.example.baddit.domain.repository.ChatRepository
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
 import java.net.URISyntaxException
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +23,7 @@ class SocketManager @Inject constructor(
     private var socket: Socket? = null
 
     // StateFlow to emit real-time messages
-    private val _messages = MutableStateFlow<List<MessageResponseDTOItem>>(emptyList())
+    private val _messages = MutableStateFlow<List<MutableMessageResponseDTOItem>>(emptyList())
     val messages = _messages.asStateFlow()
 
     // StateFlow to track connection status
@@ -51,21 +53,18 @@ class SocketManager @Inject constructor(
                     })
                 }
 
-                on(Socket.EVENT_DISCONNECT) {
-                    _connectionStatus.value = false
-                    Log.d("SocketIO", "Disconnected from socket server")
-                }
-
                 // Listen for new messages
                 on("new_message") { args ->
+                    Log.d("SocketIO","Receive new message")
                     args?.let {
                         if (it.isNotEmpty()) {
                             val messageJson = it[0] as JSONObject
                             val newMessage = parseMessageFromJson(messageJson)
 
+                            val mutableMessage = newMessage.toMutableMessageResponseDTOItem()
                             // Update local cache and StateFlow
-                            chatRepository.channelMessageCache.add(newMessage.toMutableMessageResponseDTOItem())
-                            _messages.value += newMessage
+//                            chatRepository.channelMessageCache.add(mutableMessage)
+                            _messages.value += newMessage.toMutableMessageResponseDTOItem()
                         }
                     }
                 }
@@ -73,6 +72,11 @@ class SocketManager @Inject constructor(
                 // Error handling
                 on(Socket.EVENT_CONNECT_ERROR) { args ->
                     Log.e("SocketIO", "Connection error: ${args?.contentToString()}")
+                }
+
+                on(Socket.EVENT_DISCONNECT) {
+                    _connectionStatus.value = false
+                    Log.d("SocketIO", "Disconnected from socket server")
                 }
 
                 // Connect to the socket
