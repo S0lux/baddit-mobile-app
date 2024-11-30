@@ -8,15 +8,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
+import com.example.baddit.data.socket.SocketManager
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.chat.chatChannel.ChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatChannel.toMutableChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.Sender
 import com.example.baddit.domain.model.chat.chatMessage.toMutableMessageResponseDTOItem
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,10 +27,13 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     val imageLoader: ImageLoader,
     val chatRepository: ChatRepository,
-    val authRepository: AuthRepository
+    val authRepository: AuthRepository,
+    private val socketManager: SocketManager
 ) : ViewModel() {
-    val channelList = mutableStateListOf<ArrayList<ChannelResponseDTOItem>>(ArrayList<ChannelResponseDTOItem>())
-    val channelMessages  = mutableStateListOf<ArrayList<ChannelResponseDTOItem>>(ArrayList<ChannelResponseDTOItem>())
+    val channelList =
+        mutableStateListOf<ArrayList<ChannelResponseDTOItem>>(ArrayList<ChannelResponseDTOItem>())
+    val channelMessages =
+        mutableStateListOf<ArrayList<ChannelResponseDTOItem>>(ArrayList<ChannelResponseDTOItem>())
     val me = authRepository.currentUser
     val loggedIn = authRepository.isLoggedIn;
     var isRefreshing by mutableStateOf(false)
@@ -35,7 +41,40 @@ class ChatViewModel @Inject constructor(
     var error by mutableStateOf("")
     var isRefreshingChannelList by mutableStateOf(false)
 
-    fun refreshChannelList(){
+    var isSocketConnected by mutableStateOf(false)
+
+    private val _socketMessages = mutableStateListOf<MessageResponseDTOItem>()
+    val socketMessages: List<MessageResponseDTOItem> = _socketMessages
+
+    init {
+        // Observe socket connection status
+        viewModelScope.launch {
+            socketManager.connectionStatus.collectLatest { connected ->
+                isSocketConnected = connected
+            }
+        }
+
+        // Observe incoming socket messages
+        viewModelScope.launch {
+            socketManager.messages.collectLatest { messages ->
+                _socketMessages.addAll(messages)
+            }
+        }
+    }
+
+    fun connectToChannel(channelId: String) {
+        socketManager.connect(channelId)
+    }
+
+    fun sendMessageToChannel(channelId: String, message: String, sender: Sender) {
+        socketManager.sendMessage(channelId, message, sender)
+    }
+
+    fun disconnectFromChannel() {
+        socketManager.disconnect()
+    }
+
+    fun refreshChannelList() {
         viewModelScope.launch {
             isRefreshingChannelList = true
             when (val fetchChannels = chatRepository.getAllChannels()) {
@@ -54,14 +93,15 @@ class ChatViewModel @Inject constructor(
                     chatRepository.channelListCache.clear()
                     isRefreshingChannelList = false;
                     error = ""
-                    chatRepository.channelListCache.addAll(fetchChannels.data.map { it.toMutableChannelResponseDTOItem();})
+                    chatRepository.channelListCache.addAll(fetchChannels.data.map { it.toMutableChannelResponseDTOItem(); })
                 }
             }
         }
     }
-    fun fetchChannelDetail(channelId: String){
+
+    fun fetchChannelDetail(channelId: String) {
         viewModelScope.launch {
-            when(val result = chatRepository.getChannelMessages(channelId)){
+            when (val result = chatRepository.getChannelMessages(channelId)) {
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to establish connection to server"
@@ -77,5 +117,10 @@ class ChatViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        socketManager.disconnect()
     }
 }

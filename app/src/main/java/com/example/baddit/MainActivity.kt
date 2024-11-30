@@ -377,6 +377,7 @@ class MainActivity : ComponentActivity() {
                                         barState.value = true
                                         userTopBarState.value = true
 
+                                        activeFAB=null
                                         val channelId = it.arguments?.getString("channelId")
                                         val channelName = it.arguments?.getString("channelName")
                                         val channelAvatar = it.arguments?.getString("channelAvatar")

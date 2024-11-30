@@ -146,6 +146,8 @@ dependencies {
 
     // add DataStore preferences
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    implementation("io.socket:socket.io-client:2.1.0")
 }
 
 kapt {

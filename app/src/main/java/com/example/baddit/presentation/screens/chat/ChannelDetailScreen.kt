@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,19 +20,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
+import com.example.baddit.domain.model.chat.chatMessage.Sender
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
-import kotlin.random.Random
-
-// Update ChatMessage to include user avatar
-data class ChatMessage(
-    val id: String,
-    val senderId: String,
-    val senderAvatar: String,
-    val content: String,
-    val timestamp: LocalDateTime
-)
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,24 +40,41 @@ fun ChannelDetailScreen(
     channelId: String,
     channelName: String,
     channelAvatar: String,
-    navController: NavController
+    navController: NavController,
+    viewModel: ChatViewModel = hiltViewModel()
 ) {
-    val currentUserId = "user_123"
-    val fakeMessages = generateFakeMessages(50)
+    val currentUserId = viewModel.me.value?.id ?: "unknown"
+    val socketMessages by remember { derivedStateOf { viewModel.socketMessages } }
     val messageScrollState = rememberLazyListState()
     var newMessage by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Connect to channel on screen launch
+    LaunchedEffect(channelId) {
+        viewModel.connectToChannel(channelId)
+        viewModel.fetchChannelDetail(channelId)
+    }
+
+    // Automatically scroll to bottom when new messages arrive
+    LaunchedEffect(socketMessages.size) {
+        if (socketMessages.isNotEmpty()) {
+            coroutineScope.launch {
+                messageScrollState.scrollToItem(0)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Updated TopAppBar with channel avatar
+        // TopAppBar with channel avatar
         TopAppBar(
             title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     AsyncImage(
                         model = channelAvatar,
@@ -71,7 +88,10 @@ fun ChannelDetailScreen(
                 }
             },
             navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
+                IconButton(onClick = {
+                    navController.navigateUp()
+                    viewModel.disconnectFromChannel()
+                }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
@@ -85,11 +105,21 @@ fun ChannelDetailScreen(
             state = messageScrollState,
             reverseLayout = true
         ) {
-            items(fakeMessages.reversed()) { message ->
+            // Combine cached messages and socket messages
+            val allMessages =
+                (viewModel.chatRepository.channelMessageCache + viewModel.socketMessages)
+                    .map { it as MutableMessageResponseDTOItem }
+                    .sortedByDescending { it.createdAt }
+
+            var previousSenderId: String? = null
+            items(allMessages) { message ->
+                val showAvatar = previousSenderId != message.sender.id
                 MessageItem(
                     message = message,
-                    isMyMessage = message.senderId == currentUserId
+                    isMyMessage = message.sender.id == currentUserId,
+                    showAvatar = showAvatar
                 )
+                previousSenderId = message.sender.id
             }
         }
 
@@ -111,9 +141,20 @@ fun ChannelDetailScreen(
                 maxLines = 4
             )
 
-            IconButton(onClick = { /* Send message logic */ }) {
+            IconButton(
+                onClick = {
+                    if (newMessage.isNotBlank()) {
+                        val me = viewModel.me.value
+                        if (me != null) {
+                            viewModel.sendMessageToChannel(channelId, newMessage, Sender(me.id,me.username,me.avatarUrl))
+                            newMessage = ""
+                        }
+                    }
+                },
+                enabled = newMessage.isNotBlank()
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Send,
+                    imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send Message"
                 )
             }
@@ -122,7 +163,11 @@ fun ChannelDetailScreen(
 }
 
 @Composable
-fun MessageItem(message: ChatMessage, isMyMessage: Boolean) {
+fun MessageItem(
+    message: MutableMessageResponseDTOItem,
+    isMyMessage: Boolean,
+    showAvatar: Boolean
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,20 +175,24 @@ fun MessageItem(message: ChatMessage, isMyMessage: Boolean) {
         contentAlignment = if (isMyMessage) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Row(
-            modifier = Modifier.widthIn(max = 350.dp),
+            modifier = Modifier
+                .widthIn(max = 350.dp),
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = if (isMyMessage) Arrangement.End else Arrangement.Start
         ) {
-            // Show avatar for non-user messages
-            if (!isMyMessage) {
+            // Show avatar only if required
+            if (!isMyMessage && showAvatar) {
                 AsyncImage(
-                    model = message.senderAvatar,
+                    model = message.sender.avatarUrl,
                     contentDescription = "User avatar",
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
+            } else if (!isMyMessage) {
+                // Spacer for alignment when avatar is not shown
+                Spacer(modifier = Modifier.width(40.dp))
             }
 
             Column(
@@ -152,97 +201,57 @@ fun MessageItem(message: ChatMessage, isMyMessage: Boolean) {
                         RoundedCornerShape(
                             topStart = 16.dp,
                             topEnd = 16.dp,
-                            bottomStart = if (!isMyMessage) 0.dp else 16.dp,
+                            bottomStart = if (isMyMessage) 16.dp else 0.dp,
                             bottomEnd = if (isMyMessage) 0.dp else 16.dp
                         )
                     )
-                    .background(if (isMyMessage) Color.Blue.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f))
+                    .background(
+                        if (isMyMessage) Color.Blue.copy(alpha = 0.2f)
+                        else Color.Gray.copy(alpha = 0.2f)
+                    )
                     .padding(12.dp)
-                    .widthIn(max = 300.dp)
             ) {
                 Text(
                     text = message.content,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = if (isMyMessage) Color.White else MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
                 )
                 Text(
-                    text = formatTimestamp(message.timestamp),
+                    text = formatMessageTimestamp(message.createdAt),
                     color = Color.Gray,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Light
                 )
             }
-
-            // Spacer for my messages to align right
-            if (isMyMessage) {
-                Spacer(modifier = Modifier.weight(1f))
-            }
         }
     }
 }
 
-// Updated fake data generation functions
-fun generateFakeMessages(count: Int): List<ChatMessage> {
-    val users = listOf(
-        UserData("user_123", "https://example.com/avatar1.jpg"),
-        UserData("user_456", "https://example.com/avatar2.jpg"),
-        UserData("user_789", "https://example.com/avatar3.jpg")
-    )
-    val messageTemplates = listOf(
-        "Hey, how are you?",
-        "Just checking in",
-        "What's up?",
-        "Long time no see!",
-        "Did you hear about the latest news?",
-        "I'm working on a new project",
-        "Want to grab coffee sometime?",
-        "This is an interesting conversation",
-        "Tell me more about that",
-        "Great idea!"
-    )
 
-    return (1..count).map { index ->
-        val randomUser = users.random()
-        ChatMessage(
-            id = "msg_$index",
-            senderId = randomUser.id,
-            senderAvatar = randomUser.avatar,
-            content = generateFakeMessageContent(messageTemplates),
-            timestamp = LocalDateTime.now().minusMinutes(Random.nextLong(1, 1440))
-        )
+// Helper function to format timestamp
+fun formatMessageTimestamp(timestamp: String): String {
+    return try {
+        val parsedDateTime = LocalDateTime.parse(timestamp,DateTimeFormatter.ISO_DATE_TIME) // Parse the timestamp
+        val now = LocalDateTime.now(ZoneId.systemDefault()) // Current date & time
+
+        when {
+            // Check if the message is from today
+            parsedDateTime.toLocalDate() == now.toLocalDate() -> {
+                parsedDateTime.format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+            }
+            // Check if the message is from yesterday
+            parsedDateTime.toLocalDate() == now.minus(1, ChronoUnit.DAYS).toLocalDate() -> {
+                "Yesterday"
+            }
+            // For older messages, show `MMM d, yyyy` if the year differs
+            parsedDateTime.year != now.year -> {
+                parsedDateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()))
+            }
+            else -> {
+                parsedDateTime.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
+            }
+        }
+    } catch (e: Exception) {
+        timestamp // Fallback to original timestamp if parsing fails
     }
-}
-
-// User data class to hold user information
-data class UserData(
-    val id: String,
-    val avatar: String
-)
-
-fun generateFakeMessageContent(templates: List<String>): String {
-    val baseMessage = templates.random()
-    return if (Random.nextBoolean()) {
-        baseMessage
-    } else {
-        "$baseMessage ${Lorem.words(Random.nextInt(1, 10))}"
-    }
-}
-
-// Existing Lorem and timestamp formatter remain the same
-object Lorem {
-    private val wordList = listOf(
-        "lorem", "ipsum", "dolor", "sit", "amet", "consectetur",
-        "adipiscing", "elit", "sed", "do", "eiusmod", "tempor",
-        "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua"
-    )
-
-    fun words(count: Int): String {
-        return (1..count).map { wordList.random() }.joinToString(" ")
-    }
-}
-
-fun formatTimestamp(timestamp: LocalDateTime): String {
-    val hours = timestamp.hour.toString().padStart(2, '0')
-    val minutes = timestamp.minute.toString().padStart(2, '0')
-    return "$hours:$minutes"
 }
