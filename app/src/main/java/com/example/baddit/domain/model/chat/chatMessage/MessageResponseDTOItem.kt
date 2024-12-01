@@ -7,7 +7,7 @@ data class MessageResponseDTOItem(
     val id: String,
     val sender: Sender,
     val content: String,
-//    val type:String // Add this after implemented upload image for chat message
+    val type:String,
     val createdAt: String
 )
 
@@ -15,12 +15,12 @@ data class MutableMessageResponseDTOItem(
     val id: String,
     val sender: Sender,
     val content: String,
-//    val type:String // Add this after implemented upload image for chat message
+    val type:String,
     val createdAt: String
 )
 
 fun MessageResponseDTOItem.toMutableMessageResponseDTOItem(): MutableMessageResponseDTOItem {
     return MutableMessageResponseDTOItem(
-       id, sender, content, createdAt
+       id, sender, content,type,createdAt
     )
 }

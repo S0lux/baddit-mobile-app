@@ -234,5 +234,11 @@ interface BadditAPI {
     @GET("/v1/messages/channels")
     suspend fun  getAllChannels(): Response <ArrayList<ChannelResponseDTOItem>>
 
+    @Multipart
+    @POST("v1/messages/upload")
+    suspend fun uploadChatImages(
+        @Part("channelId") channelId: RequestBody,
+        @Part files: List<MultipartBody.Part>
+    ): Response<List<String>> //return cloudnary urls of uploaded images
 
 }

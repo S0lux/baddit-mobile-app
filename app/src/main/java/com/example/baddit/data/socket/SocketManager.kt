@@ -114,7 +114,8 @@ class SocketManager @Inject constructor(
                 avatarUrl = json.getJSONObject("sender").getString("avatarUrl")
             ),
             content = json.getString("content"),
-            createdAt = json.getString("createdAt")
+            type = json.getString("type"),
+            createdAt = json.getString("createdAt"),
         )
     }
 }

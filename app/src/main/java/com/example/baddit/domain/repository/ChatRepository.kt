@@ -7,6 +7,7 @@ import com.example.baddit.domain.model.chat.chatChannel.ChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatChannel.MutableChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
+import java.io.File
 
 interface ChatRepository {
     var channelListCache: SnapshotStateList<MutableChannelResponseDTOItem>
@@ -19,4 +20,8 @@ interface ChatRepository {
 
     suspend fun getChannelMessages(channelId: String): Result<ArrayList<MessageResponseDTOItem>, DataError.NetworkError>
     suspend fun getAllChannels(): Result<ArrayList<ChannelResponseDTOItem>,DataError.NetworkError>
+    suspend fun uploadChatImages(
+        channelId: String,
+        imageFiles: List<File>
+    ): Result<List<String>, DataError.NetworkError>
 }

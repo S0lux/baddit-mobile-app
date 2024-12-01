@@ -14,6 +14,11 @@ import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.posts.PostResponseDTO
 import com.example.baddit.domain.repository.ChatRepository
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import javax.inject.Inject
 
 class ChatRepositoryImpl @Inject constructor(
@@ -43,5 +48,21 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun getAllChannels(): Result<ArrayList<ChannelResponseDTOItem>, DataError.NetworkError> {
         return safeApiCall { badditAPI.getAllChannels() }
+    }
+    override suspend fun uploadChatImages(
+        channelId: String,
+        imageFiles: List<File>
+    ): Result<List<String>, DataError.NetworkError> {
+        val channelIdBody = channelId.toRequestBody("text/plain".toMediaTypeOrNull())
+        val imageParts = imageFiles.map { file ->
+            MultipartBody.Part.createFormData(
+                "files",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
+        return safeApiCall {
+            badditAPI.uploadChatImages(channelIdBody, imageParts)
+        }
     }
 }

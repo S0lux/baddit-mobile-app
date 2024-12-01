@@ -1,8 +1,11 @@
 package com.example.baddit.presentation.screens.chat
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -10,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,12 +34,12 @@ import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChannelDetailScreen(
@@ -48,6 +54,32 @@ fun ChannelDetailScreen(
     val messageScrollState = rememberLazyListState()
     var newMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            val imageFiles = uris.mapNotNull { uri ->
+                try {
+                    // Convert URI to File
+                    val file = File(context.cacheDir, "uploaded_image_${System.currentTimeMillis()}")
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    file
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            viewModel.uploadChatImages(channelId, imageFiles)
+        }
+    }
+
+    val canSendMessage = !viewModel.isUploading &&
+            (newMessage.isNotBlank() || viewModel.uploadedImageUrls.isNotEmpty())
 
     // Connect to channel on screen launch
     LaunchedEffect(channelId) {
@@ -123,6 +155,41 @@ fun ChannelDetailScreen(
             }
         }
 
+        if (viewModel.uploadedImageUrls.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(viewModel.uploadedImageUrls) { imageUrl ->
+                    Box(modifier = Modifier.size(80.dp)) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Uploaded image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = {
+                                // Remove this specific image from uploadedImageUrls
+                                viewModel.uploadedImageUrls = viewModel.uploadedImageUrls.filter { it != imageUrl }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove image",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Message Input Area
         Row(
             modifier = Modifier
@@ -130,12 +197,21 @@ fun ChannelDetailScreen(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Image Pick Button
+            IconButton(
+                onClick = {
+                    launcher.launch("image/*")
+                }
+            ) {
+                Icon(Icons.Default.AddCircle, contentDescription = "Pick Images")
+            }
+
             TextField(
                 value = newMessage,
                 onValueChange = { newMessage = it },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp),
+                    .padding(horizontal = 8.dp),
                 placeholder = { Text("Type a message") },
                 singleLine = false,
                 maxLines = 4
@@ -143,15 +219,31 @@ fun ChannelDetailScreen(
 
             IconButton(
                 onClick = {
-                    if (newMessage.isNotBlank()) {
-                        val me = viewModel.me.value
-                        if (me != null) {
-                            viewModel.sendMessageToChannel(channelId, newMessage, Sender(me.id,me.username,me.avatarUrl))
-                            newMessage = ""
+                    val me = viewModel.me.value
+                    if (me != null) {
+                        // Combine text message with uploaded image URLs
+                        val messageContent = buildString {
+                            if (newMessage.isNotBlank()) {
+                                append(newMessage)
+                            }
+                            if (viewModel.uploadedImageUrls.isNotEmpty()) {
+                                if (isNotEmpty()) append(" ")
+                                append(viewModel.uploadedImageUrls.joinToString(" "))
+                            }
                         }
+
+                        viewModel.sendMessageToChannel(
+                            channelId,
+                            messageContent,
+                            Sender(me.id, me.username, me.avatarUrl)
+                        )
+
+                        // Reset states
+                        newMessage = ""
+                        viewModel.uploadedImageUrls = emptyList()
                     }
                 },
-                enabled = newMessage.isNotBlank()
+                enabled = canSendMessage
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
