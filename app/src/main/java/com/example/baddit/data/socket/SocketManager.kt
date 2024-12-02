@@ -10,6 +10,7 @@ import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URISyntaxException
 import java.time.LocalDateTime
@@ -87,14 +88,16 @@ class SocketManager @Inject constructor(
         }
     }
 
-    fun sendMessage(channelId: String, content: String, sender: Sender) {
+    fun sendMessage(channelId: String, content: String, sender: Sender, mediaUrls: List<String> = emptyList()) {
         socket?.emit("send_message", JSONObject().apply {
             put("channelId", channelId)
             put("content", content)
-            put("sender",JSONObject().apply {
-                put("id",sender.id )
-                put("username",sender.username )
-                put("avatarUrl",sender.avatarUrl )
+            put("type", if (mediaUrls.isNotEmpty()) "IMAGE" else "TEXT")
+            put("mediaUrls", JSONArray(mediaUrls))
+            put("sender", JSONObject().apply {
+                put("id", sender.id)
+                put("username", sender.username)
+                put("avatarUrl", sender.avatarUrl)
             })
         })
     }
@@ -106,6 +109,12 @@ class SocketManager @Inject constructor(
 
     // Helper method to parse message from JSON
     private fun parseMessageFromJson(json: JSONObject): MessageResponseDTOItem {
+        // Parse mediaUrls
+        val mediaUrlsArray = json.optJSONArray("mediaUrls")
+        val mediaUrls = (0 until (mediaUrlsArray?.length() ?: 0)).map {
+            mediaUrlsArray?.getString(it) ?: ""
+        }
+
         return MessageResponseDTOItem(
             id = json.getString("id"),
             sender = Sender(
@@ -115,6 +124,7 @@ class SocketManager @Inject constructor(
             ),
             content = json.getString("content"),
             type = json.getString("type"),
+            mediaUrls = mediaUrls,
             createdAt = json.getString("createdAt"),
         )
     }

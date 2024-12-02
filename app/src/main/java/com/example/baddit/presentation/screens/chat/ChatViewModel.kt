@@ -72,12 +72,22 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendMessageToChannel(channelId: String, message: String, sender: Sender) {
-        socketManager.sendMessage(channelId, message, sender)
+
+        socketManager.sendMessage(
+            channelId,
+            message,
+            sender,
+            uploadedImageUrls
+        )
+
+        uploadedImageUrls = emptyList()
     }
 
     fun disconnectFromChannel() {
         socketManager.disconnect()
     }
+
+
 
     fun uploadChatImages(channelId: String, imageFiles: List<File>) {
         viewModelScope.launch {

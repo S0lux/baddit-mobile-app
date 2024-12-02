@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.baddit.R
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
@@ -40,6 +42,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChannelDetailScreen(
@@ -59,35 +62,32 @@ fun ChannelDetailScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
-        if (uris.isNotEmpty()) {
-            val imageFiles = uris.mapNotNull { uri ->
-                try {
-                    // Convert URI to File
-                    val file = File(context.cacheDir, "uploaded_image_${System.currentTimeMillis()}")
-                    context.contentResolver.openInputStream(uri)?.use { input ->
-                        file.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
+        val imageFiles = uris.mapNotNull { uri ->
+            try {
+                // Convert URI to File
+                val file = File(context.cacheDir, "uploaded_image_${System.currentTimeMillis()}")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
                     }
-                    file
-                } catch (e: Exception) {
-                    null
                 }
+                file
+            } catch (e: Exception) {
+                null
             }
-            viewModel.uploadChatImages(channelId, imageFiles)
         }
+
+        viewModel.uploadChatImages(channelId, imageFiles)
     }
 
     val canSendMessage = !viewModel.isUploading &&
             (newMessage.isNotBlank() || viewModel.uploadedImageUrls.isNotEmpty())
 
-    // Connect to channel on screen launch
     LaunchedEffect(channelId) {
         viewModel.connectToChannel(channelId)
         viewModel.fetchChannelDetail(channelId)
     }
 
-    // Automatically scroll to bottom when new messages arrive
     LaunchedEffect(socketMessages.size) {
         if (socketMessages.isNotEmpty()) {
             coroutineScope.launch {
@@ -101,7 +101,7 @@ fun ChannelDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // TopAppBar with channel avatar
+        // TopAppBar
         TopAppBar(
             title = {
                 Row(
@@ -137,7 +137,6 @@ fun ChannelDetailScreen(
             state = messageScrollState,
             reverseLayout = true
         ) {
-            // Combine cached messages and socket messages
             val allMessages =
                 (viewModel.chatRepository.channelMessageCache + viewModel.socketMessages)
                     .map { it as MutableMessageResponseDTOItem }
@@ -172,8 +171,8 @@ fun ChannelDetailScreen(
                         )
                         IconButton(
                             onClick = {
-                                // Remove this specific image from uploadedImageUrls
-                                viewModel.uploadedImageUrls = viewModel.uploadedImageUrls.filter { it != imageUrl }
+                                viewModel.uploadedImageUrls =
+                                    viewModel.uploadedImageUrls.filter { it != imageUrl }
                             },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -190,18 +189,15 @@ fun ChannelDetailScreen(
             }
         }
 
-        // Message Input Area
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image Pick Button
+            // Image Picker Button
             IconButton(
-                onClick = {
-                    launcher.launch("image/*")
-                }
+                onClick = { launcher.launch("image/*") }
             ) {
                 Icon(Icons.Default.AddCircle, contentDescription = "Pick Images")
             }
@@ -221,15 +217,8 @@ fun ChannelDetailScreen(
                 onClick = {
                     val me = viewModel.me.value
                     if (me != null) {
-                        // Combine text message with uploaded image URLs
                         val messageContent = buildString {
-                            if (newMessage.isNotBlank()) {
-                                append(newMessage)
-                            }
-                            if (viewModel.uploadedImageUrls.isNotEmpty()) {
-                                if (isNotEmpty()) append(" ")
-                                append(viewModel.uploadedImageUrls.joinToString(" "))
-                            }
+                            if (newMessage.isNotBlank()) append(newMessage)
                         }
 
                         viewModel.sendMessageToChannel(
@@ -238,7 +227,6 @@ fun ChannelDetailScreen(
                             Sender(me.id, me.username, me.avatarUrl)
                         )
 
-                        // Reset states
                         newMessage = ""
                         viewModel.uploadedImageUrls = emptyList()
                     }
@@ -254,12 +242,15 @@ fun ChannelDetailScreen(
     }
 }
 
+
 @Composable
 fun MessageItem(
     message: MutableMessageResponseDTOItem,
     isMyMessage: Boolean,
     showAvatar: Boolean
 ) {
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,8 +258,7 @@ fun MessageItem(
         contentAlignment = if (isMyMessage) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Row(
-            modifier = Modifier
-                .widthIn(max = 350.dp),
+            modifier = Modifier.widthIn(max = 350.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = if (isMyMessage) Arrangement.End else Arrangement.Start
         ) {
@@ -303,18 +293,42 @@ fun MessageItem(
                     )
                     .padding(12.dp)
             ) {
-                Text(
-                    text = message.content,
-                    color = if (isMyMessage) Color.White else MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp
-                )
+                // Image gallery for image messages
+                if (message.mediaUrls.isNotEmpty()) {
+                    ImageGallery(
+                        imageUrls = message.mediaUrls,
+                        onImageClick = { url -> selectedImageUrl = url }
+                    )
+                }
+
+                // Text content (if not empty)
+                if (message.content.isNotBlank() &&
+                    (message.type == "TEXT" || (message.type == "IMAGE" && message.mediaUrls.isEmpty()))
+                ) {
+                    Text(
+                        text = message.content,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp
+                    )
+                }
+
+                // Timestamp
                 Text(
                     text = formatMessageTimestamp(message.createdAt),
                     color = Color.Gray,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
+        }
+
+        // Image Viewer Dialog
+        selectedImageUrl?.let { url ->
+            ImageViewerDialog(
+                imageUrl = url,
+                onDismiss = { selectedImageUrl = null }
+            )
         }
     }
 }
@@ -323,7 +337,8 @@ fun MessageItem(
 // Helper function to format timestamp
 fun formatMessageTimestamp(timestamp: String): String {
     return try {
-        val parsedDateTime = LocalDateTime.parse(timestamp,DateTimeFormatter.ISO_DATE_TIME) // Parse the timestamp
+        val parsedDateTime =
+            LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_DATE_TIME) // Parse the timestamp
         val now = LocalDateTime.now(ZoneId.systemDefault()) // Current date & time
 
         when {
@@ -337,8 +352,14 @@ fun formatMessageTimestamp(timestamp: String): String {
             }
             // For older messages, show `MMM d, yyyy` if the year differs
             parsedDateTime.year != now.year -> {
-                parsedDateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()))
+                parsedDateTime.format(
+                    DateTimeFormatter.ofPattern(
+                        "MMM d, yyyy",
+                        Locale.getDefault()
+                    )
+                )
             }
+
             else -> {
                 parsedDateTime.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
             }
