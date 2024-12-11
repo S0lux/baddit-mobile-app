@@ -4,8 +4,12 @@ import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
+import com.example.baddit.data.dto.chat.AddMembersBody
+import com.example.baddit.data.dto.chat.AddModeratorsBody
+import com.example.baddit.data.dto.chat.CreateChannelBody
 import com.example.baddit.data.dto.chat.DirectChannelBody
 import com.example.baddit.data.dto.chat.SendMessageBody
+import com.example.baddit.data.dto.chat.UpdateChannelNameBody
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
 import com.example.baddit.data.dto.comment.EditCommentRequestBody
 import com.example.baddit.data.dto.comment.PostCommentRequestBody
@@ -41,7 +45,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
-import java.io.File
+import java.time.ZoneId
 
 interface BadditAPI {
     @GET("/v1/posts")
@@ -241,4 +245,27 @@ interface BadditAPI {
         @Part files: List<MultipartBody.Part>
     ): Response<List<String>> //return cloudnary urls of uploaded images
 
+    @POST("v1/messages/channel")
+    suspend fun createChatChannel(@Body createChannelBody: CreateChannelBody): Response<ChannelResponseDTOItem>
+
+    @PUT("v1/messages/channel")
+    suspend fun updateChatChannelName(@Body updateChannelName: UpdateChannelNameBody): Response<ChannelResponseDTOItem>
+
+    @PUT("v1/messages/channel/avatar")
+    suspend fun updateChatChannelAvatar(
+        @Part("channelId") channelId: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ChannelResponseDTOItem>
+
+    @PUT("v1/messages/channel/moderators")
+    suspend fun addModeratorsToChat(@Body addModeratorsBody: AddModeratorsBody): Response<ChannelResponseDTOItem>
+
+    @PUT("v1/messages/channel/members")
+    suspend fun addMembersToChat(@Body addMembersBody: AddMembersBody): Response<ChannelResponseDTOItem>
+
+    @DELETE("v1/messages/channel/{channelId}")
+    suspend fun deleteChatChannel(@Path("channelId") channelId: String): Response<Unit>
+
+    @DELETE("v1/messages/{messageId}")
+    suspend fun deleteMessage(@Path("messageId") messageId: String): Response<Unit>
 }

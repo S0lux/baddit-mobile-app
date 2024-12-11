@@ -9,7 +9,8 @@ data class MessageResponseDTOItem(
     val content: String,
     val type: String, // Type are "TEXT", "IMAGE" to detect for display message
     val mediaUrls: List<String>,
-    val createdAt: String
+    val createdAt: String,
+    val isDeleted: Boolean
 )
 
 data class MutableMessageResponseDTOItem(
@@ -18,11 +19,12 @@ data class MutableMessageResponseDTOItem(
     val content: String,
     val type: String,
     val mediaUrls: List<String>,
-    val createdAt: String
+    val createdAt: String,
+    val isDeleted: Boolean
 )
 
 fun MessageResponseDTOItem.toMutableMessageResponseDTOItem(): MutableMessageResponseDTOItem {
     return MutableMessageResponseDTOItem(
-        id, sender, content, type, mediaUrls, createdAt
+        id, sender, content, type, mediaUrls, createdAt, isDeleted
     )
 }

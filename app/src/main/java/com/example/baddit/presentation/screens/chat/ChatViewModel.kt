@@ -17,8 +17,10 @@ import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
 import com.example.baddit.domain.model.chat.chatMessage.toMutableMessageResponseDTOItem
+import com.example.baddit.domain.model.friend.BaseFriendUser
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.ChatRepository
+import com.example.baddit.domain.repository.FriendRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -30,6 +32,7 @@ class ChatViewModel @Inject constructor(
     val imageLoader: ImageLoader,
     val chatRepository: ChatRepository,
     val authRepository: AuthRepository,
+    val friendRepository: FriendRepository,
     private val socketManager: SocketManager
 ) : ViewModel() {
     val channelList =
@@ -51,6 +54,9 @@ class ChatViewModel @Inject constructor(
     var uploadedImageUrls by mutableStateOf<List<String>>(emptyList())
     var isUploading by mutableStateOf(false)
 
+    var availableFriends by mutableStateOf<List<BaseFriendUser>>(emptyList())
+    var selectedFriendsForChannel by mutableStateOf<List<BaseFriendUser>>(emptyList())
+
     init {
         // Observe socket connection status
         viewModelScope.launch {
@@ -63,6 +69,54 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             socketManager.messages.collectLatest { messages ->
                 _socketMessages.addAll(messages)
+            }
+        }
+    }
+
+
+    fun fetchAvailableFriends() {
+        viewModelScope.launch {
+            // Use the existing method that updates local friends
+            when (val result = friendRepository.updateLocalUserFriend()) {
+                is Result.Success -> {
+                    // Directly use the local friends list
+                    availableFriends = friendRepository.currentFriends
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to fetch friends"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleFriendSelection(friend: BaseFriendUser) {
+        selectedFriendsForChannel = if (selectedFriendsForChannel.contains(friend)) {
+            selectedFriendsForChannel.filter { it != friend }
+        } else {
+            selectedFriendsForChannel + friend
+        }
+    }
+
+    fun createChatChannel(channelName: String) {
+        viewModelScope.launch {
+            val selectedFriendIds = selectedFriendsForChannel.map { it.id }
+            when (val result = chatRepository.createChatChannel(channelName, selectedFriendIds)) {
+                is Result.Success -> {
+                    // Handle successful channel creation
+                    // Maybe navigate or show a success message
+                    selectedFriendsForChannel = emptyList()
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to create channel"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
             }
         }
     }

@@ -24,4 +24,13 @@ interface ChatRepository {
         channelId: String,
         imageFiles: List<File>
     ): Result<List<String>, DataError.NetworkError>
+
+    suspend fun createChatChannel(channelName: String, memberIds: List<String>): Result<ChannelResponseDTOItem,DataError.NetworkError>
+    suspend fun updateChatChannelName(channelId: String, name: String): Result<ChannelResponseDTOItem , DataError.NetworkError>
+    suspend fun updateChatChannelAvatar(channelId: String, file: File): Result<ChannelResponseDTOItem, DataError.NetworkError>
+    suspend fun addModeratorsToChannel(channelId: String,moderatorIds:List<String>): Result<ChannelResponseDTOItem,DataError.NetworkError>
+    suspend fun addMembersToChannel(channelId: String, memberIds:List<String>): Result <ChannelResponseDTOItem, DataError.NetworkError>
+    suspend fun deleteChannel(channelId: String): Result<Unit, DataError.NetworkError>
+    suspend fun deleteMessage(messageId: String): Result<Unit, DataError.NetworkError>
+
 }

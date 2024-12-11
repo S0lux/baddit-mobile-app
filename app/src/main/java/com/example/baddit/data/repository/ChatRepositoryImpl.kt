@@ -2,8 +2,12 @@ package com.example.baddit.data.repository
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.baddit.data.dto.chat.AddMembersBody
+import com.example.baddit.data.dto.chat.AddModeratorsBody
+import com.example.baddit.data.dto.chat.CreateChannelBody
 import com.example.baddit.data.dto.chat.DirectChannelBody
 import com.example.baddit.data.dto.chat.SendMessageBody
+import com.example.baddit.data.dto.chat.UpdateChannelNameBody
 import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
@@ -24,8 +28,10 @@ import javax.inject.Inject
 class ChatRepositoryImpl @Inject constructor(
     private val badditAPI: BadditAPI,
 ) : ChatRepository {
-    override var channelListCache: SnapshotStateList<MutableChannelResponseDTOItem> = mutableStateListOf()
-    override var channelMessageCache: SnapshotStateList<MutableMessageResponseDTOItem> = mutableStateListOf()
+    override var channelListCache: SnapshotStateList<MutableChannelResponseDTOItem> =
+        mutableStateListOf()
+    override var channelMessageCache: SnapshotStateList<MutableMessageResponseDTOItem> =
+        mutableStateListOf()
 
     override suspend fun getOrCreateDirectChannel(targetUserId: String): Result<ChannelResponseDTOItem, DataError.NetworkError> {
         return safeApiCall { badditAPI.getOrCreateDirectChannel(DirectChannelBody(targetUserId)) }
@@ -49,6 +55,7 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun getAllChannels(): Result<ArrayList<ChannelResponseDTOItem>, DataError.NetworkError> {
         return safeApiCall { badditAPI.getAllChannels() }
     }
+
     override suspend fun uploadChatImages(
         channelId: String,
         imageFiles: List<File>
@@ -64,5 +71,75 @@ class ChatRepositoryImpl @Inject constructor(
         return safeApiCall {
             badditAPI.uploadChatImages(channelIdBody, imageParts)
         }
+    }
+
+    override suspend fun createChatChannel(
+        channelName: String,
+        memberIds: List<String>
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall {
+            badditAPI.createChatChannel(
+                CreateChannelBody(
+                    channelName,
+                    memberIds
+                )
+            )
+        }
+    }
+
+    override suspend fun updateChatChannelName(
+        channelId: String,
+        name: String
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall {
+            badditAPI.updateChatChannelName(
+                UpdateChannelNameBody(
+                    channelId,
+                    name
+                )
+            )
+        }
+    }
+
+    override suspend fun updateChatChannelAvatar(
+        channelId: String,
+        file: File
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        val channelIdBody = channelId.toRequestBody("text/plain".toMediaTypeOrNull())
+        val imagePart = MultipartBody.Part.createFormData(
+            "file",
+            file.name,
+            file.asRequestBody("image/*".toMediaTypeOrNull())
+        )
+        return safeApiCall { badditAPI.updateChatChannelAvatar(channelIdBody, imagePart) }
+    }
+
+    override suspend fun addModeratorsToChannel(
+        channelId: String,
+        moderatorIds: List<String>
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall {
+            badditAPI.addModeratorsToChat(
+                AddModeratorsBody(
+                    channelId,
+                    moderatorIds
+                )
+            )
+        }
+    }
+
+    override suspend fun addMembersToChannel(
+        channelId: String,
+        memberIds: List<String>
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall { badditAPI.addMembersToChat(AddMembersBody(channelId, memberIds)) }
+    }
+
+    override suspend fun deleteChannel(channelId: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.deleteChatChannel(channelId) }
+    }
+
+    override suspend fun deleteMessage(messageId: String): Result<Unit, DataError.NetworkError> {
+        return safeApiCall { badditAPI.deleteMessage(messageId) }
     }
 }
