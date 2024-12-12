@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.chat
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -50,6 +51,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,6 +77,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.baddit.domain.model.chat.chatChannel.ChatMember
+import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CreateChatChannelBottomSheet
 import com.example.baddit.presentation.components.CreateCommunity
@@ -104,6 +107,9 @@ fun ChannelListScreen(
     val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheetCreateChatChannel by remember { mutableStateOf(false) }
     val loggedIn by viewModel.loggedIn
+
+//    val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
+//    val socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
 
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {

@@ -1,5 +1,6 @@
 package com.example.baddit.presentation.screens.chat
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -60,6 +61,8 @@ fun ChannelDetailScreen(
     var newMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
+
+
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -86,8 +89,15 @@ fun ChannelDetailScreen(
             (newMessage.isNotBlank() || viewModel.uploadedImageUrls.isNotEmpty())
 
     LaunchedEffect(channelId) {
+        viewModel.clearPreviousMessages()
+
+        viewModel.chatRepository.channelMessageCache.clear()
+
         viewModel.connectToChannel(channelId)
+
         viewModel.fetchChannelDetail(channelId)
+
+        Log.d("CHANNEL_DETAIL",channelId)
     }
 
     LaunchedEffect(socketMessages.size) {
@@ -97,6 +107,16 @@ fun ChannelDetailScreen(
             }
         }
     }
+
+    val filteredMessages =
+        (viewModel.chatRepository.channelMessageCache + viewModel.socketMessages)
+            .filter { message ->
+                message.channelId == channelId
+            }
+            .distinctBy { it.id }
+            .map { it as MutableMessageResponseDTOItem }
+            .sortedByDescending { it.createdAt }
+
 
     Column(
         modifier = Modifier
@@ -132,11 +152,13 @@ fun ChannelDetailScreen(
             actions = {
                 IconButton(
                     onClick = {
-                        navController.navigate(ChannelInfo(
-                            channelId = channelId,
-                            channelName = channelName,
-                            channelAvatar = channelAvatar
-                        ))
+                        navController.navigate(
+                            ChannelInfo(
+                                channelId = channelId,
+                                channelName = channelName,
+                                channelAvatar = channelAvatar
+                            )
+                        )
                     }
                 ) {
                     Icon(Icons.Default.Info, contentDescription = "Channel Info")
@@ -152,13 +174,10 @@ fun ChannelDetailScreen(
             state = messageScrollState,
             reverseLayout = true
         ) {
-            val allMessages =
-                (viewModel.chatRepository.channelMessageCache + viewModel.socketMessages)
-                    .map { it as MutableMessageResponseDTOItem }
-                    .sortedByDescending { it.createdAt }
+
 
             var previousSenderId: String? = null
-            items(allMessages) { message ->
+            items(filteredMessages) { message ->
                 val showAvatar = previousSenderId != message.sender.id
                 MessageItem(
                     message = message,

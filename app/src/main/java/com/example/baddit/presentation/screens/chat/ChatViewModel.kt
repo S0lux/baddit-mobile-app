@@ -22,7 +22,9 @@ import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.ChatRepository
 import com.example.baddit.domain.repository.FriendRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -33,7 +35,7 @@ class ChatViewModel @Inject constructor(
     val chatRepository: ChatRepository,
     val authRepository: AuthRepository,
     val friendRepository: FriendRepository,
-    private val socketManager: SocketManager
+    val socketManager: SocketManager
 ) : ViewModel() {
     val channelList =
         mutableStateListOf<ArrayList<ChannelResponseDTOItem>>(ArrayList<ChannelResponseDTOItem>())
@@ -48,8 +50,8 @@ class ChatViewModel @Inject constructor(
 
     var isSocketConnected by mutableStateOf(false)
 
-    private val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
-    val socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
+    val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
+    var socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
 
     var uploadedImageUrls by mutableStateOf<List<String>>(emptyList())
     var isUploading by mutableStateOf(false)
@@ -68,11 +70,19 @@ class ChatViewModel @Inject constructor(
         // Observe incoming socket messages
         viewModelScope.launch {
             socketManager.messages.collectLatest { messages ->
+                // Clear and replace socket messages
+                _socketMessages.clear()
                 _socketMessages.addAll(messages)
+                socketMessages = _socketMessages
             }
         }
     }
 
+    fun clearPreviousMessages(){
+        _socketMessages.clear()
+        socketMessages = _socketMessages
+        chatRepository.channelMessageCache.clear()
+    }
 
     fun fetchAvailableFriends() {
         viewModelScope.launch {
@@ -122,6 +132,12 @@ class ChatViewModel @Inject constructor(
     }
 
     fun connectToChannel(channelId: String) {
+        socketManager.disconnect()
+
+        // Clear previous messages
+        clearPreviousMessages()
+
+        // Connect to the new channel
         socketManager.connect(channelId)
     }
 

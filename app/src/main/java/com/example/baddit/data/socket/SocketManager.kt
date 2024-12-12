@@ -22,7 +22,7 @@ class SocketManager @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
     private var socket: Socket? = null
-
+    private var currentChannelId: String? = null
     // StateFlow to emit real-time messages
     private val _messages = MutableStateFlow<List<MutableMessageResponseDTOItem>>(emptyList())
     val messages = _messages.asStateFlow()
@@ -33,6 +33,7 @@ class SocketManager @Inject constructor(
 
     fun connect(channelId: String) {
         try {
+            disconnect()
             // Configure Socket.IO connection options
             val options = IO.Options().apply {
                 transports = arrayOf("websocket")
@@ -52,6 +53,7 @@ class SocketManager @Inject constructor(
                     emit("join_channel", JSONObject().apply {
                         put("channelId", channelId)
                     })
+                    currentChannelId = channelId
                 }
 
                 // Listen for new messages
@@ -62,10 +64,9 @@ class SocketManager @Inject constructor(
                             val messageJson = it[0] as JSONObject
                             val newMessage = parseMessageFromJson(messageJson)
 
-                            val mutableMessage = newMessage.toMutableMessageResponseDTOItem()
-                            // Update local cache and StateFlow
-//                            chatRepository.channelMessageCache.add(mutableMessage)
-                            _messages.value += newMessage.toMutableMessageResponseDTOItem()
+                            if (newMessage.channelId == currentChannelId) {
+                                _messages.value += newMessage.toMutableMessageResponseDTOItem()
+                            }
                         }
                     }
                 }
@@ -126,7 +127,8 @@ class SocketManager @Inject constructor(
             type = json.getString("type"),
             mediaUrls = mediaUrls,
             createdAt = json.getString("createdAt"),
-            isDeleted = json.optBoolean("isDeleted",false)
+            isDeleted = json.optBoolean("isDeleted",false),
+            channelId = json.getString("channelId")
         )
     }
 }
