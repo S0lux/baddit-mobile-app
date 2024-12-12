@@ -100,4 +100,11 @@ data class ChannelDetail(
 )
 
 @Serializable
+data class ChannelInfo(
+    val channelId: String?,
+    val channelName: String?,
+    val channelAvatar: String?
+)
+
+@Serializable
 object ChannelList

@@ -126,7 +126,7 @@ class SocketManager @Inject constructor(
             type = json.getString("type"),
             mediaUrls = mediaUrls,
             createdAt = json.getString("createdAt"),
-            isDeleted = json.getBoolean("isDeleted")
+            isDeleted = json.optBoolean("isDeleted",false)
         )
     }
 }

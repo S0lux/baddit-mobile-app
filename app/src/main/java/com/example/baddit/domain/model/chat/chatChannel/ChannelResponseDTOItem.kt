@@ -8,7 +8,7 @@ data class ChannelResponseDTOItem(
     val name: String,
     val avatarUrl: String,
     val members: List<ChatMember>,
-    val moderators: List<ChatModerators>?,
+    val moderators: List<ChatModerators>,
     val createdAt: String,
     val isDeleted: Boolean
 )
@@ -18,7 +18,7 @@ data class MutableChannelResponseDTOItem(
     val name: String,
     val avatarUrl: String,
     val members: List<ChatMember>,
-    val moderators: List<ChatModerators>?,
+    val moderators: List<ChatModerators>,
     val createdAt: String,
     val isDeleted: Boolean
 )

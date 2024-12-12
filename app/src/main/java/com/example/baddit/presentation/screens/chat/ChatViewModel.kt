@@ -188,6 +188,146 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun updateChannelName(channelId: String, newName: String) {
+        viewModelScope.launch {
+            when (val result = chatRepository.updateChatChannelName(channelId, newName)) {
+                is Result.Success -> {
+                    // Update the local cache if needed
+                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    if (channelIndex != -1) {
+                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                    }
+                    error = "" // Clear any previous errors
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to update channel name"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    fun uploadChannelAvatar(channelId: String, avatarFile: File) {
+        viewModelScope.launch {
+            isUploading = true
+            when (val result = chatRepository.updateChatChannelAvatar(channelId, avatarFile)) {
+                is Result.Success -> {
+                    // Update the local cache if needed
+                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    if (channelIndex != -1) {
+                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                    }
+                    error = "" // Clear any previous errors
+                    isUploading = false
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to upload channel avatar"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                    isUploading = false
+                }
+            }
+        }
+    }
+
+    fun addModeratorsToChannel(channelId: String, moderatorIds: List<String>) {
+        viewModelScope.launch {
+            when (val result = chatRepository.addModeratorsToChannel(channelId, moderatorIds)) {
+                is Result.Success -> {
+                    // Update the local cache if needed
+                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    if (channelIndex != -1) {
+                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                    }
+                    error = "" // Clear any previous errors
+                    selectedFriendsForChannel = emptyList() // Reset selected friends
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to add moderators"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    fun addMembersToChannel(channelId: String, memberIds: List<String>) {
+        viewModelScope.launch {
+            when (val result = chatRepository.addMembersToChannel(channelId, memberIds)) {
+                is Result.Success -> {
+                    // Update the local cache if needed
+                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    if (channelIndex != -1) {
+                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                    }
+                    error = "" // Clear any previous errors
+                    selectedFriendsForChannel = emptyList() // Reset selected friends
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to add members"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    fun deleteChannel(channelId: String) {
+        viewModelScope.launch {
+            when (val result = chatRepository.deleteChannel(channelId)) {
+                is Result.Success -> {
+                    // Remove the channel from local cache
+                    chatRepository.channelListCache.removeAll { it.id == channelId }
+                    error = "" // Clear any previous errors
+                    // Optionally navigate back or refresh channel list
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to delete channel"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    fun deleteMessage(messageId: String) {
+        viewModelScope.launch {
+            when (val result = chatRepository.deleteMessage(messageId)) {
+                is Result.Success -> {
+                    // Remove the message from local cache
+                    _socketMessages.removeAll { it.id == messageId }
+                    chatRepository.channelMessageCache.removeAll { it.id == messageId }
+                    error = "" // Clear any previous errors
+                }
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to delete message"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+    // Helper method to check if current user is a moderator of a specific channel
+    fun isUserModerator(channelId: String): Boolean {
+        val currentChannel = chatRepository.channelListCache.find { it.id == channelId }
+        val currentUserId = me.value?.id
+        return currentChannel?.moderators?.any { it.id == currentUserId } ?: false
+    }
+
     fun fetchChannelDetail(channelId: String) {
         viewModelScope.launch {
             when (val result = chatRepository.getChannelMessages(channelId)) {
