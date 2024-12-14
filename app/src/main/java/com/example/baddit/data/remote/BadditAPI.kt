@@ -99,7 +99,7 @@ interface BadditAPI {
 
     @GET("/v1/comments")
     suspend fun getComments(
-        @Query("postId") postId: String?=null,
+        @Query("postId") postId: String? = null,
         @Query("commentId") commentId: String? = null,
         @Query("authorName") authorName: String? = null,
         @Query("cursor") cursor: String? = null,
@@ -239,6 +239,8 @@ interface BadditAPI {
     @GET("/v1/messages/channels")
     suspend fun  getAllChannels(): Response <ArrayList<ChannelResponseDTOItem>>
 
+    @PATCH("/v1/posts/{postId}/subscribe")
+    suspend fun subscribeToPost(@Path("postId") postId: String): Response<Unit>
     @Multipart
     @POST("v1/messages/upload")
     suspend fun uploadChatImages(
@@ -276,4 +278,6 @@ interface BadditAPI {
 
     @PUT("v1/messages/channel/members/remove")
     suspend fun removeMembers(@Body removeMembersBody: RemoveMembersBody): Response<ChannelResponseDTOItem>
+    @PATCH("/v1/posts/{postId}/unsubscribe")
+    suspend fun unsubscribeFromPost(@Path("postId") postId: String): Response<Unit>
 }

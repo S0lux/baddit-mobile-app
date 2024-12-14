@@ -1,18 +1,13 @@
 package com.example.baddit.data.repository
 
 import android.util.Log
-import androidx.annotation.Nullable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
 import com.example.baddit.data.dto.auth.LoginRequestBody
 import com.example.baddit.data.dto.auth.RegisterRequestBody
-import com.example.baddit.data.utils.httpToError
 import com.example.baddit.data.remote.BadditAPI
 import com.example.baddit.data.utils.safeApiCall
 import com.example.baddit.domain.error.DataError
@@ -21,20 +16,17 @@ import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.FriendRepository
 import com.google.gson.Gson
+import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import retrofit2.Response
-import java.io.IOException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val badditAPI: BadditAPI
+    private val badditAPI: BadditAPI,
+    private val friendRepository: Lazy<FriendRepository>
 ) : AuthRepository {
 
     override val isLoggedIn: MutableState<Boolean> = mutableStateOf(false)
@@ -44,6 +36,7 @@ class AuthRepositoryImpl @Inject constructor(
     init {
         CoroutineScope(Dispatchers.IO).launch {
             getMe()
+            if (isLoggedIn.value) friendRepository.get().updateLocalUserFriend()
         }
     }
 

@@ -46,7 +46,13 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getPost(postId: String): Result<PostResponseDTO, DataError.NetworkError> {
-        return safeApiCall { badditAPI.getPost(postId) }
+        val result = safeApiCall<PostResponseDTO, DataError.NetworkError> { badditAPI.getPost(postId) }
+        if (result is Result.Success && result.data.isNotEmpty()) {
+            postCache.removeIf { it.id == result.data.first().id }
+            postCache.add(result.data.first().toMutablePostResponseDTOItem())
+            postCache.sortByDescending { it.createdAt }
+        }
+        return result
     }
 
     override suspend fun votePost(
@@ -101,6 +107,34 @@ class PostRepositoryImpl @Inject constructor(
         }
 
         return result
+    }
+
+    override suspend fun subscribeToPost(postId: String): Result<Unit, DataError.NetworkError> {
+        val post = postCache.find { it.id == postId }
+        if (post != null) {
+            post.isSubscribed.value = post.isSubscribed.value.not()
+        }
+
+        val result = safeApiCall<Unit, DataError.NetworkError> { badditAPI.subscribeToPost(postId) }
+        if (result is Result.Error && post != null) {
+            post.isSubscribed.value = post.isSubscribed.value.not()
+        }
+
+        return result;
+    }
+
+    override suspend fun unsubcribeFromPost(postId: String): Result<Unit, DataError.NetworkError> {
+        val post = postCache.find { it.id == postId }
+        if (post != null) {
+            post.isSubscribed.value = post.isSubscribed.value.not()
+        }
+
+        val result = safeApiCall<Unit, DataError.NetworkError> { badditAPI.unsubscribeFromPost(postId) }
+        if (result is Result.Error && post != null) {
+            post.isSubscribed.value = post.isSubscribed.value.not()
+        }
+
+        return result;
     }
 
     private fun prepareFilePart(partName: String, file: File?): MultipartBody.Part? {

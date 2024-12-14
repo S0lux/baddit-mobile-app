@@ -3,6 +3,10 @@ package com.example.baddit
 import ChannelInfoScreen
 import FriendsScreen
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -39,15 +43,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.NavHost
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.findNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.example.baddit.PushNotification.Companion.CHANNEL_ID
+import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.NotificationRepository
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
@@ -102,12 +114,12 @@ import com.example.baddit.ui.theme.BadditTheme
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject
     lateinit var localThemes: LocalThemeUseCases
 
@@ -116,6 +128,11 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var commentRepository: CommentRepository
+
+    lateinit var navController: NavHostController
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -127,11 +144,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Default channel"
+            val descriptionText = "Use for most notifications"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun handleIncomingIntent(intent: Intent) {
+        Log.d("Intent", "New intent: ${intent.action}")
+
+        var extras = ""
+        intent.extras?.keySet()?.forEach { key -> extras += "$key: ${intent.extras?.getString(key)}, " }
+
+        Log.d("Intent", "Intent data: $extras")
+        lifecycleScope.launch { navigateOnIntentAction(intent.action, intent.extras?.getString("typeId")) }
+    }
+
+    private suspend fun navigateOnIntentAction(action: String?, actionTargetId: String? = null) {
+        if (action.isNullOrEmpty()) return
+        when (action) {
+            "FRIEND_REQUEST" -> navController.navigate(Friend)
+            "NEW_COMMENT" -> {
+                val result = commentRepository.getComments(commentId = actionTargetId)
+                if (result is Result.Success && result.data.isNotEmpty()) {
+                    val postId = result.data.first().postId
+                    navController.navigate(Post(postId, actionTargetId))
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         enableEdgeToEdge()
+        createNotificationChannel()
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -189,10 +252,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-
             val notifications = notificationRepository.notifications
+            navController = rememberNavController()
 
-            val navController = rememberNavController()
             val barState = rememberSaveable { mutableStateOf(false) }
             val userTopBarState = rememberSaveable { mutableStateOf(false) }
             var showLoginDialog by remember { mutableStateOf(false) }
@@ -230,6 +292,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                handleIncomingIntent(intent)
             }
 
             val switchTheme: suspend (String) -> Unit = { darkTheme ->
@@ -461,7 +525,11 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
-                                    composable<Friend> {
+                                    composable<Friend>(
+                                        deepLinks = listOf(
+                                            navDeepLink { uriPattern = "https://baddit.life/friends" }
+                                        )
+                                    ) {
                                         selectedBottomNavigation = -1
                                         sidebarEnabled.value = false
 
@@ -672,7 +740,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
                 }
             }
         }

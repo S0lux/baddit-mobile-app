@@ -40,6 +40,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.community.Community
 import com.example.baddit.presentation.styles.textFieldColors
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
 
@@ -48,7 +49,7 @@ import com.example.baddit.ui.theme.CustomTheme.textSecondary
 fun CommunitySelector(onClick: () -> Unit, viewmodel: CreatePostViewodel) {
     Box(
         modifier = Modifier
-            .fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+            .fillMaxWidth().background(MaterialTheme.colorScheme.cardBackground)
     ) {
         TextField(
             value = viewmodel.selectedCommunity ?: "",
@@ -125,7 +126,6 @@ fun SelectCommunityBottomSheet(
         sheetState = sheetState,
         modifier = Modifier
             .fillMaxWidth()
-            .safeDrawingPadding()
     ) {
         Column(
             modifier = Modifier
@@ -204,19 +204,21 @@ fun SelectCommunityBottomSheet(
                 }
             }
 
-            item {
-                Text(text = "Communities", style = MaterialTheme.typography.titleMedium)
-            }
-            items(items = communities) { it ->
-                Community(
-                    community = it,
-                    onSelected = {
-                        viewmodel.selectedCommunity = it.name
-                        viewmodel.selectedCommunityLogo = it.logoUrl
-                        onDismissRequest()
-                    })
-            }
+            if (communities.isNotEmpty()) {
+                item {
+                    Text(text = "Communities", style = MaterialTheme.typography.titleMedium)
+                }
 
+                items(items = communities) { it ->
+                    Community(
+                        community = it,
+                        onSelected = {
+                            viewmodel.selectedCommunity = it.name
+                            viewmodel.selectedCommunityLogo = it.logoUrl
+                            onDismissRequest()
+                        })
+                }
+            }
         }
 
     }

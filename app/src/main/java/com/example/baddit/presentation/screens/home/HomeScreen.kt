@@ -184,7 +184,14 @@ fun HomeScreen(
                             },
                             onComponentClick = onComponentClick,
                             navController = navController,
-                            imageLoader = viewModel.imageLoader
+                            imageLoader = viewModel.imageLoader,
+                            setSubscriptionStatus = { status: Boolean ->
+                                if (status) {
+                                    viewModel.postRepository.subscribeToPost(item.id)
+                                } else {
+                                    viewModel.postRepository.unsubcribeFromPost(item.id)
+                                }
+                            }
                         )
                     }
                 }

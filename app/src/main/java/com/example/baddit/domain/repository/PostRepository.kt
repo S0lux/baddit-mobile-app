@@ -1,5 +1,6 @@
 package com.example.baddit.domain.repository
 
+import android.provider.ContactsContract.Data
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
@@ -41,6 +42,14 @@ interface PostRepository {
     ): Result<Unit, DataError.NetworkError>
 
     suspend fun deletePost(
+        postId: String
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun subscribeToPost(
+        postId: String
+    ): Result<Unit, DataError.NetworkError>
+
+    suspend fun unsubcribeFromPost(
         postId: String
     ): Result<Unit, DataError.NetworkError>
 }

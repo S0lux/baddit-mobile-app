@@ -93,6 +93,7 @@ fun PostCard(
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
     onComponentClick: () -> Unit,
+    setSubscriptionStatus: suspend (Boolean) -> Unit,
     navController: NavController,
     imageLoader: ImageLoader? = null,
     allowNavigateSelf: Boolean = true
@@ -293,7 +294,9 @@ fun PostCard(
                 navigateReply = navigateReply,
                 deletePostFn = deletePostFn,
                 coroutineScope = coroutineScope,
-                postType = postDetails.type
+                postType = postDetails.type,
+                isSubscribed = postDetails.isSubscribed.value,
+                setSubscriptionStatus = setSubscriptionStatus
             )
         }
     }
@@ -444,8 +447,8 @@ fun PostMediaContent(mediaUrls: List<String>, imageLoader: ImageLoader?) {
                 imageLoader = imageLoader,
                 contentDescription = null,
                 modifier = Modifier
-                    .heightIn(50.dp, 450.dp),
-                contentScale = ContentScale.Fit
+                    .heightIn(100.dp, 450.dp),
+                contentScale = ContentScale.Crop
             )
         }
     }
@@ -466,6 +469,8 @@ fun PostActions(
     onUpvote: () -> Unit,
     onDownvote: () -> Unit,
     commentCount: Int,
+    isSubscribed: Boolean,
+    setSubscriptionStatus: suspend (Boolean) -> Unit,
     onGloballyPositioned: (LayoutCoordinates) -> Unit,
     loggedInUser: GetMeResponseDTO?,
     showLoginDialog: () -> Unit,
@@ -496,6 +501,71 @@ fun PostActions(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+
+                if (isSubscribed) {
+                    Button(
+                        onClick = {
+                            if (loggedInUser == null) {
+                                showLoginDialog()
+                                return@Button
+                            }
+                            showModal = false
+                            coroutineScope.launch { setSubscriptionStatus(false) }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.unsubscribe),
+                                contentDescription = null,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Unsubscribe")
+                        }
+                    }
+                }
+
+                if (isSubscribed.not()) {
+                    Button(
+                        onClick = {
+                            if (loggedInUser == null) {
+                                showLoginDialog()
+                                return@Button
+                            }
+                            showModal = false
+                            coroutineScope.launch { setSubscriptionStatus(true) }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.email),
+                                contentDescription = null,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Subscribe")
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
                         if (loggedInUser == null) {
