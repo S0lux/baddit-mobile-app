@@ -1,6 +1,10 @@
 package com.example.baddit.presentation.components
 
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -29,11 +33,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,7 +93,8 @@ fun CommentCard(
     onComponentClick: () -> Unit,
     navigateEdit: (commentId: String, content: String) -> Unit,
     deleteFn: suspend (String) -> Result<Unit, DataError.NetworkError>,
-    loggedInUser: GetMeResponseDTO?
+    loggedInUser: GetMeResponseDTO?,
+    isHighlighted: Boolean? = false
 ) {
     val commentHoldDuration = 400L
     val colorUpvote = MaterialTheme.colorScheme.appOrange
@@ -100,6 +107,25 @@ fun CommentCard(
     var showLoginDialog by remember { mutableStateOf(false) }
     var isDeleted by remember { mutableStateOf(details.deleted) }
     val coroutineScope = rememberCoroutineScope()
+
+    val highlightColor = Color.hsl(29F, 0.91F, 0.79F)
+    val cardBackgroundColor = MaterialTheme.colorScheme.cardBackground
+
+    val animatedColor = remember { Animatable(cardBackgroundColor) }
+
+    LaunchedEffect(isHighlighted) {
+        if (isHighlighted == true) {
+            animatedColor.snapTo(highlightColor)
+
+            animatedColor.animateTo(
+                targetValue = cardBackgroundColor,
+                animationSpec = tween(
+                    durationMillis = 5000,
+                    easing = FastOutSlowInEasing
+                )
+            )
+        }
+    }
 
     fun upVote() = handleVote(
         isLoggedIn = isLoggedIn,
@@ -208,7 +234,10 @@ fun CommentCard(
                     }
                 })
             }) {
-            Column(modifier = Modifier.background(MaterialTheme.colorScheme.cardBackground)) {
+            Column(modifier = if (isHighlighted == true) {
+                Modifier.background(animatedColor.value)
+            }
+            else Modifier.background(MaterialTheme.colorScheme.cardBackground)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -235,7 +264,8 @@ fun CommentCard(
                             creationDate = details.createdAt,
                             voteState = voteState.toString(),
                             collapsed = collapsedState,
-                            isDeleted = isDeleted
+                            isDeleted = isDeleted,
+                            isHighlighted = isHighlighted
                         )
 
                         Spacer(modifier = Modifier.height(1.dp))
@@ -314,6 +344,7 @@ fun CommentMeta(
     authorName: String,
     avatarUrl: String,
     navigateProfile: () -> Unit,
+    isHighlighted: Boolean?,
     score: Int,
     creationDate: String,
     voteState: String? = null,
@@ -390,8 +421,25 @@ fun CommentMeta(
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.textSecondary,
             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
-            modifier = Modifier.weight(1f)
+            modifier = if (isHighlighted == true) Modifier else Modifier.weight(1f)
         )
+        if (isHighlighted == true) {
+            Text(
+                "•",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.textSecondary,
+                style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+            )
+            Text(
+                text = "Highlight",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.appOrange,
+                style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
+                modifier = Modifier.weight(1f)
+            )
+        }
         AnimatedVisibility(visible = collapsed) {
             Text(
                 text = " C ",

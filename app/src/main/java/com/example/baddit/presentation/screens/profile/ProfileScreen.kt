@@ -710,7 +710,14 @@ fun ProfilePostSection(
                             },
                             onComponentClick = {},
                             navController = navController,
-                            imageLoader = imageLoader
+                            imageLoader = imageLoader,
+                            setSubscriptionStatus = { status: Boolean ->
+                                if (status) {
+                                    viewModel.postRepository.subscribeToPost(item.id)
+                                } else {
+                                    viewModel.postRepository.unsubcribeFromPost(item.id)
+                                }
+                            }
                         )
                     }
                 }

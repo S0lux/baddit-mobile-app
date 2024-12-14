@@ -56,7 +56,9 @@ import androidx.navigation.findNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.example.baddit.PushNotification.Companion.CHANNEL_ID
+import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.repository.AuthRepository
+import com.example.baddit.domain.repository.CommentRepository
 import com.example.baddit.domain.repository.NotificationRepository
 import com.example.baddit.domain.usecases.LocalThemeUseCases
 import com.example.baddit.presentation.components.AvatarMenu
@@ -108,6 +110,7 @@ import com.example.baddit.ui.theme.BadditTheme
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -121,6 +124,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var commentRepository: CommentRepository
 
     lateinit var navController: NavHostController
 
@@ -157,13 +163,20 @@ class MainActivity : ComponentActivity() {
         intent.extras?.keySet()?.forEach { key -> extras += "$key: ${intent.extras?.getString(key)}, " }
 
         Log.d("Intent", "Intent data: $extras")
-        navigateOnIntentAction(intent.action, intent.extras?.getString("typeId"))
+        lifecycleScope.launch { navigateOnIntentAction(intent.action, intent.extras?.getString("typeId")) }
     }
 
-    private fun navigateOnIntentAction(action: String?, actionTargetId: String? = null) {
+    private suspend fun navigateOnIntentAction(action: String?, actionTargetId: String? = null) {
         if (action.isNullOrEmpty()) return
         when (action) {
             "FRIEND_REQUEST" -> navController.navigate(Friend)
+            "NEW_COMMENT" -> {
+                val result = commentRepository.getComments(commentId = actionTargetId)
+                if (result is Result.Success && result.data.isNotEmpty()) {
+                    val postId = result.data.first().postId
+                    navController.navigate(Post(postId, actionTargetId))
+                }
+            }
         }
     }
 

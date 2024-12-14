@@ -18,7 +18,8 @@ data class PostResponseDTOItem(
     val type: String,
     val updatedAt: String,
     val voteState: String?,
-    val mediaUrls: List<String>
+    val mediaUrls: List<String>,
+    val isSubscribed: Boolean
 )
 
 data class MutablePostResponseDTOItem(
@@ -33,7 +34,8 @@ data class MutablePostResponseDTOItem(
     val type: String,
     val updatedAt: String,
     val voteState: MutableState<String?>,
-    val mediaUrls: List<String>
+    val mediaUrls: List<String>,
+    var isSubscribed: MutableState<Boolean>,
 )
 
 fun PostResponseDTOItem.toMutablePostResponseDTOItem(): MutablePostResponseDTOItem {
@@ -49,6 +51,7 @@ fun PostResponseDTOItem.toMutablePostResponseDTOItem(): MutablePostResponseDTOIt
         type = this.type,
         updatedAt = this.updatedAt,
         voteState = mutableStateOf(this.voteState),
-        mediaUrls = this.mediaUrls
+        mediaUrls = this.mediaUrls,
+        isSubscribed = mutableStateOf(this.isSubscribed)
     )
 }

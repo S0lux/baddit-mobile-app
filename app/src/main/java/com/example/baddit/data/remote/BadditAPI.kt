@@ -234,5 +234,9 @@ interface BadditAPI {
     @GET("/v1/messages/channels")
     suspend fun  getAllChannels(): Response <ArrayList<ChannelResponseDTOItem>>
 
+    @PATCH("/v1/posts/{postId}/subscribe")
+    suspend fun subscribeToPost(@Path("postId") postId: String): Response<Unit>
 
+    @PATCH("/v1/posts/{postId}/unsubscribe")
+    suspend fun unsubscribeFromPost(@Path("postId") postId: String): Response<Unit>
 }

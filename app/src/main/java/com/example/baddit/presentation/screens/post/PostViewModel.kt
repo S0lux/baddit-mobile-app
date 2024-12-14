@@ -32,6 +32,7 @@ class PostViewModel @Inject constructor(
 ) : ViewModel() {
 
     val postId = savedStateHandle.toRoute<Post>().postId
+    val highlightedComment = savedStateHandle.toRoute<Post>().highlightedComment
     var post = postRepository.postCache.find { it.id == postId }!!
 
     var postNotFound by mutableStateOf(false)

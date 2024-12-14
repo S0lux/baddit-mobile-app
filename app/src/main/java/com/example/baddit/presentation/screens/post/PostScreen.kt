@@ -92,11 +92,13 @@ fun PostScreen(
         ) {
             if (viewModel.error.isNotEmpty()) return@LazyColumn
 
-            item {
+            stickyHeader {
                 BaseTopNavigationBar(
                     title = "Post",
                     leftIcon = R.drawable.baseline_arrow_back_24,
                     onLeftIconClick = { navController.popBackStack() })
+            }
+            item {
                 PostCard(
                     postDetails = viewModel.post,
                     loggedIn = viewModel.isLoggedIn,
@@ -141,13 +143,57 @@ fun PostScreen(
                     onComponentClick = onComponentClick,
                     navController = navController,
                     imageLoader = viewModel.imageLoader,
-                    allowNavigateSelf = false
+                    allowNavigateSelf = false,
+                    setSubscriptionStatus = { status: Boolean ->
+                        if (status) {
+                            viewModel.postRepository.subscribeToPost(viewModel.postId)
+                        } else {
+                            viewModel.postRepository.unsubcribeFromPost(viewModel.postId)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            if (viewModel.highlightedComment != null) {
+                items(items = viewModel.comments.filter { it.id == viewModel.highlightedComment }) { it ->
+                    CommentCard(
+                        details = it,
+                        voteFn = { commentId: String, state: String ->
+                            viewModel.voteComment(
+                                commentId,
+                                state
+                            )
+                        },
+                        isLoggedIn = viewModel.isLoggedIn,
+                        navigateLogin = { navController.navigate(Login) },
+                        navigateReply = navReply,
+                        navController = navController,
+                        onComponentClick = onComponentClick,
+                        navigateEdit = { commentId: String, content: String ->
+                            navController.navigate(
+                                Editing(
+                                    postId = null,
+                                    commentContent = content,
+                                    commentId = commentId,
+                                    darkMode = darkMode
+                                )
+                            )
+                        },
+                        deleteFn = { commentId: String ->
+                            viewModel.commentRepository.deleteComment(
+                                commentId
+                            )
+                        },
+                        loggedInUser = viewModel.authRepository.currentUser.value,
+                        isHighlighted = true
+                    )
+                }
+            }
+
             items(items = viewModel.comments) { it ->
+                if (it.id == viewModel.highlightedComment) return@items
                 CommentCard(
                     details = it,
                     voteFn = { commentId: String, state: String ->

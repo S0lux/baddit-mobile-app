@@ -1,6 +1,5 @@
 package com.example.baddit.presentation.utils
 
-import com.example.baddit.domain.model.posts.PostResponseDTOItem
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -54,7 +53,8 @@ data class Profile(
 
 @Serializable
 data class Post(
-    val postId: String
+    val postId: String,
+    val highlightedComment: String? = null
 )
 
 @Serializable
