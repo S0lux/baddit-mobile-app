@@ -10,6 +10,7 @@ data class ChannelResponseDTOItem(
     val members: List<ChatMember>,
     val moderators: List<ChatModerators>,
     val createdAt: String,
+    val type: String,
     val isDeleted: Boolean
 )
 
@@ -20,12 +21,13 @@ data class MutableChannelResponseDTOItem(
     val members: List<ChatMember>,
     val moderators: List<ChatModerators>,
     val createdAt: String,
+    val type: String,
     val isDeleted: Boolean
 )
 
 
 fun ChannelResponseDTOItem.toMutableChannelResponseDTOItem(): MutableChannelResponseDTOItem {
     return MutableChannelResponseDTOItem(
-        id, name, avatarUrl, members, moderators, createdAt, isDeleted
+        id, name, avatarUrl, members, moderators, createdAt, type, isDeleted
     )
 }

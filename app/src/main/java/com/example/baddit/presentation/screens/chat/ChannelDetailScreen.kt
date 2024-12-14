@@ -62,7 +62,6 @@ fun ChannelDetailScreen(
     val coroutineScope = rememberCoroutineScope()
 
 
-
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -96,8 +95,6 @@ fun ChannelDetailScreen(
         viewModel.connectToChannel(channelId)
 
         viewModel.fetchChannelDetail(channelId)
-
-        Log.d("CHANNEL_DETAIL",channelId)
     }
 
     LaunchedEffect(socketMessages.size) {
@@ -123,6 +120,9 @@ fun ChannelDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        val channel =
+            viewModel.chatRepository.channelListCache.find { it.id == channelId }!!
+        val avatar = channel.avatarUrl
         // TopAppBar
         TopAppBar(
             title = {
@@ -130,15 +130,42 @@ fun ChannelDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    AsyncImage(
-                        model = channelAvatar,
-                        contentDescription = "$channelName avatar",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                    Text(channelName)
+                    if (channel.type == "DIRECT") {
+                        AsyncImage(
+                            model = channelAvatar,
+                            contentDescription = "$channelName avatar",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        if (avatar != "https://placehold.co/400.png") {
+                            AsyncImage(
+                                model = avatar,
+                                contentDescription = "$channelName avatar",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            val currentChatChannel =
+                                viewModel.chatRepository.channelListCache.find { it.id == channelId }!!
+                            val members = currentChatChannel.members
+                            DiagonalOverlappingAvatars(
+                                avatars = listOf(members[0].avatarUrl, members[1].avatarUrl),
+                                modifier = Modifier.size(50.dp),
+                                overlap = 6.dp,
+                                size = 50.dp
+                            )
+                        }
+                    }
+                    if (channel.type == "GROUP") {
+                        Text(channel.name)
+                    } else {
+                        Text(channelName)
+                    }
                 }
             },
             navigationIcon = {

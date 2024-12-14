@@ -5,4 +5,5 @@ data class GetOtherResponseDTO (
     val id: String,
     val registeredAt: String,
     val username: String,
+    val messagePrivacy: String,
 )

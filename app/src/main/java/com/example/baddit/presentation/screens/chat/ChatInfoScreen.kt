@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -25,7 +26,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.baddit.domain.model.friend.BaseFriendUser
+import com.example.baddit.presentation.screens.chat.ChannelListScreen
 import com.example.baddit.presentation.screens.chat.ChatViewModel
+import com.example.baddit.presentation.screens.chat.DiagonalOverlappingAvatars
+import com.example.baddit.presentation.utils.ChannelList
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,11 +44,16 @@ fun ChannelInfoScreen(
 ) {
     // State for editing
     var localChannelName by remember { mutableStateOf(channelName) }
-    var localChannelAvatar by remember { mutableStateOf(channelAvatar) }
+//    var localChannelAvatar by remember { mutableStateOf(channelAvatar) }
     var isEditingName by remember { mutableStateOf(false) }
+
+    var showAddMembersDialog by remember { mutableStateOf(false) }
+    var showAddModeratorsDialog by remember { mutableStateOf(false) }
+    var showRemoveMembersDialog by remember { mutableStateOf(false) }
 
     // Fetch channel details
     LaunchedEffect(channelId) {
+        viewModel.fetchChannelDetail(channelId)
         viewModel.fetchChannelDetail(channelId)
     }
 
@@ -65,7 +75,8 @@ fun ChannelInfoScreen(
     ) { uri ->
         uri?.let {
             try {
-                val file = File(context.cacheDir, "channel_avatar_${System.currentTimeMillis()}.jpg")
+                val file =
+                    File(context.cacheDir, "channel_avatar_${System.currentTimeMillis()}.jpg")
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     file.outputStream().use { output ->
                         input.copyTo(output)
@@ -81,6 +92,206 @@ fun ChannelInfoScreen(
 
     // Delete channel confirmation state
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    if (showRemoveMembersDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveMembersDialog = false },
+            title = { Text("Remove Members") },
+            text = {
+                LazyColumn {
+                    items(currentChannel?.members.orEmpty().filter { member ->
+                        // Filter out current user and other moderators
+                        member.id != viewModel.me.value!!.id  &&
+                                !currentChannel!!.moderators.map { it.id }.contains(member.id)
+                    }) { member ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.toggleFriendSelection(BaseFriendUser(
+                                        id = member.id,
+                                        username =  member.username,
+                                        avatarUrl = member.avatarUrl,
+                                        status = "ACTIVE",
+                                    ))
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Checkbox(
+                                checked = viewModel.selectedFriendsForChannel.contains(BaseFriendUser(
+                                    id = member.id,
+                                    username =  member.username,
+                                    avatarUrl = member.avatarUrl,
+                                    status = "ACTIVE",
+                                )),
+                                onCheckedChange = {
+                                    viewModel.toggleFriendSelection(BaseFriendUser(
+                                        id = member.id,
+                                        username =  member.username,
+                                        avatarUrl = member.avatarUrl,
+                                        status = "ACTIVE",
+                                    ))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            AsyncImage(
+                                model = member.avatarUrl,
+                                contentDescription = "Member Avatar",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = member.username)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Remove selected members
+                        val selectedMemberIds = viewModel.selectedFriendsForChannel.map { it.id }
+                        viewModel.removeMembersFromChannel(channelId, selectedMemberIds)
+                        showRemoveMembersDialog = false
+                    },
+                    enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveMembersDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showAddMembersDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddMembersDialog = false },
+            title = { Text("Add Members") },
+            text = {
+                LazyColumn {
+                    items(viewModel.availableFriends.filter { friend ->
+                        // Filter out existing members
+                        currentChannel?.members?.none { it.id == friend.id } ?: true
+                    }) { friend ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.toggleFriendSelection(friend)
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Checkbox(
+                                checked = viewModel.selectedFriendsForChannel.contains(friend),
+                                onCheckedChange = {
+                                    viewModel.toggleFriendSelection(friend)
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            AsyncImage(
+                                model = friend.avatarUrl,
+                                contentDescription = "Friend Avatar",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = friend.username)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Add selected friends as members
+                        val selectedFriendIds = viewModel.selectedFriendsForChannel.map { it.id }
+                        viewModel.addMembersToChannel(channelId, selectedFriendIds)
+                        showAddMembersDialog = false
+                    },
+                    enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddMembersDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Add Moderators Dialog
+    if (showAddModeratorsDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddModeratorsDialog = false },
+            title = { Text("Add Moderators") },
+            text = {
+                LazyColumn {
+                    items(viewModel.availableFriends.filter { friend ->
+                        // Filter out existing members and existing moderators
+                        currentChannel?.moderators?.none { it.id == friend.id } ?: true
+                    }) { friend ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.toggleFriendSelection(friend)
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Checkbox(
+                                checked = viewModel.selectedFriendsForChannel.contains(friend),
+                                onCheckedChange = {
+                                    viewModel.toggleFriendSelection(friend)
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            AsyncImage(
+                                model = friend.avatarUrl,
+                                contentDescription = "Friend Avatar",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = friend.username)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Add selected friends as moderators
+                        val selectedFriendIds = viewModel.selectedFriendsForChannel.map { it.id }
+                        viewModel.addModeratorsToChannel(channelId, selectedFriendIds)
+                        showAddModeratorsDialog = false
+                    },
+                    enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddModeratorsDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(), // Ensure full size constraint
@@ -105,26 +316,85 @@ fun ChannelInfoScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                val channel =
+                    viewModel.chatRepository.channelListCache.find { it.id == channelId }!!
+                val avatar = channel.avatarUrl
                 // Channel Avatar and Name
                 item {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        AsyncImage(
-                            model = localChannelAvatar,
-                            contentDescription = "Channel Avatar",
+                        Box(
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(CircleShape)
-                                .clickable {
-                                    if (isCurrentUserModerator) {
-                                        avatarLauncher.launch("image/*")
-                                    }
-                                },
-                            contentScale = ContentScale.Crop
-                        )
+                                .clip(CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (viewModel.isUploading) {
+                                // Show loading indicator when uploading
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(50.dp)
+                                        .align(Alignment.Center)
+                                )
+                            } else {
+                                if(channel.type == "DIRECT"){
+                                    AsyncImage(
+                                        model = channelAvatar,
+                                        contentDescription = "$channelName avatar",
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                if (isCurrentUserModerator) {
+                                                    avatarLauncher.launch("image/*")
+                                                }
+                                            },
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                else{
 
+                                if (avatar == "https://placehold.co/400.png") {
+                                    val currentChatChannel =
+                                        viewModel.chatRepository.channelListCache.find { it.id == channelId }!!
+                                    val members = currentChatChannel.members
+                                    DiagonalOverlappingAvatars(
+                                        avatars = listOf(
+                                            members[0].avatarUrl,
+                                            members[1].avatarUrl
+                                        ),
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                if (isCurrentUserModerator) {
+                                                    avatarLauncher.launch("image/*")
+                                                }
+                                            },
+                                        overlap = 8.dp,
+                                        size = 100.dp
+                                    )
+                                } else {
+
+                                    AsyncImage(
+                                        model = avatar,
+                                        contentDescription = "$channelName avatar",
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                if (isCurrentUserModerator) {
+                                                    avatarLauncher.launch("image/*")
+                                                }
+                                            },
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                }
+                            }
+                        }
                         Column {
                             if (isEditingName && isCurrentUserModerator) {
                                 TextField(
@@ -134,7 +404,10 @@ fun ChannelInfoScreen(
                                     trailingIcon = {
                                         Row {
                                             TextButton(onClick = {
-                                                viewModel.updateChannelName(channelId, localChannelName)
+                                                viewModel.updateChannelName(
+                                                    channelId,
+                                                    localChannelName
+                                                )
                                                 isEditingName = false
                                             }) {
                                                 Text("Save")
@@ -165,13 +438,31 @@ fun ChannelInfoScreen(
 
                 // Members Section
                 item {
-                    Text(
-                        text = "Members (${currentChannel?.members?.size ?: 0})",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Members (${currentChannel?.members?.size ?: 0})",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Add Members Button (Only for Moderators)
+                        if (isCurrentUserModerator) {
+                            IconButton(
+                                onClick = {
+                                    // Reset selected friends before opening dialog
+                                    viewModel.selectedFriendsForChannel = emptyList()
+                                    showAddMembersDialog = true
+                                }
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Members")
+                            }
+                        }
+                    }
                 }
-                items(currentChannel?.members ?: emptyList()) { member ->
+                items(channel.members) { member ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -187,15 +478,23 @@ fun ChannelInfoScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = member.username)
 
-                        // Add moderator button for current moderators
-                        if (isCurrentUserModerator) {
+                        // Add remove member button for moderators
+                        if (isCurrentUserModerator && member.id != viewModel.me.value!!.id
+                            && !channel.moderators.map { it.id }.contains(member.id)) {
                             Spacer(modifier = Modifier.weight(1f))
                             IconButton(
                                 onClick = {
-                                    // TODO: Implement add/remove moderator functionality
+                                    // Reset selected friends and open remove members dialog
+                                    viewModel.selectedFriendsForChannel = listOf(BaseFriendUser(
+                                        id = member.id,
+                                        username =  member.username,
+                                        avatarUrl = member.avatarUrl,
+                                        status = "ACTIVE",
+                                    ))
+                                    showRemoveMembersDialog = true
                                 }
                             ) {
-                                Icon(Icons.Default.Person, contentDescription = "Manage Moderator")
+                                Icon(Icons.Default.Delete, contentDescription = "Remove Member")
                             }
                         }
                     }
@@ -203,13 +502,31 @@ fun ChannelInfoScreen(
 
                 // Moderators Section
                 item {
-                    Text(
-                        text = "Moderators (${currentChannel?.moderators?.size ?: 0})",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Moderators (${currentChannel?.moderators?.size ?: 0})",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Add Moderators Button (Only for Moderators)
+                        if (isCurrentUserModerator) {
+                            IconButton(
+                                onClick = {
+                                    // Reset selected friends before opening dialog
+                                    viewModel.selectedFriendsForChannel = emptyList()
+                                    showAddModeratorsDialog = true
+                                }
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Moderators")
+                            }
+                        }
+                    }
                 }
-                items(currentChannel?.moderators ?: emptyList()) { moderator ->
+                items(channel.moderators) { moderator ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -226,6 +543,8 @@ fun ChannelInfoScreen(
                         Text(text = moderator.username)
                     }
                 }
+
+
 
                 // Media Gallery
                 item {
@@ -288,7 +607,7 @@ fun ChannelInfoScreen(
                         TextButton(
                             onClick = {
                                 viewModel.deleteChannel(channelId)
-                                navController.navigateUp()
+                                navController.navigate(ChannelList)
                             }
                         ) {
                             Text("Delete", color = MaterialTheme.colorScheme.error)

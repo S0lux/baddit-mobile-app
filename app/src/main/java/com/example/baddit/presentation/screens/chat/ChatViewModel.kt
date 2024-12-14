@@ -59,6 +59,9 @@ class ChatViewModel @Inject constructor(
     var availableFriends by mutableStateOf<List<BaseFriendUser>>(emptyList())
     var selectedFriendsForChannel by mutableStateOf<List<BaseFriendUser>>(emptyList())
 
+
+    var isCreatingDirectChannel by mutableStateOf(false)
+
     init {
         // Observe socket connection status
         viewModelScope.launch {
@@ -78,7 +81,7 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun clearPreviousMessages(){
+    fun clearPreviousMessages() {
         _socketMessages.clear()
         socketMessages = _socketMessages
         chatRepository.channelMessageCache.clear()
@@ -92,6 +95,7 @@ class ChatViewModel @Inject constructor(
                     // Directly use the local friends list
                     availableFriends = friendRepository.currentFriends
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to fetch friends"
@@ -111,15 +115,30 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun createOrGetChatChannel(targetUserId: String){
+        viewModelScope.launch {
+            isCreatingDirectChannel = true
+            when(val result = chatRepository.getOrCreateDirectChannel(targetUserId)){
+                is Result.Error -> {
+                    isCreatingDirectChannel = false
+                }
+                is Result.Success -> {
+                    chatRepository.channelListCache.add(result.data.toMutableChannelResponseDTOItem())
+                    isCreatingDirectChannel = false
+                }
+            }
+        }
+    }
+
     fun createChatChannel(channelName: String) {
         viewModelScope.launch {
             val selectedFriendIds = selectedFriendsForChannel.map { it.id }
             when (val result = chatRepository.createChatChannel(channelName, selectedFriendIds)) {
                 is Result.Success -> {
-                    // Handle successful channel creation
-                    // Maybe navigate or show a success message
+                    refreshChannelList()
                     selectedFriendsForChannel = emptyList()
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to create channel"
@@ -158,7 +177,6 @@ class ChatViewModel @Inject constructor(
     }
 
 
-
     fun uploadChatImages(channelId: String, imageFiles: List<File>) {
         viewModelScope.launch {
             isUploading = true
@@ -167,6 +185,7 @@ class ChatViewModel @Inject constructor(
                     uploadedImageUrls = result.data
                     isUploading = false
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to upload images"
@@ -209,12 +228,15 @@ class ChatViewModel @Inject constructor(
             when (val result = chatRepository.updateChatChannelName(channelId, newName)) {
                 is Result.Success -> {
                     // Update the local cache if needed
-                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    val channelIndex =
+                        chatRepository.channelListCache.indexOfFirst { it.id == channelId }
                     if (channelIndex != -1) {
-                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                        chatRepository.channelListCache[channelIndex] =
+                            result.data.toMutableChannelResponseDTOItem()
                     }
                     error = "" // Clear any previous errors
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to update channel name"
@@ -232,13 +254,16 @@ class ChatViewModel @Inject constructor(
             when (val result = chatRepository.updateChatChannelAvatar(channelId, avatarFile)) {
                 is Result.Success -> {
                     // Update the local cache if needed
-                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    val channelIndex =
+                        chatRepository.channelListCache.indexOfFirst { it.id == channelId }
                     if (channelIndex != -1) {
-                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                        chatRepository.channelListCache[channelIndex] =
+                            result.data.toMutableChannelResponseDTOItem()
                     }
                     error = "" // Clear any previous errors
                     isUploading = false
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to upload channel avatar"
@@ -256,13 +281,16 @@ class ChatViewModel @Inject constructor(
             when (val result = chatRepository.addModeratorsToChannel(channelId, moderatorIds)) {
                 is Result.Success -> {
                     // Update the local cache if needed
-                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    val channelIndex =
+                        chatRepository.channelListCache.indexOfFirst { it.id == channelId }
                     if (channelIndex != -1) {
-                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                        chatRepository.channelListCache[channelIndex] =
+                            result.data.toMutableChannelResponseDTOItem()
                     }
                     error = "" // Clear any previous errors
                     selectedFriendsForChannel = emptyList() // Reset selected friends
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to add moderators"
@@ -279,13 +307,16 @@ class ChatViewModel @Inject constructor(
             when (val result = chatRepository.addMembersToChannel(channelId, memberIds)) {
                 is Result.Success -> {
                     // Update the local cache if needed
-                    val channelIndex = chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    val channelIndex =
+                        chatRepository.channelListCache.indexOfFirst { it.id == channelId }
                     if (channelIndex != -1) {
-                        chatRepository.channelListCache[channelIndex] = result.data.toMutableChannelResponseDTOItem()
+                        chatRepository.channelListCache[channelIndex] =
+                            result.data.toMutableChannelResponseDTOItem()
                     }
                     error = "" // Clear any previous errors
                     selectedFriendsForChannel = emptyList() // Reset selected friends
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to add members"
@@ -297,15 +328,44 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    //TODO make remove members from chat channel function
+    fun removeMembersFromChannel(channelId: String, memberIds: List<String>) {
+        viewModelScope.launch {
+            when (val result = chatRepository.removeMembers(channelId, memberIds)) {
+                is Result.Success -> {
+                    // Update the local cache if needed
+                    val channelIndex =
+                        chatRepository.channelListCache.indexOfFirst { it.id == channelId }
+                    if (channelIndex != -1) {
+                        chatRepository.channelListCache[channelIndex] =
+                            result.data.toMutableChannelResponseDTOItem()
+                    }
+                    error = "" // Clear any previous errors
+                    selectedFriendsForChannel = emptyList() // Reset selected friends
+                }
+
+                is Result.Error -> {
+                    error = when (result.error) {
+                        DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to remove members"
+                        DataError.NetworkError.NO_INTERNET -> "No internet connection"
+                        else -> "An unknown error occurred"
+                    }
+                }
+            }
+        }
+    }
+
+
     fun deleteChannel(channelId: String) {
         viewModelScope.launch {
             when (val result = chatRepository.deleteChannel(channelId)) {
                 is Result.Success -> {
                     // Remove the channel from local cache
-                    chatRepository.channelListCache.removeAll { it.id == channelId }
+                    refreshChannelList()
                     error = "" // Clear any previous errors
                     // Optionally navigate back or refresh channel list
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to delete channel"
@@ -326,6 +386,7 @@ class ChatViewModel @Inject constructor(
                     chatRepository.channelMessageCache.removeAll { it.id == messageId }
                     error = "" // Clear any previous errors
                 }
+
                 is Result.Error -> {
                     error = when (result.error) {
                         DataError.NetworkError.INTERNAL_SERVER_ERROR -> "Unable to delete message"
@@ -346,6 +407,7 @@ class ChatViewModel @Inject constructor(
 
     fun fetchChannelDetail(channelId: String) {
         viewModelScope.launch {
+            isRefreshing = true
             when (val result = chatRepository.getChannelMessages(channelId)) {
                 is Result.Error -> {
                     error = when (result.error) {
@@ -358,6 +420,7 @@ class ChatViewModel @Inject constructor(
                 is Result.Success -> {
                     chatRepository.channelMessageCache.clear()
                     error = ""
+                    isRefreshing = false
                     chatRepository.channelMessageCache.addAll(result.data.map { it.toMutableMessageResponseDTOItem() })
                 }
             }

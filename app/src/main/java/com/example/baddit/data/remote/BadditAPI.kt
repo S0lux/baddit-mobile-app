@@ -8,6 +8,7 @@ import com.example.baddit.data.dto.chat.AddMembersBody
 import com.example.baddit.data.dto.chat.AddModeratorsBody
 import com.example.baddit.data.dto.chat.CreateChannelBody
 import com.example.baddit.data.dto.chat.DirectChannelBody
+import com.example.baddit.data.dto.chat.RemoveMembersBody
 import com.example.baddit.data.dto.chat.SendMessageBody
 import com.example.baddit.data.dto.chat.UpdateChannelNameBody
 import com.example.baddit.data.dto.comment.CommentCommentRequestBody
@@ -251,6 +252,7 @@ interface BadditAPI {
     @PUT("v1/messages/channel")
     suspend fun updateChatChannelName(@Body updateChannelName: UpdateChannelNameBody): Response<ChannelResponseDTOItem>
 
+    @Multipart
     @PUT("v1/messages/channel/avatar")
     suspend fun updateChatChannelAvatar(
         @Part("channelId") channelId: RequestBody,
@@ -268,4 +270,10 @@ interface BadditAPI {
 
     @DELETE("v1/messages/{messageId}")
     suspend fun deleteMessage(@Path("messageId") messageId: String): Response<Unit>
+
+    @GET("v1/messages/channels/{channelId}")
+    suspend fun getChatChannel(@Path("channelId") channelId: String): Response<ChannelResponseDTOItem>
+
+    @PUT("v1/messages/channel/members/remove")
+    suspend fun removeMembers(@Body removeMembersBody: RemoveMembersBody): Response<ChannelResponseDTOItem>
 }

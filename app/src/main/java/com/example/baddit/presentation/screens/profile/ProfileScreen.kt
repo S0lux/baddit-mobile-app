@@ -86,7 +86,9 @@ import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
+import com.example.baddit.presentation.screens.chat.ChatViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
+import com.example.baddit.presentation.utils.ChannelList
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Home
@@ -97,6 +99,7 @@ import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -112,6 +115,7 @@ fun ProfileScreen(
     navController: NavController,
     navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
+    chatViewModel: ChatViewModel = hiltViewModel(),
     navigateLogin: () -> Unit,
     navigateReply: (String, String) -> Unit,
     darkMode: Boolean
@@ -125,6 +129,35 @@ fun ProfileScreen(
 
     val contentSelectionModalState = rememberModalBottomSheetState()
     var showContentSelectionModal by remember { mutableStateOf(false) }
+
+
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // Function to handle messaging navigation
+    fun navigateToDirectMessage() {
+        isLoading = true
+        errorMessage = ""
+
+        coroutineScope.launch {
+            try {
+                // Call the function to create or get direct channel
+                chatViewModel.createOrGetChatChannel(userId)
+
+                // Wait until channel creation is complete
+                while (chatViewModel.isCreatingDirectChannel) {
+                    delay(50) // Small delay to prevent tight looping
+                }
+
+                // Navigate to ChannelList once done
+                isLoading = false
+                navController.navigate(ChannelList)
+            } catch (e: Exception) {
+                isLoading = false
+                errorMessage = "Failed to create chat channel: ${e.message}"
+            }
+        }
+    }
 
     if (error.isNotEmpty()) {
         ErrorNotification(icon = R.drawable.wifi_off, text = error)
@@ -192,28 +225,29 @@ fun ProfileScreen(
             )
 
             if (!viewModel.isMe) {
-//
-//                val messagePrivacy = viewModel.user.value?.friendRequestStatus;
-//                val isFriend = viewModel.user.value?.isFriend;
-//                if (messagePrivacy != null && isFriend != null) {
-//                    if (messagePrivacy == "EVERYONE") {
-//                        IconMenuItem(
-//                            icon = R.drawable.outline_message,
-//                            tint = MaterialTheme.colorScheme.textPrimary,
-//                            text = "Message",
-//                            onClick = { TODO() }
-//                        )
-//                    } else {
-//                        if (isFriend == true) {
-//                            IconMenuItem(
-//                                icon = R.drawable.outline_message,
-//                                tint = MaterialTheme.colorScheme.textPrimary,
-//                                text = "Message",
-//                                onClick = { TODO() }
-//                            )
-//                        }
-//                    }
-//                }
+
+                val messagePrivacy = viewModel.user.value?.messagePrivacy;
+                if (messagePrivacy != null) {
+                    if (messagePrivacy == "EVERYONE") {
+                        IconMenuItem(
+                            icon = R.drawable.outline_message,
+                            tint = MaterialTheme.colorScheme.textPrimary,
+                            text = "Message",
+                            onClick = {
+                                navigateToDirectMessage()
+                            }
+                        )
+                    } else {
+                        if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
+                            IconMenuItem(
+                                icon = R.drawable.outline_message,
+                                tint = MaterialTheme.colorScheme.textPrimary,
+                                text = "Message",
+                                onClick = { navigateToDirectMessage() }
+                            )
+                        }
+                    }
+                }
 
                 if (viewModel.friendRepository.currentFriends.any { it.id == userId }) {
                     IconMenuItem(

@@ -238,21 +238,13 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
                 state = listState
             ) {
                 if (viewModel.error.isEmpty()) {
-                    items(items = viewModel.chatRepository.channelListCache) { item ->
-                        val channelAvatar =
-                            if (item.members.size >= 3 && item.avatarUrl == "https://placehold.co/400.png") {
-                                val avatarsToUse = item.members.take(3)
-                                (avatarsToUse.map { it.avatarUrl })
-                            } else {
-                                item.avatarUrl
-                            }
+                    items(items = viewModel.chatRepository.channelListCache.filter { !it.isDeleted }) { item ->
                         var otherUser: ChatMember? = null
-                        if (item.members.size == 2) {
+                        if (item.type == "DIRECT") {
                             otherUser = item.members.firstOrNull { member ->
                                 member.id != viewModel.me.value?.id
                             }
                             if (otherUser != null) {
-
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
@@ -285,42 +277,81 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.textPrimary
                                         )
-//                                    Text(
-//                                        "${item.members.size} members",
-//                                        color = MaterialTheme.colorScheme.textSecondary
-//                                    )
                                     }
                                 }
                             }
-                        } else if (item.members.size > 2) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clickable {
-                                        navController.navigate(
-                                            ChannelDetail(
-                                                channelId = item.id,
-                                                channelName = item.name,
-                                                channelAvatar = "MultiAvatar"
+                        } else {
+                            if (item.avatarUrl == "https://placehold.co/400.png") {
+
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable {
+                                            navController.navigate(
+                                                ChannelDetail(
+                                                    channelId = item.id,
+                                                    channelName = item.name,
+                                                    channelAvatar = item.avatarUrl
+                                                )
                                             )
+                                        }
+                                ) {
+                                    // Create a custom multi-avatar component
+                                    DiagonalOverlappingAvatars(
+                                        avatars = listOf(
+                                            item.members[0].avatarUrl,
+                                            item.members[1].avatarUrl
+                                        ),
+                                        modifier = Modifier.size(50.dp),
+                                        overlap = 8.dp,
+                                        size = 50.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            item.name,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.textPrimary
                                         )
                                     }
-                            ) {
-                                // Create a custom multi-avatar component
-                                DiagonalOverlappingAvatars(
-                                    avatars = listOf(item.members[0].avatarUrl, item.members[1].avatarUrl),
-                                    modifier = Modifier.size(50.dp),
-                                    overlap = 8.dp
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        item.name,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.textPrimary
+                                }
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable {
+                                            navController.navigate(
+                                                ChannelDetail(
+                                                    channelId = item.id,
+                                                    channelName = item.name,
+                                                    channelAvatar = item.avatarUrl
+                                                )
+                                            )
+                                        }
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item.avatarUrl).build(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .height(50.dp)
+                                            .aspectRatio(1f),
                                     )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            item.name,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.textPrimary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -344,8 +375,8 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
 fun DiagonalOverlappingAvatars(
     avatars: List<String>,
     modifier: Modifier = Modifier,
-    size: Dp = 50.dp,
-    overlap: Dp = 8.dp
+    size: Dp,
+    overlap: Dp,
 ) {
     Box(
         modifier = modifier
@@ -353,7 +384,7 @@ fun DiagonalOverlappingAvatars(
     ) {
         Box(
             modifier = Modifier
-                .size(size * 0.7f)
+                .size(size)
                 .align(Alignment.TopEnd)
                 .offset(x = -(size * 0.10f), y = -(size * 0.10f))
         ) {
@@ -362,7 +393,7 @@ fun DiagonalOverlappingAvatars(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(size * 0.7f)
+                    .size(size)
                     .clip(CircleShape)
                     .border(2.dp, Color.White, CircleShape)
             )
@@ -370,7 +401,7 @@ fun DiagonalOverlappingAvatars(
 
         Box(
             modifier = Modifier
-                .size(size * 0.7f)
+                .size(size)
                 .align(Alignment.BottomStart)
                 .offset(x = (size * 0.10f), y = (size * 0.10f))
         ) {
@@ -379,7 +410,7 @@ fun DiagonalOverlappingAvatars(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(size * 0.7f)
+                    .size(size)
                     .clip(CircleShape)
                     .border(2.dp, Color.White, CircleShape)
             )

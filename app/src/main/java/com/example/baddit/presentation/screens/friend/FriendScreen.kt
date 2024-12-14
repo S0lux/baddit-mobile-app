@@ -24,22 +24,51 @@ import com.example.baddit.R
 import com.example.baddit.domain.model.friend.BaseFriendUser
 import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.presentation.components.BaseTopNavigationBar
+import com.example.baddit.presentation.screens.chat.ChatViewModel
 import com.example.baddit.presentation.screens.friend.FriendViewModel
 import com.example.baddit.presentation.screens.profile.IconMenuItem
+import com.example.baddit.presentation.utils.ChannelList
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(
     navController: NavController,
-    viewModel: FriendViewModel = hiltViewModel()
+    viewModel: FriendViewModel = hiltViewModel(),
+    chatViewModel: ChatViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
     var selectedFriend: BaseFriendUser? = null
     var showFriendModal by remember { mutableStateOf(false) }
+
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    fun navigateToDirectMessage(friendId: String) {
+        isLoading = true
+        errorMessage = ""
+
+        coroutineScope.launch {
+            try {
+                chatViewModel.createOrGetChatChannel(friendId)
+
+                while (chatViewModel.isCreatingDirectChannel) {
+                    delay(50)
+                }
+
+                // Navigate to ChannelList once done
+                isLoading = false
+                navController.navigate(ChannelList)
+            } catch (e: Exception) {
+                isLoading = false
+                errorMessage = "Failed to create chat channel: ${e.message}"
+            }
+        }
+    }
 
     LaunchedEffect(true) {
         coroutineScope.launch {
@@ -64,15 +93,22 @@ fun FriendsScreen(
             if (viewModel.currentFriends.isEmpty() && viewModel.incomingRequests.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(1F),
-                    contentAlignment = Alignment.Center) {
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        AnimatedLogo(R.raw.sad, size = 125.dp, tintColor = MaterialTheme.colorScheme.textSecondary)
-                        Text("You have no friend",
+                        AnimatedLogo(
+                            R.raw.sad,
+                            size = 125.dp,
+                            tintColor = MaterialTheme.colorScheme.textSecondary
+                        )
+                        Text(
+                            "You have no friend",
                             color = MaterialTheme.colorScheme.textSecondary,
-                            fontWeight = FontWeight.Medium)
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
@@ -82,7 +118,8 @@ fun FriendsScreen(
                     .fillMaxSize()
                     .padding(
                         start = padding.calculateStartPadding(LayoutDirection.Ltr),
-                        end = padding.calculateStartPadding(LayoutDirection.Ltr))
+                        end = padding.calculateStartPadding(LayoutDirection.Ltr)
+                    )
             ) {
                 // Pending Friend Requests Section
                 if (viewModel.incomingRequests.isNotEmpty()) {
@@ -97,8 +134,20 @@ fun FriendsScreen(
                     items(viewModel.incomingRequests) { request ->
                         PendingFriendRequestItem(
                             request = request.sender,
-                            onAccept = { coroutineScope.launch { viewModel.acceptFriendRequest(request.sender.id) } },
-                            onReject = { coroutineScope.launch { viewModel.rejectFriendRequest(request.sender.id) } },
+                            onAccept = {
+                                coroutineScope.launch {
+                                    viewModel.acceptFriendRequest(
+                                        request.sender.id
+                                    )
+                                }
+                            },
+                            onReject = {
+                                coroutineScope.launch {
+                                    viewModel.rejectFriendRequest(
+                                        request.sender.id
+                                    )
+                                }
+                            },
                         )
                     }
                 }
@@ -141,7 +190,13 @@ fun FriendsScreen(
                         onBlock = {
                             TODO()
                             showFriendModal = false
-                        }
+                        },
+                        onMessage = {
+                            navigateToDirectMessage(selectedFriend!!.id)
+                            showFriendModal = false
+                        },
+                        isLoading = isLoading
+
                     )
                 }
             }
@@ -153,7 +208,7 @@ fun FriendsScreen(
 fun PendingFriendRequestItem(
     request: BaseFriendUser,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -230,7 +285,9 @@ fun FriendItem(
 fun FriendOptionsBottomSheetContent(
     friend: BaseFriendUser,
     onUnfriend: () -> Unit,
-    onBlock: () -> Unit
+    onBlock: () -> Unit,
+    onMessage: () -> Unit,
+    isLoading: Boolean = false // Add loading state
 ) {
     Column(
         modifier = Modifier
@@ -248,8 +305,17 @@ fun FriendOptionsBottomSheetContent(
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 6.dp),
 
-            )
+                )
         }
+
+        IconMenuItem(
+            icon = R.drawable.outline_message,
+            text = if (isLoading) "Loading..." else "Message",
+            tint = MaterialTheme.colorScheme.textPrimary,
+            iconGap = 12.dp,
+            disabled = isLoading,
+            onClick = onMessage
+        )
 
         IconMenuItem(
             icon = R.drawable.remove_user,

@@ -6,6 +6,7 @@ import com.example.baddit.data.dto.chat.AddMembersBody
 import com.example.baddit.data.dto.chat.AddModeratorsBody
 import com.example.baddit.data.dto.chat.CreateChannelBody
 import com.example.baddit.data.dto.chat.DirectChannelBody
+import com.example.baddit.data.dto.chat.RemoveMembersBody
 import com.example.baddit.data.dto.chat.SendMessageBody
 import com.example.baddit.data.dto.chat.UpdateChannelNameBody
 import com.example.baddit.data.remote.BadditAPI
@@ -141,5 +142,16 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun deleteMessage(messageId: String): Result<Unit, DataError.NetworkError> {
         return safeApiCall { badditAPI.deleteMessage(messageId) }
+    }
+
+    override suspend fun getChatChannel(channelId: String): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall { badditAPI.getChatChannel(channelId) }
+    }
+
+    override suspend fun removeMembers(
+        channelId: String,
+        memberIds: List<String>
+    ): Result<ChannelResponseDTOItem, DataError.NetworkError> {
+        return safeApiCall { badditAPI.removeMembers(RemoveMembersBody(channelId, memberIds)) }
     }
 }
