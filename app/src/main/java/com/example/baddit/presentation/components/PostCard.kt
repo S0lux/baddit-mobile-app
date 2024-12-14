@@ -444,8 +444,8 @@ fun PostMediaContent(mediaUrls: List<String>, imageLoader: ImageLoader?) {
                 imageLoader = imageLoader,
                 contentDescription = null,
                 modifier = Modifier
-                    .heightIn(50.dp, 450.dp),
-                contentScale = ContentScale.Fit
+                    .heightIn(100.dp, 450.dp),
+                contentScale = ContentScale.Crop
             )
         }
     }
