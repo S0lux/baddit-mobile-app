@@ -16,6 +16,7 @@ class FriendViewModel @Inject constructor(
     val incomingRequests = friendRepository.incomingFriendRequests
 
     suspend fun updateFriendsInfo() {
+        if (authRepository.isLoggedIn.value.not()) return
         friendRepository.updateLocalUserFriend()
     }
 

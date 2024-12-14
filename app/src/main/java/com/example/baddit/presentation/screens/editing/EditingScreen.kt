@@ -1,6 +1,7 @@
 package com.example.baddit.presentation.screens.editing
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.baddit.R
 import com.example.baddit.presentation.components.AnimatedLogo
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.styles.textFieldColors
+import com.example.baddit.presentation.styles.textFieldColorsNoBorder
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @Composable
@@ -56,65 +60,20 @@ fun EditingScreen(navController: NavController, viewModel: EditingViewModel = hi
     }
 
     Column(
-        modifier = Modifier.padding(10.dp)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.cardBackground),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (!viewModel.isLoading) {
-                IconButton(
-                    onClick = { viewModel.onSend() },
-                    enabled = !viewModel.isLoading,
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    colors = IconButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.round_send_24),
-                        contentDescription = null
-                    )
-                }
+        BaseTopNavigationBar(
+            title = "Edit post",
+            leftIcon = R.drawable.round_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() },
+            rightIcons = listOf(
+                Pair(R.drawable.round_send_24) { viewModel.onSend() }
+            ),
+            rightIconsLoading = viewModel.isLoading,
+            loadingIcon = {
+                AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
             }
-
-            if (viewModel.isLoading) {
-                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
-                }
-            }
-
-            Row(
-                modifier = Modifier.align(Alignment.CenterStart),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier,
-                    colors = IconButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.round_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-
-                Text(
-                    text = "Editing",
-                    style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
-
-            }
-
-        }
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -135,7 +94,7 @@ fun EditingScreen(navController: NavController, viewModel: EditingViewModel = hi
             supportingText = {
                 Text(text = viewModel.error)
             },
-            colors = textFieldColors()
+            colors = textFieldColorsNoBorder()
         )
     }
 }

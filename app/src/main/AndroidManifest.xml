@@ -38,6 +38,10 @@
                 <data android:scheme="https" />
                 <data android:host="baddit.life" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="FRIEND_REQUEST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
         <provider
             android:authorities="${applicationId}.provider"

@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,11 +54,13 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.baddit.R
 import com.example.baddit.presentation.components.AnimatedLogo
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.presentation.utils.Auth
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Main
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
@@ -135,65 +138,20 @@ fun CreateMediaPostSCcreen(
         Toast.makeText(context, viewmodel.error, Toast.LENGTH_LONG).show()
     }
     Column(
-        modifier = Modifier.padding(top = 10.dp, start = 10.dp, end = 10.dp)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.cardBackground)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (!viewmodel.isPosting) {
-                IconButton(
-                    onClick = { viewmodel.uploadMediaPost(context) },
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    enabled = !viewmodel.isPosting,
-                    colors = IconButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.round_send_24),
-                        contentDescription = null
-                    )
-                }
+        BaseTopNavigationBar(
+            title = "Upload post",
+            leftIcon = R.drawable.round_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() },
+            rightIcons = listOf(
+                Pair(R.drawable.round_send_24) { viewmodel.uploadMediaPost(context) }
+            ),
+            rightIconsLoading = viewmodel.isPosting,
+            loadingIcon = {
+                AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
             }
-
-            if (viewmodel.isPosting) {
-                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    AnimatedLogo(icon = loadingIcon, iteration = 999, size = 45.dp)
-                }
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterStart),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                IconButton(
-                    onClick = {
-                        navController.navigateUp()
-                    },
-                    modifier = Modifier,
-                    colors = IconButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.textPrimary,
-                        disabledContentColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.round_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-
-                Text(
-                    text = "Media post",
-                    style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
-            }
-
-        }
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -292,7 +250,7 @@ fun CreateMediaPostSCcreen(
                             .align(Alignment.TopEnd)
                             .offset(x = -5.dp, y = 5.dp),
                         colors = IconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.neutralGray,
+                            containerColor = MaterialTheme.colorScheme.cardBackground,
                             contentColor = Color.White,
                             disabledContentColor = Color.Transparent,
                             disabledContainerColor = Color.Transparent
