@@ -95,8 +95,17 @@ object Notification
 // open by channelId or navigate to channel after click "Message" when there is no channel with target user
 data class ChannelDetail(
     val channelId: String?,
-    val targetUserId: String?
+    val channelName: String?,
+    val channelAvatar: String?
+)
+
+@Serializable
+data class ChannelInfo(
+    val channelId: String?,
+    val channelName: String?,
+    val channelAvatar: String?
 )
 
 @Serializable
 object ChannelList
+

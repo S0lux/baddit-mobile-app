@@ -5,3 +5,9 @@ data class ChatMember(
     val username: String,
     val avatarUrl: String
 )
+
+data class ChatModerators(
+    val id: String,
+    val username: String,
+    val avatarUrl: String
+)

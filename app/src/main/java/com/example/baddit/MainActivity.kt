@@ -1,5 +1,6 @@
 package com.example.baddit
 
+import ChannelInfoScreen
 import FriendsScreen
 import android.Manifest
 import android.app.NotificationChannel
@@ -67,6 +68,7 @@ import com.example.baddit.presentation.components.BottomNavigationBar
 import com.example.baddit.presentation.components.BottomNavigationItem
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.components.SideDrawerContent.SideDrawerContent
+import com.example.baddit.presentation.screens.chat.ChannelDetailScreen
 import com.example.baddit.presentation.screens.chat.ChannelListScreen
 import com.example.baddit.presentation.screens.comment.CommentScreen
 import com.example.baddit.presentation.screens.community.AddModeratorScreen
@@ -87,6 +89,8 @@ import com.example.baddit.presentation.screens.signup.SignupScreen
 import com.example.baddit.presentation.screens.verify.VerifyScreen
 import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.Auth
+import com.example.baddit.presentation.utils.ChannelDetail
+import com.example.baddit.presentation.utils.ChannelInfo
 import com.example.baddit.presentation.utils.ChannelList
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Community
@@ -423,14 +427,54 @@ class MainActivity : ComponentActivity() {
                                         activeFAB = FAButtons.POST_CREATE
                                         CommunityScreen(navController)
                                     }
+
                                     composable<ChannelList> {
                                         sidebarEnabled.value = true
                                         selectedBottomNavigation = 2
                                         barState.value = true
                                         userTopBarState.value = true
 
-                                        activeFAB = FAButtons.POST_CREATE
+                                        activeFAB = null
                                         ChannelListScreen(navController)
+                                    }
+
+                                    composable<ChannelInfo> {
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = true
+                                        activeFAB = null
+
+                                        val channelId = it.arguments?.getString("channelId")
+                                        val channelName = it.arguments?.getString("channelName")
+                                        val channelAvatar = it.arguments?.getString("channelAvatar")
+                                        ChannelInfoScreen(
+                                            channelId = channelId!!,
+                                            channelName =  channelName!!,
+                                            channelAvatar = channelAvatar!!,
+                                            navController = navController,
+                                        )
+                                    }
+
+                                    composable<ChannelDetail>{
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = -1
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        activeFAB=null
+                                        val channelId = it.arguments?.getString("channelId")
+                                        val channelName = it.arguments?.getString("channelName")
+                                        val channelAvatar = it.arguments?.getString("channelAvatar")
+
+                                        ChannelDetailScreen(
+                                            channelId = channelId!!,
+                                            channelName =  channelName!!,
+                                            channelAvatar = channelAvatar!!,
+                                            navController = navController,
+//                                            navigateLogin = { navController.navigate(Login) },
+//                                            darkMode = bool.value ?: false
+                                        )
                                     }
                                     composable<Profile> {
                                         sidebarEnabled.value = true

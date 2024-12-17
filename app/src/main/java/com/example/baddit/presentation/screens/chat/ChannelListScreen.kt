@@ -1,11 +1,19 @@
 package com.example.baddit.presentation.screens.chat
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Rect
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +22,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,12 +51,14 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,17 +67,23 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.baddit.domain.model.chat.chatChannel.ChatMember
+import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.presentation.components.BodyBottomSheet
+import com.example.baddit.presentation.components.CreateChatChannelBottomSheet
 import com.example.baddit.presentation.components.CreateCommunity
 import com.example.baddit.presentation.components.LoginDialog
 import com.example.baddit.presentation.screens.community.ListViewCommunities
+import com.example.baddit.presentation.utils.ChannelDetail
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
@@ -90,15 +108,26 @@ fun ChannelListScreen(
     var showBottomSheetCreateChatChannel by remember { mutableStateOf(false) }
     val loggedIn by viewModel.loggedIn
 
+//    val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
+//    val socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
+
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         viewModel.refreshChannelList()
+        viewModel.fetchAvailableFriends()
     }
     if (showLoginDialog) {
         LoginDialog(
             navigateLogin = { navController.navigate(Login) },
             onDismiss = { showLoginDialog = false })
     }
+    if (showBottomSheetCreateChatChannel) {
+        CreateChatChannelBottomSheet(
+            viewModel = viewModel,
+            onDismiss = { showBottomSheetCreateChatChannel = false }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,53 +160,6 @@ fun ChannelListScreen(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
         )
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = sheetState,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.textPrimary
-            ) {
-                // Sheet content
-//                BodyBottomSheet(viewModel.chatRepository.channelListCache, navController) {
-//                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-//                        if (!sheetState.isVisible) {
-//                            showBottomSheet = false
-//                        }
-//                    }
-//                }
-            }
-        }
-
-        if (showBottomSheetCreateChatChannel) {
-            ModalBottomSheet(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
-                onDismissRequest = {
-                    showBottomSheetCreateChatChannel = false
-                },
-                sheetState = sheetState,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.textPrimary
-            ) {
-                // Sheet content
-//                CreateCommunity(viewModel) {
-//                    scopeCreateCommunity.launch { bottomSheetState.hide() }.invokeOnCompletion {
-//                        if (!bottomSheetState.isVisible) {
-//                            showBottomSheetCreateCommunity = false
-//                        }
-//                    }
-//                }
-            }
-        }
 
         Column(
             modifier = Modifier
@@ -256,45 +238,120 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
                 state = listState
             ) {
                 if (viewModel.error.isEmpty()) {
-                    items(items = viewModel.chatRepository.channelListCache) { item ->
+                    items(items = viewModel.chatRepository.channelListCache.filter { !it.isDeleted }) { item ->
                         var otherUser: ChatMember? = null
-                        if (item.members.size > 1) {
+                        if (item.type == "DIRECT") {
                             otherUser = item.members.firstOrNull { member ->
                                 member.id != viewModel.me.value?.id
                             }
-                        }
-                        if (otherUser != null) {
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clickable {
-//                                    navController.navigate(CommunityDetail(item.name))
-                                    }
-                            ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(otherUser.avatarUrl).build(),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                            if (otherUser != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
-                                        .clip(CircleShape)
-                                        .height(50.dp)
-                                        .aspectRatio(1f),
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        otherUser.username,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.textPrimary
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable {
+                                            navController.navigate(
+                                                ChannelDetail(
+                                                    channelId = item.id,
+                                                    channelName = otherUser.username,
+                                                    channelAvatar = otherUser.avatarUrl
+                                                )
+                                            )
+                                        }
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(otherUser.avatarUrl).build(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .height(50.dp)
+                                            .aspectRatio(1f),
                                     )
-//                                    Text(
-//                                        "${item.members.size} members",
-//                                        color = MaterialTheme.colorScheme.textSecondary
-//                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            otherUser.username,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            if (item.avatarUrl == "https://placehold.co/400.png") {
+
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable {
+                                            navController.navigate(
+                                                ChannelDetail(
+                                                    channelId = item.id,
+                                                    channelName = item.name,
+                                                    channelAvatar = item.avatarUrl
+                                                )
+                                            )
+                                        }
+                                ) {
+                                    // Create a custom multi-avatar component
+                                    DiagonalOverlappingAvatars(
+                                        avatars = listOf(
+                                            item.members[0].avatarUrl,
+                                            item.members[1].avatarUrl
+                                        ),
+                                        modifier = Modifier.size(50.dp),
+                                        overlap = 8.dp,
+                                        size = 50.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            item.name,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.textPrimary
+                                        )
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable {
+                                            navController.navigate(
+                                                ChannelDetail(
+                                                    channelId = item.id,
+                                                    channelName = item.name,
+                                                    channelAvatar = item.avatarUrl
+                                                )
+                                            )
+                                        }
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(item.avatarUrl).build(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .height(50.dp)
+                                            .aspectRatio(1f),
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            item.name,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.textPrimary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -309,6 +366,54 @@ fun ListViewChannels(viewModel: ChatViewModel, navController: NavController) {
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+fun DiagonalOverlappingAvatars(
+    avatars: List<String>,
+    modifier: Modifier = Modifier,
+    size: Dp,
+    overlap: Dp,
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .align(Alignment.TopEnd)
+                .offset(x = -(size * 0.10f), y = -(size * 0.10f))
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(model = avatars[0]),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(size)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.White, CircleShape)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(size)
+                .align(Alignment.BottomStart)
+                .offset(x = (size * 0.10f), y = (size * 0.10f))
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(model = avatars[1]),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(size)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.White, CircleShape)
+            )
         }
     }
 }

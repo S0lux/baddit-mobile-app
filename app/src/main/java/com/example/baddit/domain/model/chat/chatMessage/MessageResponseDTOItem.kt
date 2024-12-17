@@ -7,20 +7,26 @@ data class MessageResponseDTOItem(
     val id: String,
     val sender: Sender,
     val content: String,
-//    val type:String // Add this after implemented upload image for chat message
-    val createdAt: String
+    val type: String, // Type are "TEXT", "IMAGE" to detect for display message
+    val mediaUrls: List<String>,
+    val createdAt: String,
+    val isDeleted: Boolean,
+    val channelId: String
 )
 
 data class MutableMessageResponseDTOItem(
     val id: String,
     val sender: Sender,
     val content: String,
-//    val type:String // Add this after implemented upload image for chat message
-    val createdAt: String
+    val type: String,
+    val mediaUrls: List<String>,
+    val createdAt: String,
+    val isDeleted: Boolean,
+    val channelId: String
 )
 
 fun MessageResponseDTOItem.toMutableMessageResponseDTOItem(): MutableMessageResponseDTOItem {
     return MutableMessageResponseDTOItem(
-       id, sender, content, createdAt
+        id, sender, content, type, mediaUrls, createdAt, isDeleted, channelId
     )
 }
