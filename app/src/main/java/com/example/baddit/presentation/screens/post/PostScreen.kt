@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -86,77 +87,112 @@ fun PostScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (viewModel.error.isNotEmpty()) return@LazyColumn
+        Column {
+            BaseTopNavigationBar(
+                title = "Post",
+                leftIcon = R.drawable.baseline_arrow_back_24,
+                onLeftIconClick = { navController.popBackStack() })
 
-            stickyHeader {
-                BaseTopNavigationBar(
-                    title = "Post",
-                    leftIcon = R.drawable.baseline_arrow_back_24,
-                    onLeftIconClick = { navController.popBackStack() })
-            }
-            item {
-                PostCard(
-                    postDetails = viewModel.post,
-                    loggedIn = viewModel.isLoggedIn,
-                    navigateLogin = { navController.navigate(Login) },
-                    votePostFn = { voteState: String ->
-                        viewModel.postRepository.votePost(
-                            viewModel.post.id, voteState
-                        )
-                    },
-                    isExpanded = true,
-                    navigatePost = { _: String -> Unit },
-                    setPostScore = { score: Int ->
-                        viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.score.value =
-                            score
-                    },
-                    setVoteState = { state: String? ->
-                        viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.voteState.value =
-                            state
-                    },
-                    loggedInUser = viewModel.authRepository.currentUser.value,
-                    deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
-                    navigateEdit = { postId: String ->
-                        navController.navigate(
-                            Editing(
-                                postId = postId,
-                                commentId = null,
-                                commentContent = null,
-                                darkMode = darkMode
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (viewModel.error.isNotEmpty()) return@LazyColumn
+                item {
+                    PostCard(
+                        postDetails = viewModel.post,
+                        loggedIn = viewModel.isLoggedIn,
+                        navigateLogin = { navController.navigate(Login) },
+                        votePostFn = { voteState: String ->
+                            viewModel.postRepository.votePost(
+                                viewModel.post.id, voteState
                             )
-                        )
-                    },
-                    navigateReply = { postId: String ->
-                        navController.navigate(
-                            Comment(
-                                postId = postId,
-                                darkMode = darkMode,
-                                commentContent = null,
-                                commentId = null
+                        },
+                        isExpanded = true,
+                        navigatePost = { _: String -> Unit },
+                        setPostScore = { score: Int ->
+                            viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.score.value =
+                                score
+                        },
+                        setVoteState = { state: String? ->
+                            viewModel.postRepository.postCache.find { it.id == viewModel.post.id }!!.voteState.value =
+                                state
+                        },
+                        loggedInUser = viewModel.authRepository.currentUser.value,
+                        deletePostFn = { postId: String -> viewModel.postRepository.deletePost(postId) },
+                        navigateEdit = { postId: String ->
+                            navController.navigate(
+                                Editing(
+                                    postId = postId,
+                                    commentId = null,
+                                    commentContent = null,
+                                    darkMode = darkMode
+                                )
                             )
-                        )
-                    },
-                    onComponentClick = onComponentClick,
-                    navController = navController,
-                    imageLoader = viewModel.imageLoader,
-                    allowNavigateSelf = false,
-                    setSubscriptionStatus = { status: Boolean ->
-                        if (status) {
-                            viewModel.postRepository.subscribeToPost(viewModel.postId)
-                        } else {
-                            viewModel.postRepository.unsubcribeFromPost(viewModel.postId)
+                        },
+                        navigateReply = { postId: String ->
+                            navController.navigate(
+                                Comment(
+                                    postId = postId,
+                                    darkMode = darkMode,
+                                    commentContent = null,
+                                    commentId = null
+                                )
+                            )
+                        },
+                        onComponentClick = onComponentClick,
+                        navController = navController,
+                        imageLoader = viewModel.imageLoader,
+                        allowNavigateSelf = false,
+                        setSubscriptionStatus = { status: Boolean ->
+                            if (status) {
+                                viewModel.postRepository.subscribeToPost(viewModel.postId)
+                            } else {
+                                viewModel.postRepository.unsubcribeFromPost(viewModel.postId)
+                            }
                         }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                if (viewModel.highlightedComment != null) {
+                    items(items = viewModel.comments.filter { it.id == viewModel.highlightedComment }) { it ->
+                        CommentCard(
+                            details = it,
+                            voteFn = { commentId: String, state: String ->
+                                viewModel.voteComment(
+                                    commentId,
+                                    state
+                                )
+                            },
+                            isLoggedIn = viewModel.isLoggedIn,
+                            navigateLogin = { navController.navigate(Login) },
+                            navigateReply = navReply,
+                            navController = navController,
+                            onComponentClick = onComponentClick,
+                            navigateEdit = { commentId: String, content: String ->
+                                navController.navigate(
+                                    Editing(
+                                        postId = null,
+                                        commentContent = content,
+                                        commentId = commentId,
+                                        darkMode = darkMode
+                                    )
+                                )
+                            },
+                            deleteFn = { commentId: String ->
+                                viewModel.commentRepository.deleteComment(
+                                    commentId
+                                )
+                            },
+                            loggedInUser = viewModel.authRepository.currentUser.value,
+                            isHighlighted = true
+                        )
                     }
-                )
+                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            if (viewModel.highlightedComment != null) {
-                items(items = viewModel.comments.filter { it.id == viewModel.highlightedComment }) { it ->
+                items(items = viewModel.comments) { it ->
+                    if (it.id == viewModel.highlightedComment) return@items
                     CommentCard(
                         details = it,
                         voteFn = { commentId: String, state: String ->
@@ -185,45 +221,11 @@ fun PostScreen(
                                 commentId
                             )
                         },
-                        loggedInUser = viewModel.authRepository.currentUser.value,
-                        isHighlighted = true
+                        loggedInUser = viewModel.authRepository.currentUser.value
                     )
                 }
             }
-
-            items(items = viewModel.comments) { it ->
-                if (it.id == viewModel.highlightedComment) return@items
-                CommentCard(
-                    details = it,
-                    voteFn = { commentId: String, state: String ->
-                        viewModel.voteComment(
-                            commentId,
-                            state
-                        )
-                    },
-                    isLoggedIn = viewModel.isLoggedIn,
-                    navigateLogin = { navController.navigate(Login) },
-                    navigateReply = navReply,
-                    navController = navController,
-                    onComponentClick = onComponentClick,
-                    navigateEdit = { commentId: String, content: String ->
-                        navController.navigate(
-                            Editing(
-                                postId = null,
-                                commentContent = content,
-                                commentId = commentId,
-                                darkMode = darkMode
-                            )
-                        )
-                    },
-                    deleteFn = { commentId: String ->
-                        viewModel.commentRepository.deleteComment(
-                            commentId
-                        )
-                    },
-                    loggedInUser = viewModel.authRepository.currentUser.value
-                )
-            }
         }
+
     }
 }
