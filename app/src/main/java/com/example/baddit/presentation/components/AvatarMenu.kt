@@ -49,11 +49,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.baddit.presentation.screens.notifications.NotificationItem
+import com.example.baddit.presentation.screens.profile.ProfileViewModel
 import com.example.baddit.presentation.utils.Friend
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.utils.Notification
 import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.presentation.utils.Report
 import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
@@ -63,6 +65,7 @@ import com.example.baddit.ui.theme.CustomTheme.textPrimary
 fun AvatarMenu(
     show: MutableState<Boolean>,
     viewModel: LoginViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     navController: NavHostController,
     switchTheme: suspend (String) -> Unit,
     isDarkTheme: Boolean,
@@ -233,6 +236,17 @@ fun AvatarMenu(
                                             show.value = false;
                                         }
                                     )
+                                    if(profileViewModel.me.value != null && profileViewModel.me.value!!.role == "ADMIN"){
+                                        ProfileItem(
+                                            painterResource(id = R.drawable.error),
+                                            "Reports", onClick = {
+                                                coroutineScope.launch {
+                                                    navController.navigate(Report)
+                                                    show.value = false;
+                                                }
+                                            }
+                                        )
+                                    }
                                     ProfileItem(
                                         painterResource(id = R.drawable.baseline_logout_24),
                                         "Logout", onClick = {
@@ -243,6 +257,7 @@ fun AvatarMenu(
                                             }
                                         }
                                     )
+
                                 } else {
                                     ProfileItem(
                                         painterResource(id = R.drawable.baseline_login_24),

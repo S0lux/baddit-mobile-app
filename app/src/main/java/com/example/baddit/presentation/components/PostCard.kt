@@ -53,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -62,6 +63,8 @@ import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.posts.MutablePostResponseDTOItem
+import com.example.baddit.domain.model.report.ReportType
+import com.example.baddit.presentation.screens.report.ReportViewModel
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.InvalidatingPlacementModifierElement
 import com.example.baddit.presentation.utils.Profile
@@ -110,6 +113,8 @@ fun PostCard(
     if (showLoginDialog) {
         LoginDialog(navigateLogin = { navigateLogin() }, onDismiss = { showLoginDialog = false })
     }
+
+
 
     LaunchedEffect(postDetails.voteState.value) {
         if (hasUserInteracted && postDetails.voteState.value != null) {
@@ -346,7 +351,12 @@ fun PostHeader(
             if (communityName.isNotEmpty()) {
                 navController.navigate(CommunityDetail(communityName))
             } else {
-                navController.navigate(Profile(username = authorName, userId = postDetails.author.id))
+                navController.navigate(
+                    Profile(
+                        username = authorName,
+                        userId = postDetails.author.id
+                    )
+                )
             }
         }
     ) {
@@ -454,6 +464,8 @@ fun PostMediaContent(mediaUrls: List<String>, imageLoader: ImageLoader?) {
     }
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostActions(
@@ -477,14 +489,26 @@ fun PostActions(
     deletePostFn: suspend (String) -> Unit,
     navigateEdit: (String) -> Unit,
     navigateReply: (String) -> Unit,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    reportViewModel: ReportViewModel = hiltViewModel()
 ) {
     var showModal by remember { mutableStateOf(false) }
+    var showReportSheet by remember { mutableStateOf(false) }
 
+
+    if (showReportSheet) {
+        CreateReportBottomSheet(
+            reportType = ReportType.POST,
+            targetId = postId,
+            onDismiss = {showReportSheet = false},
+            viewModel = reportViewModel
+        )
+    }
     if (showModal) {
         ModalBottomSheet(
             onDismissRequest = { showModal = false },
-            containerColor = MaterialTheme.colorScheme.cardBackground) {
+            containerColor = MaterialTheme.colorScheme.cardBackground
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -500,6 +524,39 @@ fun PostActions(
                         style = MaterialTheme.typography.titleLarge.copy(MaterialTheme.colorScheme.textPrimary),
                         fontWeight = FontWeight.SemiBold
                     )
+                }
+
+                if (loggedInUser?.username != postAuthor) {
+
+                    Button(
+                        onClick = {
+                            if (loggedInUser == null) {
+                                showLoginDialog()
+                                return@Button
+                            }
+                            showReportSheet = true
+                            showModal = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.textPrimary,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.error),
+                                contentDescription = null,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "Report")
+                        }
+                    }
                 }
 
                 if (isSubscribed) {

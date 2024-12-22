@@ -2,6 +2,7 @@ package com.example.baddit
 
 import ChannelInfoScreen
 import FriendsScreen
+import ReportManagementScreen
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -107,6 +108,7 @@ import com.example.baddit.presentation.utils.Main
 import com.example.baddit.presentation.utils.Notification
 import com.example.baddit.presentation.utils.Post
 import com.example.baddit.presentation.utils.Profile
+import com.example.baddit.presentation.utils.Report
 import com.example.baddit.presentation.utils.Setting
 import com.example.baddit.presentation.utils.SignUp
 import com.example.baddit.presentation.utils.Verify
@@ -164,10 +166,16 @@ class MainActivity : ComponentActivity() {
         Log.d("Intent", "New intent: ${intent.action}")
 
         var extras = ""
-        intent.extras?.keySet()?.forEach { key -> extras += "$key: ${intent.extras?.getString(key)}, " }
+        intent.extras?.keySet()
+            ?.forEach { key -> extras += "$key: ${intent.extras?.getString(key)}, " }
 
         Log.d("Intent", "Intent data: $extras")
-        lifecycleScope.launch { navigateOnIntentAction(intent.action, intent.extras?.getString("typeId")) }
+        lifecycleScope.launch {
+            navigateOnIntentAction(
+                intent.action,
+                intent.extras?.getString("typeId")
+            )
+        }
     }
 
     private suspend fun navigateOnIntentAction(action: String?, actionTargetId: String? = null) {
@@ -211,6 +219,7 @@ class MainActivity : ComponentActivity() {
                         is com.example.baddit.domain.error.Result.Success -> {
                             Log.d("Activity", "FCM token sent successfully")
                         }
+
                         is com.example.baddit.domain.error.Result.Error -> {
                             Log.e("Activity", "Failed to send FCM token: ${result.error}")
                         }
@@ -223,14 +232,18 @@ class MainActivity : ComponentActivity() {
 
         fun setLightStatusBar() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.insetsController?.setSystemBarsAppearance(APPEARANCE_LIGHT_STATUS_BARS, APPEARANCE_LIGHT_STATUS_BARS)
+                window.insetsController?.setSystemBarsAppearance(
+                    APPEARANCE_LIGHT_STATUS_BARS,
+                    APPEARANCE_LIGHT_STATUS_BARS
+                )
             } else {
                 @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                } else {
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                }
+                window.decorView.systemUiVisibility =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    } else {
+                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    }
 
             }
         }
@@ -243,10 +256,13 @@ class MainActivity : ComponentActivity() {
 
         // Ask for notification permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 Log.d("Activity", "Permission already granted")
-            }
-            else {
+            } else {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
@@ -284,10 +300,12 @@ class MainActivity : ComponentActivity() {
                                 bool.value = true
                                 setDarkStatusBar()
                             }
+
                             "Light" -> {
                                 bool.value = false
                                 setLightStatusBar()
                             }
+
                             else -> bool.value;
                         }
                     }
@@ -303,9 +321,11 @@ class MainActivity : ComponentActivity() {
                         "Dark" -> {
                             bool.value = true
                         }
+
                         "Light" -> {
                             bool.value = false
                         }
+
                         else -> bool.value = null
                     }
                 }
@@ -332,18 +352,21 @@ class MainActivity : ComponentActivity() {
                         .navigationBarsPadding(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ModalNavigationDrawer(drawerContent = {
-                        SideDrawerContent(
-                            onExploreClick = {
-                                scope.launch {
-                                    navController.navigate(Community)
-                                    drawerState.close()
-                                }
-                            },
-                            navController = navController,
-                            drawerState =  drawerState)
-                    },  drawerState = drawerState,
-                        gesturesEnabled = sidebarEnabled.value)
+                    ModalNavigationDrawer(
+                        drawerContent = {
+                            SideDrawerContent(
+                                onExploreClick = {
+                                    scope.launch {
+                                        navController.navigate(Community)
+                                        drawerState.close()
+                                    }
+                                },
+                                navController = navController,
+                                drawerState = drawerState
+                            )
+                        }, drawerState = drawerState,
+                        gesturesEnabled = sidebarEnabled.value
+                    )
                     {
                         Scaffold(
                             modifier = Modifier.clickable(
@@ -438,6 +461,16 @@ class MainActivity : ComponentActivity() {
                                         ChannelListScreen(navController)
                                     }
 
+                                    composable<Report> {
+                                        sidebarEnabled.value = true
+                                        selectedBottomNavigation = 3
+                                        barState.value = true
+                                        userTopBarState.value = true
+
+                                        activeFAB = null
+                                        ReportManagementScreen(navController)
+                                    }
+
                                     composable<ChannelInfo> {
                                         sidebarEnabled.value = true
                                         selectedBottomNavigation = -1
@@ -450,26 +483,26 @@ class MainActivity : ComponentActivity() {
                                         val channelAvatar = it.arguments?.getString("channelAvatar")
                                         ChannelInfoScreen(
                                             channelId = channelId!!,
-                                            channelName =  channelName!!,
+                                            channelName = channelName!!,
                                             channelAvatar = channelAvatar!!,
                                             navController = navController,
                                         )
                                     }
 
-                                    composable<ChannelDetail>{
+                                    composable<ChannelDetail> {
                                         sidebarEnabled.value = true
                                         selectedBottomNavigation = -1
                                         barState.value = true
                                         userTopBarState.value = true
 
-                                        activeFAB=null
+                                        activeFAB = null
                                         val channelId = it.arguments?.getString("channelId")
                                         val channelName = it.arguments?.getString("channelName")
                                         val channelAvatar = it.arguments?.getString("channelAvatar")
 
                                         ChannelDetailScreen(
                                             channelId = channelId!!,
-                                            channelName =  channelName!!,
+                                            channelName = channelName!!,
                                             channelAvatar = channelAvatar!!,
                                             navController = navController,
 //                                            navigateLogin = { navController.navigate(Login) },
@@ -527,7 +560,9 @@ class MainActivity : ComponentActivity() {
 
                                     composable<Friend>(
                                         deepLinks = listOf(
-                                            navDeepLink { uriPattern = "https://baddit.life/friends" }
+                                            navDeepLink {
+                                                uriPattern = "https://baddit.life/friends"
+                                            }
                                         )
                                     ) {
                                         selectedBottomNavigation = -1
@@ -560,13 +595,15 @@ class MainActivity : ComponentActivity() {
                                         {
                                             slideIntoContainer(
                                                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                                animationSpec = tween(500))
+                                                animationSpec = tween(500)
+                                            )
                                         },
                                         exitTransition =
                                         {
                                             slideOutOfContainer(
                                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                                animationSpec = tween(500))
+                                                animationSpec = tween(500)
+                                            )
                                         }) {
                                         selectedBottomNavigation = -1
                                         sidebarEnabled.value = true
@@ -681,7 +718,10 @@ class MainActivity : ComponentActivity() {
                                         barState.value = false
                                         userTopBarState.value = true
                                         val name = it.arguments?.getString("name");
-                                        AddModeratorScreen(name = name!!, navController = navController )
+                                        AddModeratorScreen(
+                                            name = name!!,
+                                            navController = navController
+                                        )
                                     }
                                     composable<Notification> {
                                         barState.value = false

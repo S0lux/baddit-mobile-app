@@ -109,3 +109,6 @@ data class ChannelInfo(
 @Serializable
 object ChannelList
 
+@Serializable
+object Report
+

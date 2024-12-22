@@ -20,6 +20,7 @@ import com.example.baddit.data.dto.community.ModerateMemberRequestBody
 import com.example.baddit.data.dto.notification.NotificationResponseItem
 import com.example.baddit.data.dto.posts.PostEditRequestBody
 import com.example.baddit.data.dto.posts.VotePostRequestBody
+import com.example.baddit.data.dto.report.CreateReportBody
 import com.example.baddit.domain.model.auth.GetMeResponseDTO
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
@@ -33,6 +34,7 @@ import com.example.baddit.domain.model.community.Moderators
 import com.example.baddit.domain.model.friend.GetFriendsResponse
 import com.example.baddit.domain.model.notification.FcmTokenBody
 import com.example.baddit.domain.model.posts.PostResponseDTO
+import com.example.baddit.domain.model.report.ReportResponseDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -280,4 +282,13 @@ interface BadditAPI {
     suspend fun removeMembers(@Body removeMembersBody: RemoveMembersBody): Response<ChannelResponseDTOItem>
     @PATCH("/v1/posts/{postId}/unsubscribe")
     suspend fun unsubscribeFromPost(@Path("postId") postId: String): Response<Unit>
+
+    @GET("/v1/reports")
+    suspend fun getAllReports(): Response<ArrayList<ReportResponseDTO>>
+
+    @POST("/v1/reports")
+    suspend fun createReport(@Body createReportBody: CreateReportBody): Response<ReportResponseDTO>
+
+    @PATCH("v1/reports/{reportId}/resolve")
+    suspend fun resolveReport(@Path("reportId") reportId: String): Response<ReportResponseDTO>
 }
