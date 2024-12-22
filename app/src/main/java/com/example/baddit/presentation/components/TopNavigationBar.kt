@@ -107,8 +107,7 @@ fun TopNavigationBar(
     ) {
         TopAppBar(
             title = { },
-            modifier = Modifier.shadow(elevation = 1.dp)
-                .padding(end = WindowInsets.safeContent.asPaddingValues().calculateRightPadding(LayoutDirection.Ltr)),
+            modifier = Modifier.shadow(elevation = 1.dp),
             colors = TopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.cardBackground,
                 navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,

@@ -95,8 +95,8 @@ fun SideDrawerContent(
                     color = MaterialTheme.colorScheme.textPrimary)
             },
             modifier = Modifier.padding(
-                top = WindowInsets.safeContent.asPaddingValues().calculateTopPadding(),
-                start = WindowInsets.safeContent.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr).plus(15.dp),
+                top = 25.dp,
+                start = WindowInsets.safeContent.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr),
                 end = 10.dp
             )
         ) {
