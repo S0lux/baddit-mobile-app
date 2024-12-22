@@ -76,8 +76,19 @@ class AuthRepositoryImpl @Inject constructor(
         val result = safeApiCall<GetMeResponseDTO, DataError.NetworkError> { badditAPI.getMe() }
 
         if (result is Result.Success) {
+            if (result.data.status == "SUSPENDED") {
+                isLoggedIn.value = false;
+                currentUser.value = null;
+                return Result.Error(DataError.NetworkError.FORBIDDEN)
+            }
             isLoggedIn.value = true;
             currentUser.value = result.data;
+        }
+
+        if (result is Result.Error) {
+            isLoggedIn.value = false;
+            currentUser.value = null;
+            return Result.Error(result.error)
         }
 
         Log.d("GetMe", "getMe: ${currentUser.value?.username ?: "null"}")

@@ -86,10 +86,8 @@ fun CreateChatChannelBottomSheet(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Loading friends...",
+                        text = "Friends list is empty",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

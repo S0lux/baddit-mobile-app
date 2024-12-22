@@ -76,8 +76,10 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.baddit.R
 import com.example.baddit.domain.model.chat.chatChannel.ChatMember
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CreateChatChannelBottomSheet
 import com.example.baddit.presentation.components.CreateCommunity
@@ -87,6 +89,7 @@ import com.example.baddit.presentation.utils.ChannelDetail
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -133,37 +136,18 @@ fun ChannelListScreen(
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
-        TopAppBar(
-            title = {
-                val titleText = "Chat Channels"
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = titleText,
-                        style = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp
-                        )
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(
-                        modifier = Modifier.padding(start = 30.dp),
-                        onClick = { showBottomSheet = true }
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    }
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
-        )
+        BaseTopNavigationBar(
+            title = "Messages",
+            leftIcon = R.drawable.baseline_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() },
+            rightIcons = listOf(
+                Pair(R.drawable.baseline_search_24) { showBottomSheet = true }
+            ))
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.cardBackground)
                 .padding(10.dp)
         ) {
             Column(modifier = Modifier.padding(0.dp)) {

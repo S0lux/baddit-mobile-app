@@ -189,6 +189,10 @@ class MainActivity : ComponentActivity() {
                     navController.navigate(Post(postId, actionTargetId))
                 }
             }
+            "ACCOUNT_SUSPENDED" -> {
+                authRepository.getMe()
+                navController.navigate(Login)
+            }
         }
     }
 

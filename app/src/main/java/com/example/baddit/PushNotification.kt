@@ -59,6 +59,8 @@ class PushNotification: FirebaseMessagingService() {
                 }
             }
 
+            authRepository.getMe()
+
             if (message.data.isNotEmpty()) {
                 if (message.data["type"] == "FRIEND_REQUEST") {
                     friendRepository.updateLocalUserFriend()

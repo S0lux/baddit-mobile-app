@@ -87,7 +87,6 @@ fun PostScreen(
             .fillMaxSize()
     ) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             if (viewModel.error.isNotEmpty()) return@LazyColumn
