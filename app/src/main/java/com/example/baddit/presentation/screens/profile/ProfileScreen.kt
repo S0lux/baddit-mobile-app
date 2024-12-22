@@ -83,11 +83,14 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
+import com.example.baddit.domain.model.report.ReportType
 import com.example.baddit.presentation.components.CommentCard
+import com.example.baddit.presentation.components.CreateReportBottomSheet
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.components.PostCard
 import com.example.baddit.presentation.screens.chat.ChatViewModel
 import com.example.baddit.presentation.screens.login.LoginViewModel
+import com.example.baddit.presentation.screens.report.ReportViewModel
 import com.example.baddit.presentation.utils.ChannelList
 import com.example.baddit.presentation.utils.Comment
 import com.example.baddit.presentation.utils.Editing
@@ -116,6 +119,7 @@ fun ProfileScreen(
     navigatePost: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
+    reportViewModel: ReportViewModel = hiltViewModel(),
     navigateLogin: () -> Unit,
     navigateReply: (String, String) -> Unit,
     darkMode: Boolean
@@ -133,6 +137,9 @@ fun ProfileScreen(
 
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var showReportSheet by remember { mutableStateOf(false) }
+
+
 
     // Function to handle messaging navigation
     fun navigateToDirectMessage() {
@@ -166,6 +173,15 @@ fun ProfileScreen(
 
     LaunchedEffect(username) {
         viewModel.fetchUserProfile(username)
+    }
+
+    if (showReportSheet) {
+        CreateReportBottomSheet(
+            reportType = ReportType.USER,
+            targetId = viewModel.user.value!!.id,
+            onDismiss = {showReportSheet = false},
+            viewModel = reportViewModel
+            )
     }
 
     Column(
@@ -225,7 +241,6 @@ fun ProfileScreen(
             )
 
             if (!viewModel.isMe) {
-
                 val messagePrivacy = viewModel.user.value?.messagePrivacy;
                 if (messagePrivacy != null) {
                     if (messagePrivacy == "EVERYONE") {
@@ -294,6 +309,12 @@ fun ProfileScreen(
                     tint = MaterialTheme.colorScheme.textPrimary,
                     text = "Block",
                     onClick = { TODO() }
+                )
+                IconMenuItem(
+                    icon = R.drawable.error,
+                    tint = MaterialTheme.colorScheme.textPrimary,
+                    text = "Report",
+                    onClick = {showReportSheet = true}
                 )
             }
         }
