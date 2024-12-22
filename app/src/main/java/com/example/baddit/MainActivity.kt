@@ -476,9 +476,9 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     composable<ChannelInfo> {
-                                        sidebarEnabled.value = true
+                                        sidebarEnabled.value = false
                                         selectedBottomNavigation = -1
-                                        barState.value = true
+                                        barState.value = false
                                         userTopBarState.value = true
                                         activeFAB = null
 
@@ -494,9 +494,9 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     composable<ChannelDetail> {
-                                        sidebarEnabled.value = true
+                                        sidebarEnabled.value = false
                                         selectedBottomNavigation = -1
-                                        barState.value = true
+                                        barState.value = false
                                         userTopBarState.value = true
 
                                         activeFAB = null
