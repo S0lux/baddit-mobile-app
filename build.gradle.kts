@@ -5,5 +5,4 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.51.1" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
     id("com.google.gms.google-services") version "4.4.2" apply false
-
 }

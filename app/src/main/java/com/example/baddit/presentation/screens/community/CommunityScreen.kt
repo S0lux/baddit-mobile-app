@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -67,7 +68,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.baddit.R
 import com.example.baddit.presentation.components.BadditDialog
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CommunityList
 import com.example.baddit.presentation.components.CreateCommunity
@@ -78,6 +81,7 @@ import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.utils.Editing
 import com.example.baddit.presentation.utils.Login
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -116,34 +120,15 @@ fun CommunityScreen(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.cardBackground)
     ) {
-        TopAppBar(
-            title = {
-                val titleText = "Communities"
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = titleText,
-                        style = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp
-                        )
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(
-                        modifier = Modifier.padding(start = 30.dp),
-                        onClick = { showBottomSheet = true }
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    }
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
-        )
+        BaseTopNavigationBar(
+            title = "Communities",
+            leftIcon = R.drawable.baseline_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() },
+            rightIcons = listOf(
+                Pair(R.drawable.baseline_search_24) { showBottomSheet = true }
+            ))
 
         if (showBottomSheet) {
             ModalBottomSheet(

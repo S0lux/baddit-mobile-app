@@ -59,7 +59,14 @@ class LoginViewModel @Inject constructor(
 
             is Result.Success -> {
                 generalError = ""
-                authRepository.getMe()
+                val getMeResult = authRepository.getMe()
+                if (getMeResult is Result.Error) {
+                    if (getMeResult.error == DataError.NetworkError.FORBIDDEN) {
+                        generalError = "Your account has been suspended"
+                    }
+
+                    return Result.Error(getMeResult.error)
+                }
             }
         }
         return result;

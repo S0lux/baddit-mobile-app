@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeGesturesPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -136,6 +139,7 @@ fun CommunityDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .safeDrawingPadding()
             ) {
                 BannerCommunity(community.value!!, navController)
                 AvatarCommunity(
@@ -270,22 +274,6 @@ fun BannerCommunity(community: GetACommunityResponseDTO, navController: NavContr
                 .aspectRatio(1f)
                 .fillMaxSize()
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.background(Color.Transparent),
-            ) {
-                Icon(
-                    Icons.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.textPrimary
-                )
-            }
-        }
     }
 }
 

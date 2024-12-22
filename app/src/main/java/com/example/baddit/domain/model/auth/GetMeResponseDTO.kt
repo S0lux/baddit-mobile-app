@@ -8,5 +8,6 @@ data class GetMeResponseDTO(
     val id: String,
     val registeredAt: String,
     val role: String,
-    val username: String
+    val username: String,
+    val status: String,
 )
