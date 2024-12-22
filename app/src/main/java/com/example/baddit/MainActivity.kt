@@ -162,6 +162,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun handleFcmToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                Log.d("Activity", "FCM Token retrieved: $token")
+                lifecycleScope.launch {
+                    when (val result = notificationRepository.sendFcmTokenToServer(token)) {
+                        is Result.Success -> {
+                            Log.d("Activity", "FCM token sent successfully")
+                        }
+                        is Result.Error -> {
+                            Log.e("Activity", "Failed to send FCM token: ${result.error}")
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Activity", "FCM Token retrieval failed", e)
+                e.printStackTrace()
+            }
+    }
+
     private fun handleIncomingIntent(intent: Intent) {
         Log.d("Intent", "New intent: ${intent.action}")
 
@@ -199,6 +220,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIncomingIntent(intent)
+        handleFcmToken()
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -208,29 +230,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         createNotificationChannel()
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w("Activity", "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
-            }
-
-            // Get new FCM registration token
-            val token = task.result
-
-            if (authRepository.isLoggedIn.value) {
-                lifecycleScope.launch {
-                    when (val result = notificationRepository.sendFcmTokenToServer(token)) {
-                        is com.example.baddit.domain.error.Result.Success -> {
-                            Log.d("Activity", "FCM token sent successfully")
-                        }
-
-                        is com.example.baddit.domain.error.Result.Error -> {
-                            Log.e("Activity", "Failed to send FCM token: ${result.error}")
-                        }
-                    }
-                }
-            }
-        })
+        handleFcmToken()
 
         FirebaseMessaging.getInstance().subscribeToTopic("GlobalNotification")
 

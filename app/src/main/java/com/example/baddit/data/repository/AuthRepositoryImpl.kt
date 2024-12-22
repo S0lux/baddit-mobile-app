@@ -3,6 +3,7 @@ package com.example.baddit.data.repository
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.lifecycleScope
 import com.example.baddit.data.dto.ErrorResponse
 import com.example.baddit.data.dto.auth.ChangePasswordRequestBody
 import com.example.baddit.data.dto.auth.EmailVerificationRequestBody
@@ -17,16 +18,23 @@ import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.auth.LoginResponseDTO
 import com.example.baddit.domain.repository.AuthRepository
 import com.example.baddit.domain.repository.FriendRepository
+import com.example.baddit.domain.repository.NotificationRepository
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class AuthRepositoryImpl @Inject constructor(
     private val badditAPI: BadditAPI,
-    private val friendRepository: Lazy<FriendRepository>
+    private val friendRepository: Lazy<FriendRepository>,
+    private val notificationRepository: Lazy<NotificationRepository>
 ) : AuthRepository {
 
     override val isLoggedIn: MutableState<Boolean> = mutableStateOf(false)
@@ -44,7 +52,37 @@ class AuthRepositoryImpl @Inject constructor(
         username: String,
         password: String
     ): Result<LoginResponseDTO, DataError.NetworkError> {
-        return safeApiCall { badditAPI.login(LoginRequestBody(username, password)) }
+        val loginResult = safeApiCall<LoginResponseDTO, DataError.NetworkError> {
+            badditAPI.login(LoginRequestBody(username, password))
+        }
+
+        if (loginResult is Result.Success) {
+            try {
+                val token = suspendCancellableCoroutine<String> { continuation ->
+                    FirebaseMessaging.getInstance().token
+                        .addOnSuccessListener { token ->
+                            continuation.resume(token)
+                        }
+                        .addOnFailureListener { exception ->
+                            continuation.resumeWithException(exception)
+                        }
+                }
+
+                // Send token to server
+                when (val tokenResult = notificationRepository.get().sendFcmTokenToServer(token)) {
+                    is Result.Success -> {
+                        Log.d("Activity", "FCM token sent successfully")
+                    }
+                    is Result.Error -> {
+                        Log.e("Activity", "Failed to send FCM token: ${tokenResult.error}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Activity", "Failed to get/send FCM token", e)
+            }
+        }
+
+        return loginResult
     }
 
     override suspend fun register(

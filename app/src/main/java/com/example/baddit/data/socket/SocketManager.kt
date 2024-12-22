@@ -41,7 +41,7 @@ class SocketManager @Inject constructor(
             }
 
             // Replace with your actual socket server URL
-            socket = IO.socket("http://10.0.2.2:3001", options)
+            socket = IO.socket("https://api.baddit.life", options)
 
             socket?.apply {
                 // Connection listeners

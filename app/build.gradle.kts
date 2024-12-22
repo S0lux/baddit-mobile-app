@@ -73,7 +73,7 @@ android {
 dependencies {
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
     implementation("androidx.core:core-ktx:1.15.0")
