@@ -279,7 +279,8 @@ fun ProfileScreen(
                     )
                 }
 
-                if (viewModel.friendRepository.outgoingFriendRequests.any { it.id == userId }) {
+                if (viewModel.friendRepository.outgoingFriendRequests.any { it.receiverId == userId } ||
+                    viewModel.friendRepository.incomingFriendRequests.any { it.senderId == userId }) {
                     IconMenuItem(
                         icon = R.drawable.pending,
                         tint = MaterialTheme.colorScheme.textPrimary,
@@ -288,7 +289,8 @@ fun ProfileScreen(
                     )
                 }
 
-                if (viewModel.friendRepository.outgoingFriendRequests.all { it.id != userId } &&
+                if (viewModel.friendRepository.outgoingFriendRequests.all { it.receiverId != userId } &&
+                    viewModel.friendRepository.incomingFriendRequests.all { it.senderId != userId } &&
                     viewModel.friendRepository.currentFriends.all { it.id != userId }) {
                     IconMenuItem(
                         icon = R.drawable.add_user,
@@ -304,12 +306,6 @@ fun ProfileScreen(
                     )
                 }
 
-                IconMenuItem(
-                    icon = R.drawable.block,
-                    tint = MaterialTheme.colorScheme.textPrimary,
-                    text = "Block",
-                    onClick = { TODO() }
-                )
                 IconMenuItem(
                     icon = R.drawable.error,
                     tint = MaterialTheme.colorScheme.textPrimary,
