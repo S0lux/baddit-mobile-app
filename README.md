@@ -9,7 +9,7 @@ Made by a group of students for their Mobile Application Introductory course at 
 ## Authors
 
 - [@S0lux](https://www.github.com/S0lux)
-- [@raccooncancode](https://www.github.com/raccooncancode)
+- [@VaderNgo](https://www.github.com/VaderNgo)
 
 
 ## Acknowledgements
