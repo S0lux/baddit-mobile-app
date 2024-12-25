@@ -37,6 +37,7 @@ import com.example.baddit.R
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.Sender
+import com.example.baddit.presentation.styles.textFieldColors
 import com.example.baddit.presentation.utils.ChannelInfo
 import kotlinx.coroutines.launch
 import java.io.File
@@ -263,7 +264,7 @@ fun ChannelDetailScreen(
                 Icon(Icons.Default.AddCircle, contentDescription = "Pick Images")
             }
 
-            TextField(
+            OutlinedTextField(
                 value = newMessage,
                 onValueChange = { newMessage = it },
                 modifier = Modifier
@@ -271,7 +272,8 @@ fun ChannelDetailScreen(
                     .padding(horizontal = 8.dp),
                 placeholder = { Text("Type a message") },
                 singleLine = false,
-                maxLines = 4
+                maxLines = 4,
+                colors = textFieldColors()
             )
 
             IconButton(

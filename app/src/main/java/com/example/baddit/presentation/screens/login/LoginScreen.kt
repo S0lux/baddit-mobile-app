@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -53,15 +55,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(isDarkMode: Boolean = isSystemInDarkTheme(),
+fun LoginScreen(
+    isDarkMode: Boolean = isSystemInDarkTheme(),
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToHome: () -> Unit,
     navigateToSignup: () -> Unit
 ) {
-    val isDarkMode = isDarkMode;
+    val isDarkMode = isDarkMode
     val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -69,26 +78,31 @@ fun LoginScreen(isDarkMode: Boolean = isSystemInDarkTheme(),
         ) {
             AppLogo(isDarkTheme = isDarkMode)
 
-            Column(
-                modifier = Modifier.padding(50.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(50.dp)
             ) {
-                LoginHeader(navigateToSignup)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    LoginHeader(navigateToSignup)
 
-                Spacer(modifier = Modifier.size(5.dp))
+                    Spacer(modifier = Modifier.size(5.dp))
 
-                CredentialsInputs(viewModel = viewModel)
+                    CredentialsInputs(viewModel = viewModel)
 
-                AnimatedVisibility(visible = viewModel.generalError.isNotEmpty()) {
-                    Alert {
-                        Text(
-                            text = viewModel.generalError,
-                            color = MaterialTheme.colorScheme.errorRed
-                        )
+                    AnimatedVisibility(visible = viewModel.generalError.isNotEmpty()) {
+                        Alert {
+                            Text(
+                                text = viewModel.generalError,
+                                color = MaterialTheme.colorScheme.errorRed
+                            )
+                        }
                     }
-                }
 
-                LoginButton(viewModel = viewModel, coroutineScope = coroutineScope, navigateToHome)
+                    LoginButton(viewModel = viewModel, coroutineScope = coroutineScope, navigateToHome)
+                }
             }
         }
     }
