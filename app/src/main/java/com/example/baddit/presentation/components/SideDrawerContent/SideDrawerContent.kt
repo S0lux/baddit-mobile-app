@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -78,7 +80,8 @@ fun SideDrawerContent(
     ModalDrawerSheet(
         modifier = Modifier
             .width(250.dp)
-            .safeDrawingPadding(),
+            .safeDrawingPadding()
+            .fillMaxHeight(),
         drawerContainerColor = MaterialTheme.colorScheme.cardBackground,
         drawerContentColor = MaterialTheme.colorScheme.textPrimary,
     ) {
@@ -98,7 +101,7 @@ fun SideDrawerContent(
                 top = 25.dp,
                 start = WindowInsets.safeContent.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr),
                 end = 10.dp
-            )
+            ).fillMaxSize()
         ) {
             LazyColumn (verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 item {

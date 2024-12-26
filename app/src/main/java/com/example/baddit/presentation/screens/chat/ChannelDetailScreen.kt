@@ -126,10 +126,11 @@ fun ChannelDetailScreen(
         val avatar = channel.avatarUrl
         // TopAppBar
         TopAppBar(
+            modifier = Modifier.padding(top = WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()),
             title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     if (channel.type == "DIRECT") {
                         AsyncImage(

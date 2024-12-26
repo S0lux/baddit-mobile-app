@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -98,8 +100,6 @@ fun TopNavigationBar(
             onDismiss = { showLoginDialog = false })
     }
 
-
-
     AnimatedVisibility(
         visible = barState && !userTopBarState,
         exit = slideOutVertically(),
@@ -107,7 +107,7 @@ fun TopNavigationBar(
     ) {
         TopAppBar(
             title = { },
-            modifier = Modifier.shadow(elevation = 1.dp),
+            modifier = Modifier.shadow(elevation = 1.dp).background(MaterialTheme.colorScheme.cardBackground).padding(top = WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()),
             colors = TopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.cardBackground,
                 navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
@@ -181,7 +181,7 @@ fun TopNavigationBar(
                     )
                 }
 
-            }
+            },
         )
         Box(modifier = Modifier.fillMaxWidth()
             .wrapContentSize(Alignment.TopEnd).padding(end = 50.dp))
@@ -201,7 +201,6 @@ fun TopNavigationBar(
                 )
             }
         }
-
     }
 }
 

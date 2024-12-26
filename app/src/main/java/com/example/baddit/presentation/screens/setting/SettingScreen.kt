@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -71,6 +72,7 @@ import androidx.wear.compose.material3.OutlinedButton
 import com.example.baddit.R
 import com.example.baddit.domain.error.Result
 import com.example.baddit.presentation.components.BadditDialog
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
@@ -102,34 +104,11 @@ fun SettingScreen(
 
     val themes = listOf("Dark", "Light", "System")
 
-    Column {
-        TopAppBar(
-            title = {
-                val titleText = "Settings"
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = titleText,
-                        style = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp
-                        )
-                    )
-                }
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home) }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.cardBackground)) {
+        BaseTopNavigationBar(
+            title = "Settings",
+            leftIcon = R.drawable.baseline_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() }
         )
 
         val openThemeDialog = remember { mutableStateOf(false) }

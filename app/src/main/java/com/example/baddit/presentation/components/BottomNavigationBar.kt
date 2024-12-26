@@ -7,12 +7,14 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,21 +50,16 @@ fun BottomNavigationBar(
 ) {
     val selectedIndex = selectedItem
     val scope = rememberCoroutineScope()
-    AnimatedVisibility(
-        visible = barState.value,
-        exit = slideOutVertically(),
-        enter = slideInVertically()
-    ) {
-        NavigationBar(
+
+    if (barState.value) {
+        BottomAppBar(
             modifier = Modifier
-                .height(60.dp)
                 .shadow(elevation = 1.dp),
-            containerColor = MaterialTheme.colorScheme.cardBackground
+            containerColor = MaterialTheme.colorScheme.cardBackground,
         ) {
             navItems.forEachIndexed { index, item ->
                 NavigationBarItem(
                     selected = index == selectedIndex,
-                    modifier = Modifier.fillMaxHeight(),
                     colors = NavigationBarItemColors(
                         selectedIconColor = MaterialTheme.colorScheme.textPrimary,
                         selectedTextColor = Color.Transparent,
@@ -96,9 +93,8 @@ fun BottomNavigationBar(
                             )
 
                         }
-                    },
-
-                    )
+                    }
+                )
             }
         }
     }
