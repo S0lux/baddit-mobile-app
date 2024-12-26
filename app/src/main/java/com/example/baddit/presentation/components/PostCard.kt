@@ -448,17 +448,15 @@ fun PostMediaContent(mediaUrls: List<String>, imageLoader: ImageLoader?) {
             .clip(RoundedCornerShape(10.dp))
             .then(InvalidatingPlacementModifierElement())
             .background(MaterialTheme.colorScheme.cardForeground)
-            .fillMaxWidth()
-            .heightIn(50.dp, 400.dp), contentAlignment = Alignment.Center
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
         if (imageLoader != null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current).data(mediaUrls.first()).build(),
                 imageLoader = imageLoader,
                 contentDescription = null,
-                modifier = Modifier
-                    .heightIn(100.dp, 450.dp),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.FillWidth
             )
         }
     }

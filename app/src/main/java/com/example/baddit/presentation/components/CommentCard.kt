@@ -70,6 +70,7 @@ import com.example.baddit.ui.theme.BadditTheme
 import com.example.baddit.ui.theme.CustomTheme.appBlue
 import com.example.baddit.ui.theme.CustomTheme.appOrange
 import com.example.baddit.ui.theme.CustomTheme.cardBackground
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.neutralGray
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 import com.example.baddit.ui.theme.CustomTheme.textSecondary
@@ -445,11 +446,11 @@ fun CommentMeta(
                 text = " C ",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.textSecondary,
+                color = Color.White,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
                 modifier = Modifier
                     .clip(RoundedCornerShape(5.dp))
-                    .background(MaterialTheme.colorScheme.neutralGray)
+                    .background(MaterialTheme.colorScheme.mutedAppBlue)
             )
         }
     }

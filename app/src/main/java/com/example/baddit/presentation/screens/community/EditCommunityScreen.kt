@@ -68,11 +68,13 @@ import com.example.baddit.R
 import com.example.baddit.domain.model.community.GetACommunityResponseDTO
 import com.example.baddit.domain.model.community.Member
 import com.example.baddit.presentation.components.BadditDialog
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.ErrorNotification
 import com.example.baddit.presentation.utils.AddModerator
 import com.example.baddit.presentation.utils.Community
 import com.example.baddit.presentation.utils.CommunityDetail
 import com.example.baddit.presentation.viewmodel.CommunityViewModel
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
 import com.example.baddit.ui.theme.CustomTheme.errorRed
 import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
@@ -159,50 +161,16 @@ fun EditCommunityScreen(
         }
 
         community.value != null -> {
-            Column {
-                TopAppBar(
-                    title = {
-                        val titleText = "Edit Community"
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = titleText,
-                                style = TextStyle(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 20.sp
-                                )
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
-
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigate(CommunityDetail(name)) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    actions = {
-                        if(GetOwnerName(memberList.value, community.value!!) == me.value?.username ){
-                            IconButton(
-                                onClick = {
-                                    expanded = true
-                                }) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
+            Column(modifier = Modifier
+                .background(MaterialTheme.colorScheme.cardBackground))
+            {
+                BaseTopNavigationBar(
+                    title = "Edit Community",
+                    leftIcon = R.drawable.baseline_arrow_back_24,
+                    onLeftIconClick = { navController.navigate(CommunityDetail(name)) },
+                    rightIcons = listOf(Pair(R.drawable.vertical_dots) { expanded = true })
                 )
+
 
                 Box(modifier = Modifier.offset(x = 500.dp, y = 0.dp)){
                     DropdownMenu(
@@ -543,7 +511,8 @@ fun EditCommunityScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        saveCompleted = false
+                        saveCompleted = false;
+                        navController.navigate(CommunityDetail(name))
                     },
                 ) {
                     Text("OK", color = MaterialTheme.colorScheme.mutedAppBlue)
