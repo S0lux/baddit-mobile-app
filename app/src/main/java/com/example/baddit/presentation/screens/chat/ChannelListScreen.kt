@@ -79,6 +79,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.chat.chatChannel.ChatMember
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
+import com.example.baddit.presentation.components.AnimatedLogo
 import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.BodyBottomSheet
 import com.example.baddit.presentation.components.CreateChatChannelBottomSheet
@@ -103,27 +104,54 @@ fun ChannelListScreen(
     navController: NavController,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
-    val scopeCreateChatChannel = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheetCreateChatChannel by remember { mutableStateOf(false) }
     val loggedIn by viewModel.loggedIn
-
-//    val _socketMessages = mutableStateListOf<MutableMessageResponseDTOItem>()
-//    val socketMessages: List<MutableMessageResponseDTOItem> = _socketMessages
-
     var showLoginDialog by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.refreshChannelList()
         viewModel.fetchAvailableFriends()
     }
+
+    if (!loggedIn) {
+        Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.cardBackground)) {
+            BaseTopNavigationBar(
+                title = "Messages",
+                leftIcon = R.drawable.baseline_arrow_back_24,
+                onLeftIconClick = { navController.popBackStack() })
+
+            Box(
+                modifier = Modifier.fillMaxSize(1F),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    AnimatedLogo(
+                        R.raw.no_entry,
+                        size = 125.dp,
+                        tintColor = MaterialTheme.colorScheme.textSecondary
+                    )
+                    Text(
+                        "You need to be logged in",
+                        color = MaterialTheme.colorScheme.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        return
+    }
+
     if (showLoginDialog) {
         LoginDialog(
             navigateLogin = { navController.navigate(Login) },
             onDismiss = { showLoginDialog = false })
     }
+
     if (showBottomSheetCreateChatChannel) {
         CreateChatChannelBottomSheet(
             viewModel = viewModel,

@@ -63,6 +63,7 @@ import com.example.baddit.domain.model.report.ReportResponseDTO
 import com.example.baddit.domain.model.report.ReportStatus
 import com.example.baddit.domain.model.report.ReportType
 import com.example.baddit.domain.model.report.User
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.screens.report.ReportViewModel
 import com.example.baddit.presentation.utils.Home
 import com.example.baddit.ui.theme.CustomTheme.PrimaryContainter
@@ -104,36 +105,14 @@ fun ReportManagementScreen(
             .fillMaxHeight()
             .background(MaterialTheme.colorScheme.scaffoldBackground)
     ) {
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Report Management",
-                    style = TextStyle(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp
-                    ),
-                    color = MaterialTheme.colorScheme.textPrimary
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home) }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.scaffoldBackground,
-                titleContentColor = MaterialTheme.colorScheme.textPrimary,
-                navigationIconContentColor = MaterialTheme.colorScheme.textPrimary
-            )
+        BaseTopNavigationBar(
+            title = "Reports",
+            leftIcon = R.drawable.baseline_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() }
         )
 
         Column(
             modifier = Modifier.padding(horizontal = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Type Filter
             ReportTypeFilter(
@@ -257,11 +236,11 @@ fun ReportStatusFilter(
                 containerColor = if (selectedStatus == null)
                     MaterialTheme.colorScheme.primary
                 else
-                    MaterialTheme.colorScheme.surface
+                    MaterialTheme.colorScheme.primaryContainer
             )
         )
 
-        ReportStatus.values().forEach { status ->
+        ReportStatus.entries.forEach { status ->
             FilterChip(
                 selected = selectedStatus == status,
                 onClick = { onStatusSelected(status) },
@@ -293,8 +272,7 @@ fun ReportTypeFilter(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 10.dp),
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         FilterChip(

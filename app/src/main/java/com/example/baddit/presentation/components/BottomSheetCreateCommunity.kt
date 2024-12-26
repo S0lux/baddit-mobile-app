@@ -89,21 +89,9 @@ fun CreateCommunity(communityViewModel: CommunityViewModel, onBackButtonClick: (
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { onBackButtonClick()
-                        communityViewModel.resetCreateState() },
-                    modifier = Modifier.background(Color.Transparent)
-                ) {
-                    Icon(
-                        Icons.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.textPrimary
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp)) // Add space between the IconButton and Text
-
-                Text(text = "Create Community", color = MaterialTheme.colorScheme.textPrimary, fontWeight = FontWeight.Bold)
+                Text(text = "Create Community",
+                    color = MaterialTheme.colorScheme.textPrimary,
+                    fontWeight = FontWeight.Bold)
             }
 
             Column(modifier = Modifier.padding(10.dp)) {

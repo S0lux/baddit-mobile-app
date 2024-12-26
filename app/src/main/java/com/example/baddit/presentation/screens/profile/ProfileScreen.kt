@@ -84,6 +84,7 @@ import coil.request.ImageRequest
 import com.example.baddit.R
 import com.example.baddit.domain.model.auth.GetOtherResponseDTO
 import com.example.baddit.domain.model.report.ReportType
+import com.example.baddit.presentation.components.BaseTopNavigationBar
 import com.example.baddit.presentation.components.CommentCard
 import com.example.baddit.presentation.components.CreateReportBottomSheet
 import com.example.baddit.presentation.components.ErrorNotification
@@ -189,32 +190,10 @@ fun ProfileScreen(
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
-        TopAppBar(
-            colors = TopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.scaffoldBackground,
-                navigationIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                actionIconContentColor = MaterialTheme.colorScheme.textPrimary,
-                scrolledContainerColor = MaterialTheme.colorScheme.textPrimary,
-                titleContentColor = MaterialTheme.colorScheme.textPrimary
-            ),
-            title = {
-                Text(
-                    text = "Profile",
-                    style = TextStyle(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp
-                    )
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate(Home) }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-            },
-            actions = {},
+        BaseTopNavigationBar(
+            title = "Profile",
+            leftIcon = R.drawable.baseline_arrow_back_24,
+            onLeftIconClick = { navController.popBackStack() }
         )
 
         ProfileHeader(
