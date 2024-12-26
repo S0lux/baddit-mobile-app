@@ -1,6 +1,5 @@
 package com.example.baddit.domain.repository
 
-import android.provider.ContactsContract.Data
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.baddit.domain.error.DataError
 import com.example.baddit.domain.error.Result

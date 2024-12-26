@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URISyntaxException
-import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,7 +40,7 @@ class SocketManager @Inject constructor(
             }
 
             // Replace with your actual socket server URL
-            socket = IO.socket("https://api.baddit.life", options)
+            socket = IO.socket("https://baddit.life", options)
 
             socket?.apply {
                 // Connection listeners
@@ -66,6 +65,28 @@ class SocketManager @Inject constructor(
 
                             if (newMessage.channelId == currentChannelId) {
                                 _messages.value += newMessage.toMutableMessageResponseDTOItem()
+                            }
+                        }
+                    }
+                }
+
+                on("delete_message") { args ->
+                    Log.d("SocketIO", "Received delete message event")
+                    args?.let {
+                        if (it.isNotEmpty()) {
+                            val messageJson = it[0] as JSONObject
+                            val channelId = messageJson.getString("channelId")
+                            val messageId = messageJson.getString("messageId")
+
+                            if (channelId == currentChannelId) {
+                                val updatedMessages = _messages.value.toMutableList()
+                                val messageIndex = updatedMessages.indexOfFirst { msg -> msg.id == messageId }
+
+                                if (messageIndex != -1) {
+                                    val updatedMessage = updatedMessages[messageIndex].copy(isDeleted = true)
+                                    updatedMessages[messageIndex] = updatedMessage
+                                    _messages.value = updatedMessages
+                                }
                             }
                         }
                     }
@@ -100,6 +121,13 @@ class SocketManager @Inject constructor(
                 put("username", sender.username)
                 put("avatarUrl", sender.avatarUrl)
             })
+        })
+    }
+
+    fun deleteMessage(channelId:String, messageId: String){
+        socket?.emit("delete_message",JSONObject().apply {
+            put("channelId", channelId)
+            put("messageId", messageId)
         })
     }
 

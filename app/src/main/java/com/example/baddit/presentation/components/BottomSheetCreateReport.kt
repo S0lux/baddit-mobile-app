@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,11 +32,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.baddit.domain.model.report.ReportType
 import com.example.baddit.presentation.screens.chat.ChatViewModel
 import com.example.baddit.presentation.screens.report.ReportViewModel
+import com.example.baddit.ui.theme.CustomTheme.mutedAppBlue
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,7 +75,6 @@ fun CreateReportBottomSheet(
                 value = reportContent,
                 onValueChange = { reportContent = it },
                 maxLines = 20,
-                label = { Text("Report Reason", color = MaterialTheme.colorScheme.textPrimary) },
                 placeholder = { Text("Describe why you're reporting this ${if (reportType == ReportType.USER) "user" else "post"}", ) },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -94,8 +96,9 @@ fun CreateReportBottomSheet(
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.mutedAppBlue)
                 ) {
-                    Text("Submit")
+                    Text("Submit", color = Color.White)
                 }
         }
     }

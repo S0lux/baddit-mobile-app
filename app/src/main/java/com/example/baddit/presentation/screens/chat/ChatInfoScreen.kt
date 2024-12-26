@@ -54,7 +54,7 @@ fun ChannelInfoScreen(
     // Fetch channel details
     LaunchedEffect(channelId) {
         viewModel.fetchChannelDetail(channelId)
-        viewModel.fetchChannelDetail(channelId)
+        viewModel.fetchAvailableFriends()
     }
 
     // Get current channel from cache
@@ -65,6 +65,11 @@ fun ChannelInfoScreen(
     // Check if current user is moderator
     val isCurrentUserModerator by remember {
         derivedStateOf { viewModel.isUserModerator(channelId) }
+    }
+
+    fun refreshData() {
+        viewModel.fetchChannelDetail(channelId)
+        viewModel.fetchAvailableFriends()
     }
 
     val context = LocalContext.current
@@ -90,96 +95,143 @@ fun ChannelInfoScreen(
         }
     }
 
+
     // Delete channel confirmation state
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    if (showRemoveMembersDialog) {
-        AlertDialog(
-            onDismissRequest = { showRemoveMembersDialog = false },
-            title = { Text("Remove Members") },
-            text = {
-                LazyColumn {
-                    items(currentChannel?.members.orEmpty().filter { member ->
-                        // Filter out current user and other moderators
-                        member.id != viewModel.me.value!!.id  &&
-                                !currentChannel!!.moderators.map { it.id }.contains(member.id)
-                    }) { member ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.toggleFriendSelection(BaseFriendUser(
-                                        id = member.id,
-                                        username =  member.username,
-                                        avatarUrl = member.avatarUrl,
-                                        status = "ACTIVE",
-                                    ))
-                                }
-                                .padding(vertical = 8.dp)
-                        ) {
-                            Checkbox(
-                                checked = viewModel.selectedFriendsForChannel.contains(BaseFriendUser(
-                                    id = member.id,
-                                    username =  member.username,
-                                    avatarUrl = member.avatarUrl,
-                                    status = "ACTIVE",
-                                )),
-                                onCheckedChange = {
-                                    viewModel.toggleFriendSelection(BaseFriendUser(
-                                        id = member.id,
-                                        username =  member.username,
-                                        avatarUrl = member.avatarUrl,
-                                        status = "ACTIVE",
-                                    ))
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            AsyncImage(
-                                model = member.avatarUrl,
-                                contentDescription = "Member Avatar",
+
+        if (showRemoveMembersDialog) {
+            AlertDialog(
+                onDismissRequest = { showRemoveMembersDialog = false },
+                title = { Text("Remove Members") },
+                text = {
+                    LazyColumn {
+                        items(currentChannel?.members.orEmpty().filter { member ->
+                            // Filter out:
+                            // 1. Current user
+                            // 2. Any user who is a moderator
+                            member.id != viewModel.me.value!!.id &&
+                                    !currentChannel!!.moderators.any { mod -> mod.id == member.id }
+                        }) { member ->
+                            // Calculate remaining total members after potential removal
+                            val totalRemainingMembers = currentChannel?.members?.size?.minus(
+                                viewModel.selectedFriendsForChannel.size
+                            ) ?: 0
+
+                            // Can select if:
+                            // 1. Removing this member would still leave at least 2 total members, or
+                            // 2. This member is already selected
+                            val canSelectMore = totalRemainingMembers > 2 ||
+                                    viewModel.selectedFriendsForChannel.any { it.id == member.id }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = member.username)
+                                    .fillMaxWidth()
+                                    .clickable(enabled = canSelectMore) {
+                                        viewModel.toggleFriendSelection(
+                                            BaseFriendUser(
+                                                id = member.id,
+                                                username = member.username,
+                                                avatarUrl = member.avatarUrl,
+                                                status = "ACTIVE",
+                                            )
+                                        )
+                                    }
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Checkbox(
+                                    checked = viewModel.selectedFriendsForChannel.contains(
+                                        BaseFriendUser(
+                                            id = member.id,
+                                            username = member.username,
+                                            avatarUrl = member.avatarUrl,
+                                            status = "ACTIVE",
+                                        )
+                                    ),
+                                    onCheckedChange = {
+                                        if (canSelectMore) {
+                                            viewModel.toggleFriendSelection(
+                                                BaseFriendUser(
+                                                    id = member.id,
+                                                    username = member.username,
+                                                    avatarUrl = member.avatarUrl,
+                                                    status = "ACTIVE",
+                                                )
+                                            )
+                                        }
+                                    },
+                                    enabled = canSelectMore
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AsyncImage(
+                                    model = member.avatarUrl,
+                                    contentDescription = "Member Avatar",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(text = member.username)
+                                    if (!canSelectMore && !viewModel.selectedFriendsForChannel.any { it.id == member.id }) {
+                                        Text(
+                                            text = "Cannot remove - minimum 2 total members required",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Remove selected members
-                        val selectedMemberIds = viewModel.selectedFriendsForChannel.map { it.id }
-                        viewModel.removeMembersFromChannel(channelId, selectedMemberIds)
-                        showRemoveMembersDialog = false
-                    },
-                    enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
-                ) {
-                    Text("Remove")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRemoveMembersDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
+                },
+                confirmButton = {
+                    val totalRemainingMembers = currentChannel?.members?.size?.minus(
+                        viewModel.selectedFriendsForChannel.size
+                    ) ?: 0
 
+                    TextButton(
+                        onClick = {
+                            if (totalRemainingMembers >= 2) {
+                                val selectedMemberIds =
+                                    viewModel.selectedFriendsForChannel.map { it.id }
+                                viewModel.removeMembersFromChannel(channelId, selectedMemberIds)
+                                refreshData()
+                                showRemoveMembersDialog = false
+                            }
+                        },
+                        enabled = viewModel.selectedFriendsForChannel.isNotEmpty() && totalRemainingMembers >= 2
+                    ) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRemoveMembersDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     if (showAddMembersDialog) {
         AlertDialog(
             onDismissRequest = { showAddMembersDialog = false },
             title = { Text("Add Members") },
             text = {
-                LazyColumn {
-                    items(viewModel.availableFriends.filter { friend ->
+                // Add currentChannel?.members as a dependency to remember
+                val availableFriendsFiltered = remember(
+                    viewModel.availableFriends,
+                    currentChannel?.members // Add this dependency
+                ) {
+                    viewModel.availableFriends.filter { friend ->
                         // Filter out existing members
                         currentChannel?.members?.none { it.id == friend.id } ?: true
-                    }) { friend ->
+                    }
+                }
+
+                LazyColumn {
+                    items(availableFriendsFiltered) { friend ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -217,6 +269,7 @@ fun ChannelInfoScreen(
                         val selectedFriendIds = viewModel.selectedFriendsForChannel.map { it.id }
                         viewModel.addMembersToChannel(channelId, selectedFriendIds)
                         showAddMembersDialog = false
+                        refreshData()
                     },
                     enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
                 ) {
@@ -230,7 +283,6 @@ fun ChannelInfoScreen(
             }
         )
     }
-
     // Add Moderators Dialog
     if (showAddModeratorsDialog) {
         AlertDialog(
@@ -279,6 +331,7 @@ fun ChannelInfoScreen(
                         val selectedFriendIds = viewModel.selectedFriendsForChannel.map { it.id }
                         viewModel.addModeratorsToChannel(channelId, selectedFriendIds)
                         showAddModeratorsDialog = false
+                        refreshData()
                     },
                     enabled = viewModel.selectedFriendsForChannel.isNotEmpty()
                 ) {
