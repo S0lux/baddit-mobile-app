@@ -153,10 +153,8 @@ class ChatViewModel @Inject constructor(
     fun connectToChannel(channelId: String) {
         socketManager.disconnect()
 
-        // Clear previous messages
         clearPreviousMessages()
 
-        // Connect to the new channel
         socketManager.connect(channelId)
     }
 
@@ -170,6 +168,10 @@ class ChatViewModel @Inject constructor(
         )
 
         uploadedImageUrls = emptyList()
+    }
+
+    fun deleteMessage(channelId: String, messageId: String){
+        socketManager.deleteMessage(channelId, messageId);
     }
 
     fun disconnectFromChannel() {
@@ -289,6 +291,8 @@ class ChatViewModel @Inject constructor(
                     }
                     error = "" // Clear any previous errors
                     selectedFriendsForChannel = emptyList() // Reset selected friends
+                    fetchAvailableFriends();
+                    fetchChannelDetail(channelId)
                 }
 
                 is Result.Error -> {
@@ -315,6 +319,8 @@ class ChatViewModel @Inject constructor(
                     }
                     error = "" // Clear any previous errors
                     selectedFriendsForChannel = emptyList() // Reset selected friends
+                    fetchAvailableFriends();
+                    fetchChannelDetail(channelId)
                 }
 
                 is Result.Error -> {
@@ -333,7 +339,6 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = chatRepository.removeMembers(channelId, memberIds)) {
                 is Result.Success -> {
-                    // Update the local cache if needed
                     val channelIndex =
                         chatRepository.channelListCache.indexOfFirst { it.id == channelId }
                     if (channelIndex != -1) {
@@ -342,6 +347,8 @@ class ChatViewModel @Inject constructor(
                     }
                     error = "" // Clear any previous errors
                     selectedFriendsForChannel = emptyList() // Reset selected friends
+                    fetchAvailableFriends();
+                    fetchChannelDetail(channelId)
                 }
 
                 is Result.Error -> {

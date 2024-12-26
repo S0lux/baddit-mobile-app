@@ -1,3 +1,4 @@
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,8 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import coil.compose.AsyncImage
 import com.example.baddit.R
 import com.example.baddit.domain.model.report.Post
@@ -64,8 +64,14 @@ import com.example.baddit.domain.model.report.ReportStatus
 import com.example.baddit.domain.model.report.ReportType
 import com.example.baddit.domain.model.report.User
 import com.example.baddit.presentation.screens.report.ReportViewModel
+import com.example.baddit.presentation.utils.Home
+import com.example.baddit.ui.theme.CustomTheme.PrimaryContainter
+import com.example.baddit.ui.theme.CustomTheme.cardBackground
+import com.example.baddit.ui.theme.CustomTheme.cardForeground
+import com.example.baddit.ui.theme.CustomTheme.errorRed
 import com.example.baddit.ui.theme.CustomTheme.scaffoldBackground
 import com.example.baddit.ui.theme.CustomTheme.textPrimary
+import com.example.baddit.ui.theme.CustomTheme.textSecondary
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import java.time.ZoneId
@@ -96,6 +102,7 @@ fun ReportManagementScreen(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.scaffoldBackground)
     ) {
         TopAppBar(
             title = {
@@ -108,7 +115,20 @@ fun ReportManagementScreen(
                     color = MaterialTheme.colorScheme.textPrimary
                 )
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.scaffoldBackground)
+            navigationIcon = {
+                IconButton(onClick = { navController.navigate(Home) }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.textPrimary
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.scaffoldBackground,
+                titleContentColor = MaterialTheme.colorScheme.textPrimary,
+                navigationIconContentColor = MaterialTheme.colorScheme.textPrimary
+            )
         )
 
         Column(
@@ -139,7 +159,7 @@ fun ReportManagementScreen(
                     state = refreshBoxState,
                     isRefreshing = isRefreshing,
                     modifier = Modifier.align(Alignment.TopCenter),
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.scaffoldBackground,
                     color = MaterialTheme.colorScheme.textPrimary
                 )
             }
@@ -147,7 +167,9 @@ fun ReportManagementScreen(
             when {
                 isLoading -> {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.scaffoldBackground),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -155,7 +177,9 @@ fun ReportManagementScreen(
                 }
                 error != null -> {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.scaffoldBackground),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -175,19 +199,23 @@ fun ReportManagementScreen(
 
                     if (filteredReports.isEmpty()) {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.scaffoldBackground),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "No reports found",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.textPrimary
+                                color = MaterialTheme.colorScheme.textSecondary
                             )
                         }
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(10.dp)
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .background(MaterialTheme.colorScheme.scaffoldBackground)
                         ) {
                             items(filteredReports) { report ->
                                 ReportCard(
@@ -320,7 +348,10 @@ fun ReportCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.cardBackground,
+            contentColor = MaterialTheme.colorScheme.textPrimary
+        )
     ) {
         Column(
             modifier = Modifier
@@ -368,13 +399,20 @@ fun ReportCard(
                 OutlinedButton(
                     onClick = onResolveClick,
                     modifier = Modifier.align(Alignment.End),
-                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.cardBackground
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                 ) {
                     var buttonTextValue = "SUSPEND USER"
                     if(report.type == ReportType.POST){
                         buttonTextValue = "DELETE POST"
                     }
-                    Text(text =buttonTextValue, color = MaterialTheme.colorScheme.textPrimary)
+                    Text(
+                        text = buttonTextValue,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
@@ -384,8 +422,8 @@ fun ReportCard(
 @Composable
 fun StatusChip(status: ReportStatus) {
     val backgroundColor = when (status) {
-        ReportStatus.PENDING -> MaterialTheme.colorScheme.primary
-        ReportStatus.RESOLVED -> MaterialTheme.colorScheme.secondary
+        ReportStatus.PENDING -> MaterialTheme.colorScheme.PrimaryContainter
+        ReportStatus.RESOLVED -> MaterialTheme.colorScheme.PrimaryContainter
     }
 
     Surface(
@@ -394,7 +432,7 @@ fun StatusChip(status: ReportStatus) {
     ) {
         Text(
             text = status.name,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp,),
             color = MaterialTheme.colorScheme.onPrimary,
             style = MaterialTheme.typography.labelSmall
         )
@@ -436,7 +474,11 @@ fun ReportedPostInfo(post: Post?) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.cardForeground,
+                contentColor = MaterialTheme.colorScheme.textPrimary
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -444,24 +486,22 @@ fun ReportedPostInfo(post: Post?) {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Post Title
                 Text(
                     text = postDetails.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.textPrimary
                 )
 
-                // Post Content based on type
                 when (postDetails.type) {
                     "TEXT" -> {
                         Text(
                             text = postDetails.content,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.textSecondary,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .background(MaterialTheme.colorScheme.PrimaryContainter.copy(alpha = 0.1f))
                                 .padding(8.dp),
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis
@@ -493,37 +533,29 @@ fun ReportedPostInfo(post: Post?) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        // Deletion Status
-                        if (postDetails.deleted) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
-                                contentColor = MaterialTheme.colorScheme.error
-                            ) {
-                                Text(
-                                    text = "Deleted",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
+                    if (postDetails.deleted) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.errorRed.copy(alpha = 0.1f),
+                            contentColor = MaterialTheme.colorScheme.errorRed
+                        ) {
+                            Text(
+                                text = "Deleted",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
                         }
                     }
 
-                    // Post Type Badge
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
+                        color = MaterialTheme.colorScheme.PrimaryContainter
                     ) {
                         Text(
                             text = postDetails.type,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }

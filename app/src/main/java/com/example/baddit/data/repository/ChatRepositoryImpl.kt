@@ -17,7 +17,7 @@ import com.example.baddit.domain.model.chat.chatChannel.ChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatChannel.MutableChannelResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MessageResponseDTOItem
 import com.example.baddit.domain.model.chat.chatMessage.MutableMessageResponseDTOItem
-import com.example.baddit.domain.model.posts.PostResponseDTO
+import com.example.baddit.domain.model.chat.chatMessage.toMutableMessageResponseDTOItem
 import com.example.baddit.domain.repository.ChatRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -44,6 +44,7 @@ class ChatRepositoryImpl @Inject constructor(
     ): Result<Unit, DataError.NetworkError> {
         return safeApiCall { badditAPI.sendMessage(SendMessageBody(channelId, content)) }
     }
+
 
     override suspend fun getChannelMessages(channelId: String): Result<ArrayList<MessageResponseDTOItem>, DataError.NetworkError> {
         return safeApiCall {

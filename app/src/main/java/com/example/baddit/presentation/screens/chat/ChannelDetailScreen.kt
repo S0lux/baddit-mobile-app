@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,6 +98,8 @@ fun ChannelDetailScreen(
         viewModel.connectToChannel(channelId)
 
         viewModel.fetchChannelDetail(channelId)
+
+
     }
 
     LaunchedEffect(socketMessages.size) {
@@ -202,15 +206,19 @@ fun ChannelDetailScreen(
             state = messageScrollState,
             reverseLayout = true
         ) {
-
-
             var previousSenderId: String? = null
-            items(filteredMessages) { message ->
+            items(filteredMessages.filter { message ->
+                // Filter out deleted messages that belong to current user
+                !(message.isDeleted && message.sender.id == currentUserId)
+            }) { message ->
                 val showAvatar = previousSenderId != message.sender.id
                 MessageItem(
                     message = message,
                     isMyMessage = message.sender.id == currentUserId,
-                    showAvatar = showAvatar
+                    showAvatar = showAvatar,
+                    onDeleteMessage = { messageId ->
+                        viewModel.deleteMessage(channelId, messageId)
+                    }
                 )
                 previousSenderId = message.sender.id
             }
@@ -310,14 +318,47 @@ fun ChannelDetailScreen(
 fun MessageItem(
     message: MutableMessageResponseDTOItem,
     isMyMessage: Boolean,
-    showAvatar: Boolean
+    showAvatar: Boolean,
+    onDeleteMessage: (String) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
+    val isDeleted by remember(message.isDeleted) { mutableStateOf(message.isDeleted) }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Message") },
+            text = { Text("Do you want to delete this message?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteMessage(message.id)
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .combinedClickable(
+                onLongClick = {
+                    if (isMyMessage && !message.isDeleted) {
+                        showDeleteDialog = true
+                    }
+                },
+                onClick = { }
+            ),
         contentAlignment = if (isMyMessage) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Row(
@@ -325,7 +366,7 @@ fun MessageItem(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = if (isMyMessage) Arrangement.End else Arrangement.Start
         ) {
-            // Show avatar only if required
+            // Avatar section remains the same
             if (!isMyMessage && showAvatar) {
                 AsyncImage(
                     model = message.sender.avatarUrl,
@@ -336,10 +377,10 @@ fun MessageItem(
                     contentScale = ContentScale.Crop
                 )
             } else if (!isMyMessage) {
-                // Spacer for alignment when avatar is not shown
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
+            // Message content
             Column(
                 modifier = Modifier
                     .clip(
@@ -356,26 +397,35 @@ fun MessageItem(
                     )
                     .padding(12.dp)
             ) {
-                // Image gallery for image messages
-                if (message.mediaUrls.isNotEmpty()) {
-                    ImageGallery(
-                        imageUrls = message.mediaUrls,
-                        onImageClick = { url -> selectedImageUrl = url }
-                    )
+                if (message.isDeleted) {
+                    if (!isMyMessage) {
+                        Text(
+                            text = "This message has been removed",
+                            color = Color.Gray,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+                } else {
+                    // Existing message content rendering
+                    if (message.mediaUrls.isNotEmpty()) {
+                        ImageGallery(
+                            imageUrls = message.mediaUrls,
+                            onImageClick = { url -> selectedImageUrl = url }
+                        )
+                    }
+
+                    if (message.content.isNotBlank() &&
+                        (message.type == "TEXT" || (message.type == "IMAGE" && message.mediaUrls.isEmpty()))
+                    ) {
+                        Text(
+                            text = message.content,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
 
-                // Text content (if not empty)
-                if (message.content.isNotBlank() &&
-                    (message.type == "TEXT" || (message.type == "IMAGE" && message.mediaUrls.isEmpty()))
-                ) {
-                    Text(
-                        text = message.content,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp
-                    )
-                }
-
-                // Timestamp
+                // Timestamp remains the same
                 Text(
                     text = formatMessageTimestamp(message.createdAt),
                     color = Color.Gray,
@@ -385,7 +435,6 @@ fun MessageItem(
                 )
             }
         }
-
         // Image Viewer Dialog
         selectedImageUrl?.let { url ->
             ImageViewerDialog(
@@ -395,6 +444,7 @@ fun MessageItem(
         }
     }
 }
+
 
 
 // Helper function to format timestamp
